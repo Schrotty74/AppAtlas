@@ -1,0 +1,26 @@
+{
+  "format": "appatlas-theme",
+  "version": 1,
+  "id": "harbor-night",
+  "name": {
+    "de": "Hafen Nacht",
+    "en": "Harbor Night"
+  },
+  "mode": "dark",
+  "colors": {
+    "text": "#F4F7F8",
+    "mutedText": "#A9B8BC",
+    "background": "#0D1518",
+    "backgroundAlt": "#163038",
+    "panel": "#17242A",
+    "panelSoft": "#22353D",
+    "border": "#3E5E68",
+    "accent": "#E9B949",
+    "accentText": "#211A06"
+  },
+  "effects": {
+    "glassOpacity": 0.74,
+    "glassBorderOpacity": 0.28,
+    "shadowOpacity": 0.36
+  }
+}

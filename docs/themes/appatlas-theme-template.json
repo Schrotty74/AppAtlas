@@ -1,0 +1,26 @@
+{
+  "format": "appatlas-theme",
+  "version": 1,
+  "id": "my-custom-theme",
+  "name": {
+    "de": "Mein eigenes Theme",
+    "en": "My Custom Theme"
+  },
+  "mode": "dark",
+  "colors": {
+    "text": "#F5F7FA",
+    "mutedText": "#B7C1C9",
+    "background": "#101418",
+    "backgroundAlt": "#182128",
+    "panel": "#1E2930",
+    "panelSoft": "#26343D",
+    "border": "#40515C",
+    "accent": "#6F92FF",
+    "accentText": "#FFFFFF"
+  },
+  "effects": {
+    "glassOpacity": 0.72,
+    "glassBorderOpacity": 0.24,
+    "shadowOpacity": 0.32
+  }
+}
