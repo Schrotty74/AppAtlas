@@ -11,6 +11,12 @@ mit einem leeren lokalen Katalog.
 
 > Aktueller Release: **AppAtlas 1.0.0-beta.1**
 
+## Transparenz
+
+AppAtlas wurde gemeinsam mit OpenAI Codex konzipiert und programmiert. Auch
+der Name **AppAtlas** entstand aus einem Vorschlag von Codex. Das App-Logo
+wurde ebenfalls mit Codex erstellt.
+
 ## Funktionen
 
 - frei wählbare Ordner rein lesend scannen, technische Daten und typische
