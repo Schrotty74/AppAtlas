@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+root_directory="$(git rev-parse --show-toplevel)"
+"$root_directory/Scripts/privacy-check.sh"

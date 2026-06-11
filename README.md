@@ -81,7 +81,9 @@ swift test
 ```
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
-nur auf ausdrückliche Anweisung erstellt.
+nur auf ausdrückliche Anweisung erstellt. Lokale Git-Prüfungen vor jedem
+Commit und Push verhindern zusätzlich die Aufnahme typischer Katalog-,
+Export- und Datenbankdateien.
 
 ## Lizenz
 
