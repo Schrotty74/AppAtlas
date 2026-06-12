@@ -14,6 +14,12 @@ Jeder Benutzer startet mit einem leeren Katalog. Der persönliche Katalog liegt
 ausschließlich im lokalen Application-Support-Verzeichnis der macOS-Sandbox.
 Icons und Vorschaubilder werden dort als separate lokale Dateien gespeichert.
 
+Der ausgewählte Scan-Ordner wird beim Scannen nur gelesen. AppAtlas verändert
+Dateien darin ausschließlich nach einer ausdrücklichen Bestätigung des
+Benutzers über „Lokale Dateien in Papierkorb legen“. Dabei werden zugeordnete
+Dateien über den macOS-Papierkorb gelöscht und können von dort wiederhergestellt
+werden. AppAtlas bietet kein dauerhaftes Löschen lokaler Dateien an.
+
 ## Lizenzdaten
 
 Seriennummern, registrierte E-Mail-Adressen, Lizenztypen und private Notizen

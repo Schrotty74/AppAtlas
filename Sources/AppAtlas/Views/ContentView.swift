@@ -312,8 +312,20 @@ struct ContentView: View {
                 store.delete(app)
                 appPendingDeletion = nil
             }
+            if !app.files.isEmpty {
+                Button("Lokale Dateien in Papierkorb legen", role: .destructive) {
+                    do {
+                        try LocalAppTrashService().moveFilesToTrash(for: app)
+                        store.delete(app)
+                        appPendingDeletion = nil
+                    } catch {
+                        appPendingDeletion = nil
+                        catalogErrorMessage = error.localizedDescription
+                    }
+                }
+            }
         } message: { app in
-            Text("„\(app.name)“ wird nur aus AppAtlas entfernt. Zugehörige Dateien auf Datenträgern werden nicht verändert.")
+            Text("Du kannst „\(app.name)“ nur aus AppAtlas entfernen oder alle zugeordneten lokalen Dateien in den macOS-Papierkorb legen.")
         }
         .modifier(
             DeleteAllCatalogConfirmation(

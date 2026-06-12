@@ -25,6 +25,7 @@ struct AppDetailView: View {
     @Environment(\.appAtlasTheme) private var theme
     @State private var showEditor = false
     @State private var showDeleteConfirmation = false
+    @State private var deleteErrorMessage: String?
     @State private var licenseRecord: AppLicenseRecord?
     @State private var revealSerial = false
     let app: AppEntry
@@ -123,8 +124,32 @@ struct AppDetailView: View {
                 store.delete(displayedApp)
                 dismiss()
             }
+            if !displayedApp.files.isEmpty {
+                Button("Lokale Dateien in Papierkorb legen", role: .destructive) {
+                    do {
+                        try LocalAppTrashService().moveFilesToTrash(
+                            for: displayedApp
+                        )
+                        store.delete(displayedApp)
+                        dismiss()
+                    } catch {
+                        deleteErrorMessage = error.localizedDescription
+                    }
+                }
+            }
         } message: {
-            Text("„\(displayedApp.name)“ wird nur aus AppAtlas entfernt. Zugehörige Dateien auf Datenträgern werden nicht verändert.")
+            Text("Du kannst „\(displayedApp.name)“ nur aus AppAtlas entfernen oder alle zugeordneten lokalen Dateien in den macOS-Papierkorb legen.")
+        }
+        .alert(
+            "Lokale Dateien konnten nicht gelöscht werden",
+            isPresented: Binding(
+                get: { deleteErrorMessage != nil },
+                set: { if !$0 { deleteErrorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteErrorMessage ?? "")
         }
         .sheet(isPresented: $showEditor) {
             AppEditorView(existingApp: displayedApp) { updatedApp in

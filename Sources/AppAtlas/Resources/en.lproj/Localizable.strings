@@ -95,6 +95,14 @@
 "Nach dem schnellen Durchlauf werden nur weiterhin unvollständige Apps zusätzlich geprüft." = "After the fast pass, only apps that are still incomplete are checked further.";
 "App aus dem Katalog löschen?" = "Remove app from catalog?";
 "Nur aus Katalog löschen" = "Remove from catalog only";
+"Lokale Dateien in Papierkorb legen" = "Move local files to Trash";
+"Lokale Dateien konnten nicht gelöscht werden" = "Local files could not be deleted";
+"Du kannst „%@“ nur aus AppAtlas entfernen oder alle zugeordneten lokalen Dateien in den macOS-Papierkorb legen." = "You can remove “%@” from AppAtlas only or move all associated local files to the macOS Trash.";
+"Für diesen Katalogeintrag sind keine lokalen Dateien gespeichert." = "No local files are stored for this catalog entry.";
+"Der ursprüngliche Scan-Ordner ist nicht mehr verfügbar. Wähle ihn erneut über „Apps scannen“ aus." = "The original scan folder is no longer available. Select it again using “Scan apps”.";
+"Eine zugeordnete Datei liegt außerhalb des ausgewählten Scan-Ordners und wurde nicht verändert." = "An associated file is outside the selected scan folder and was not changed.";
+"Die Datei „%@“ wurde nicht gefunden. Der Katalogeintrag bleibt erhalten." = "The file “%@” was not found. The catalog entry remains.";
+"„%@“ konnte nicht in den Papierkorb gelegt werden: %@" = "“%@” could not be moved to the Trash: %@";
 "Gesamten Katalog löschen?" = "Delete entire catalog?";
 "Gesamten Katalog löschen" = "Delete entire catalog";
 "Theme importieren" = "Import theme";

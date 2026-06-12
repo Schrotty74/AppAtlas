@@ -10,6 +10,9 @@ und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 - Apps können direkt aus ihrer Detailansicht aus dem Katalog gelöscht werden.
 - Jede App-Karte und Listenzeile zeigt eine direkt sichtbare Löschaktion mit
   Bestätigung.
+- Beim Löschen kann der Benutzer wählen, ob nur der Katalogeintrag entfernt
+  oder dessen zugeordnete lokale Dateien in den macOS-Papierkorb gelegt werden.
+  Lokale Dateien werden niemals ohne ausdrückliche Bestätigung verändert.
 - Ein erneuter Scan trennt ältere, fälschlich zusammengeführte App-Ausgaben
   anhand ihrer tatsächlichen Dateipfade wieder auf.
 - Bereits zusammengeführte Einträge werden nun zusätzlich beim App-Start
