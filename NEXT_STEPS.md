@@ -69,6 +69,8 @@
 - Bei Datenschutzfragen vor der Umsetzung informieren und eine
   datensparsame Alternative vorschlagen.
 - Keine Backups ohne ausdrückliche Anweisung.
+- In iCloud maximal zwei AppAtlas-Backups behalten; nach einer erfolgreichen
+  neuen Kopie ausschließlich das älteste AppAtlas-iCloud-Backup entfernen.
 - Keine Release-ZIPs oder Prüfsummen ohne ausdrückliche Anweisung.
 - AppAtlas bei Builds und Tests niemals automatisch öffnen oder in den
   Vordergrund bringen.

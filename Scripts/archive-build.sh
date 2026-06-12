@@ -52,6 +52,23 @@ if [[ -n "$icloud_backup_directory" ]]; then
         echo "Die optionale Kopie stimmt nicht mit dem lokalen Backup überein." >&2
         exit 1
     fi
+
+    appatlas_icloud_backups=(
+        "${(@f)$(find "$icloud_backup_directory" \
+            -maxdepth 1 \
+            -type f \
+            -name 'AppAtlas-Backup-*.zip' \
+            -print \
+            | sort)}"
+    )
+    while (( ${#appatlas_icloud_backups[@]} > 2 )); do
+        oldest_backup="${appatlas_icloud_backups[1]}"
+        rm -f "$oldest_backup"
+        echo "Ältestes AppAtlas-iCloud-Backup entfernt:"
+        echo "  $oldest_backup"
+        appatlas_icloud_backups=("${appatlas_icloud_backups[@]:1}")
+    done
+
     echo "Optionale Kopie erstellt:"
     echo "  $icloud_backup"
 fi

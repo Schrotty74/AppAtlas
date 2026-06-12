@@ -51,6 +51,10 @@ eines lokalen App-Katalogs.
   ausdrücklichen Anweisung des Benutzers erstellt.
 - Backups und iCloud-Kopien werden ausschließlich nach einer ausdrücklichen
   Anweisung des Benutzers erstellt.
+- Im festgelegten iCloud-Ordner bleiben höchstens zwei AppAtlas-Backups
+  erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
+  ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
+  und Sicherungen anderer Projekte bleiben unverändert.
 - Alle Änderungen seit `1.0.0-beta.1` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
