@@ -13,7 +13,7 @@ AppAtlas/
 │   ├── Scanner/        Rein lesender Ordnerscanner
 │   ├── Store/          Lokaler Katalog, Icons, Export und Schlüsselbund
 │   ├── Theme/          Theme-Format und Darstellung
-│   └── Views/          SwiftUI-Oberfläche
+│   └── Views/          SwiftUI-Oberfläche, Toolbar und Dialoge
 ├── Tests/AppAtlasTests/ Automatisierte Tests
 ├── Packaging/           App-Bundle-Konfiguration und Berechtigungen
 ├── Scripts/             Build-, Datenschutz- und Release-Helfer
@@ -38,4 +38,7 @@ blockiert.
 - `Sources/AppAtlas/Scanner/VolumeScanner.swift`: Ordnerscan
 - `Sources/AppAtlas/Theme/ThemeSystem.swift`: Theme-Format
 - `Sources/AppAtlas/Views/ContentView.swift`: Hauptoberfläche
+- `Sources/AppAtlas/Views/ContentToolbar.swift`: Toolbar und App-Aktionsmenü
+- `Sources/AppAtlas/Views/ContentPresentations.swift`: Sheets, Dateiimporte
+  und Bestätigungsdialoge
 - `docs/PRIVACY.md`: Datenschutzregeln

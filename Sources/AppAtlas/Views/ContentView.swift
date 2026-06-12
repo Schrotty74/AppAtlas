@@ -67,305 +67,63 @@ struct ContentView: View {
             store.refreshDescriptionTranslations()
         }
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                HStack(spacing: 8) {
-                    AppAtlasMark(size: 34)
-                    GitHubMark(size: 34)
-
-                    Button {
-                        Task {
-                            await store.enrichCatalog()
-                        }
-                    } label: {
-                        Label(
-                            store.isEnriching
-                                ? "Online-Daten werden aktualisiert …"
-                                : "Online-Daten aktualisieren",
-                            systemImage: "arrow.triangle.2.circlepath"
-                        )
-                    }
-                    .help(
-                        store.isEnriching
-                            ? store.enrichmentProgress
-                            : "Fehlende Icons, Beschreibungen und Links bewusst online ergänzen"
-                    )
-                    .disabled(store.isEnriching || store.apps.isEmpty)
-
-                    Button {
-                        showScanner = true
-                    } label: {
-                        Label("Apps scannen", systemImage: "magnifyingglass.circle.fill")
-                    }
-                    .help("Einen frei gewählten Quellordner rein lesend scannen")
-
-                    Menu {
-                        ForEach(AppLayout.allCases) { layout in
-                            Button {
-                                selectedLayout = layout.rawValue
-                            } label: {
-                                Label(layout.title, systemImage: layout.systemImage)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: layout.systemImage)
-                    }
-                    .help("Ansicht auswählen")
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                ThemeMenu(
-                    selectedThemeID: $selectedThemeID,
-                    customThemes: customThemes,
-                    importTheme: { showThemeImporter = true },
-                    exportTheme: exportSelectedTheme,
-                    deleteTheme: prepareDeleteSelectedTheme
-                )
-            }
-
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    showAssistant = true
-                } label: {
-                    Label("App-Assistent", systemImage: "sparkles")
-                }
-                .help("Den lokalen Katalog befragen")
-
-                Button {
-                    showAddApp = true
-                } label: {
-                    Label("App hinzufügen", systemImage: "plus")
-                }
-                .help("Eine App manuell hinzufügen")
-
-                Menu {
-                    Button {
-                        Task {
-                            await store.enrichCatalog()
-                        }
-                    } label: {
-                        Label(
-                            store.isEnriching
-                                ? "Online-Daten werden aktualisiert …"
-                                : "Online-Daten aktualisieren",
-                            systemImage: "arrow.triangle.2.circlepath"
-                        )
-                    }
-                    .disabled(store.isEnriching || store.apps.isEmpty)
-
-                    if store.isEnriching {
-                        Text(store.enrichmentProgress)
-                    }
-
-                    Divider()
-
-                    SettingsLink {
-                        Label("Einstellungen …", systemImage: "gearshape")
-                    }
-
-                    Divider()
-
-                    Button {
-                        showWebsitePromptExclusions = true
-                    } label: {
-                        Label(
-                            "Website-Ausschlussliste",
-                            systemImage: "list.bullet.rectangle"
-                        )
-                    }
-
-                    Divider()
-
-                    Button("Katalog exportieren …") {
-                        showCatalogExporter = true
-                    }
-                    Button("Katalog importieren und ersetzen …") {
-                        showCatalogImporter = true
-                    }
-                    Button("Lizenzdaten importieren …") {
-                        showLicenseImporter = true
-                    }
-
-                    Divider()
-
-                    Button("Bearbeiten") {
-                        editingApp = store.selectedApp
-                    }
-                    .disabled(store.selectedApp == nil)
-
-                    Divider()
-
-                    Button("Aus Katalog löschen", role: .destructive) {
-                        appPendingDeletion = store.selectedApp
-                    }
-                    .disabled(store.selectedApp == nil)
-
-                    Button("Gesamten Katalog löschen …", role: .destructive) {
-                        showDeleteAllConfirmation = true
-                    }
-                    .disabled(store.apps.isEmpty)
-                } label: {
-                    Label("App-Aktionen", systemImage: "ellipsis.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showAddApp) {
-            AppEditorView(existingApp: nil) { app in
-                store.add(app)
-            }
-        }
-        .sheet(item: $editingApp) { app in
-            AppEditorView(existingApp: app) { updatedApp in
-                store.update(updatedApp)
-            }
-        }
-        .sheet(isPresented: $showAssistant) {
-            AssistantView()
-                .environmentObject(store)
-        }
-        .sheet(isPresented: $showScanner) {
-            ScanImportView()
-                .environmentObject(store)
-        }
-        .sheet(item: $store.pendingWebsitePrompt) { prompt in
-            WebsitePromptView(prompt: prompt)
-                .environmentObject(store)
-        }
-        .sheet(isPresented: $showWebsitePromptExclusions) {
-            WebsitePromptExclusionsView()
-                .environmentObject(store)
-        }
-        .sheet(
-            isPresented: $showCatalogExporter,
-            onDismiss: performPendingCatalogExport
-        ) {
-            CatalogExportOptionsView { protection in
-                pendingCatalogExport = protection
-            }
-        }
-        .sheet(
-            isPresented: Binding(
-                get: { encryptedCatalogData != nil },
-                set: { if !$0 { encryptedCatalogData = nil } }
+            ContentToolbar(
+                selectedLayout: $selectedLayout,
+                selectedThemeID: $selectedThemeID,
+                customThemes: customThemes,
+                importTheme: { showThemeImporter = true },
+                exportTheme: exportSelectedTheme,
+                deleteTheme: prepareDeleteSelectedTheme,
+                showScanner: { showScanner = true },
+                showAssistant: { showAssistant = true },
+                showAddApp: { showAddApp = true },
+                showWebsitePromptExclusions: {
+                    showWebsitePromptExclusions = true
+                },
+                showCatalogExporter: { showCatalogExporter = true },
+                showCatalogImporter: { showCatalogImporter = true },
+                showLicenseImporter: { showLicenseImporter = true },
+                editSelectedApp: { editingApp = store.selectedApp },
+                deleteSelectedApp: {
+                    appPendingDeletion = store.selectedApp
+                },
+                deleteAllApps: { showDeleteAllConfirmation = true }
             )
-        ) {
-            CatalogImportPasswordView(importCatalog: importEncryptedCatalog)
-        }
-        .fileImporter(
-            isPresented: $showThemeImporter,
-            allowedContentTypes: [.json]
-        ) { result in
-            importCustomTheme(result)
-        }
-        .fileImporter(
-            isPresented: $showCatalogImporter,
-            allowedContentTypes: [.json]
-        ) { result in
-            prepareCatalogImport(result)
-        }
-        .fileImporter(
-            isPresented: $showLicenseImporter,
-            allowedContentTypes: [.json, .commaSeparatedText]
-        ) { result in
-            importLicenseData(result)
-        }
-        .alert(
-            "Theme importieren",
-            isPresented: Binding(
-                get: { themeErrorMessage != nil },
-                set: { if !$0 { themeErrorMessage = nil } }
-            )
-        ) {
-            Button("OK", role: .cancel) {
-                themeErrorMessage = nil
-            }
-        } message: {
-            Text(themeErrorMessage ?? "")
-        }
-        .alert(
-            "AppAtlas",
-            isPresented: Binding(
-                get: { catalogErrorMessage != nil },
-                set: { if !$0 { catalogErrorMessage = nil } }
-            )
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(catalogErrorMessage ?? "")
-        }
-        .alert(
-            "Theme löschen?",
-            isPresented: Binding(
-                get: { themePendingDeletion != nil },
-                set: { if !$0 { themePendingDeletion = nil } }
-            )
-        ) {
-            Button("Abbrechen", role: .cancel) {
-                themePendingDeletion = nil
-            }
-            Button("Theme löschen", role: .destructive) {
-                deleteCustomTheme(themePendingDeletion)
-            }
-        } message: {
-            Text("Das importierte Theme wird aus AppAtlas entfernt.")
-        }
-        .alert(
-            "App aus dem Katalog löschen?",
-            isPresented: Binding(
-                get: { appPendingDeletion != nil },
-                set: { if !$0 { appPendingDeletion = nil } }
-            ),
-            presenting: appPendingDeletion
-        ) { app in
-            Button("Abbrechen", role: .cancel) {}
-            Button("Nur aus Katalog löschen", role: .destructive) {
-                store.delete(app)
-                appPendingDeletion = nil
-            }
-            if !app.files.isEmpty {
-                Button("Lokale Dateien in Papierkorb legen", role: .destructive) {
-                    do {
-                        try LocalAppTrashService().moveFilesToTrash(for: app)
-                        store.delete(app)
-                        appPendingDeletion = nil
-                    } catch {
-                        appPendingDeletion = nil
-                        catalogErrorMessage = error.localizedDescription
-                    }
-                }
-            }
-        } message: { app in
-            Text("Du kannst „\(app.name)“ nur aus AppAtlas entfernen oder alle zugeordneten lokalen Dateien in den macOS-Papierkorb legen.")
         }
         .modifier(
-            DeleteAllCatalogConfirmation(
-                isPresented: $showDeleteAllConfirmation
+            ContentSheetsModifier(
+                showAddApp: $showAddApp,
+                editingApp: $editingApp,
+                showAssistant: $showAssistant,
+                showScanner: $showScanner,
+                showWebsitePromptExclusions: $showWebsitePromptExclusions,
+                showCatalogExporter: $showCatalogExporter,
+                encryptedCatalogData: $encryptedCatalogData,
+                pendingCatalogExport: $pendingCatalogExport,
+                performPendingCatalogExport: performPendingCatalogExport,
+                importEncryptedCatalog: importEncryptedCatalog
             )
         )
-        .alert(
-            "Import fehlgeschlagen",
-            isPresented: Binding(
-                get: { store.importError != nil },
-                set: { _ in }
+        .modifier(
+            ContentFileImportersModifier(
+                showThemeImporter: $showThemeImporter,
+                showCatalogImporter: $showCatalogImporter,
+                showLicenseImporter: $showLicenseImporter,
+                importTheme: importCustomTheme,
+                importCatalog: prepareCatalogImport,
+                importLicenses: importLicenseData
             )
-        ) {
-            Button("OK") {}
-        } message: {
-            Text(store.importError ?? "")
-        }
-        .alert(
-            "Katalog konnte nicht gespeichert werden",
-            isPresented: Binding(
-                get: { store.persistenceError != nil },
-                set: { if !$0 { store.clearPersistenceError() } }
+        )
+        .modifier(
+            ContentAlertsModifier(
+                themeErrorMessage: $themeErrorMessage,
+                catalogMessage: $catalogErrorMessage,
+                themePendingDeletion: $themePendingDeletion,
+                appPendingDeletion: $appPendingDeletion,
+                showDeleteAllConfirmation: $showDeleteAllConfirmation,
+                deleteTheme: deleteCustomTheme
             )
-        ) {
-            Button("OK") {
-                store.clearPersistenceError()
-            }
-        } message: {
-            Text(store.persistenceError ?? "")
-        }
+        )
     }
 
     private var layout: AppLayout {
@@ -600,29 +358,6 @@ struct ContentView: View {
             } catch {
                 themeErrorMessage = error.localizedDescription
             }
-        }
-    }
-}
-
-private struct DeleteAllCatalogConfirmation: ViewModifier {
-    @EnvironmentObject private var store: CatalogStore
-    @Binding var isPresented: Bool
-
-    func body(content: Content) -> some View {
-        content.alert(
-            "Gesamten Katalog löschen?",
-            isPresented: $isPresented
-        ) {
-            Button("Abbrechen", role: .cancel) {}
-            Button("Gesamten Katalog löschen", role: .destructive) {
-                store.deleteAll()
-            }
-        } message: {
-            Text(
-                "Alle Katalogeinträge, gespeicherten App-Icons und privaten "
-                    + "Lizenzdaten werden aus AppAtlas entfernt. Dateien in "
-                    + "deinen ausgewählten Ordnern bleiben unverändert."
-            )
         }
     }
 }

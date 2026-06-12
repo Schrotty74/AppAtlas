@@ -22,6 +22,10 @@ und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 - Lokale Release-Pakete werden vor Abschluss zusätzlich auf eingebettete
   Benutzer- und Volume-Pfade geprüft. Das Ressourcenpaket wird vollständig in
   die App eingebettet und benötigt keinen lokalen Build-Ordner mehr.
+- Die zuvor sehr große `ContentView` wurde in getrennte Komponenten für
+  Toolbar, Sheets, Dateiimporte und Bestätigungsdialoge aufgeteilt. Das
+  sichtbare Design bleibt unverändert; Kompilierung, Wartbarkeit und
+  Erweiterbarkeit werden dadurch stabiler.
 - Ein erneuter Scan trennt ältere, fälschlich zusammengeführte App-Ausgaben
   anhand ihrer tatsächlichen Dateipfade wieder auf.
 - Bereits zusammengeführte Einträge werden nun zusätzlich beim App-Start
