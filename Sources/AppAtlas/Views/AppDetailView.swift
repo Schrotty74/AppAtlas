@@ -166,6 +166,13 @@ struct AppDetailView: View {
         .task(id: app.id) {
             licenseRecord = LicenseKeychainStore.shared.load(for: app.id)
         }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: .appAtlasLicenseDataDidChange
+            )
+        ) { _ in
+            licenseRecord = LicenseKeychainStore.shared.load(for: app.id)
+        }
     }
 
     private func licenseSection(

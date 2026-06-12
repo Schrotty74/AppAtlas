@@ -176,6 +176,8 @@
 "Lizenzdaten" = "License data";
 "Lizenzdaten importieren …" = "Import license data…";
 "Lizenzimport abgeschlossen" = "License import completed";
+"Lizenzimport" = "License import";
+"%lld Lizenzdaten gespeichert, %lld ohne passenden Katalogeintrag, %lld nicht eindeutig, %lld Speicherfehler." = "%lld license records saved, %lld without a matching catalog entry, %lld ambiguous, %lld storage errors.";
 "Das gewählte Lizenzformat wird nicht unterstützt." = "The selected license format is not supported.";
 "Die Lizenzdatei konnte nicht gelesen werden." = "The license file could not be read.";
 "Die Datei enthält keine importierbaren Lizenzdaten." = "The file contains no importable license data.";

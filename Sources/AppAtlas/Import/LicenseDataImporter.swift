@@ -20,6 +20,17 @@ struct LicenseImportPlan: Sendable {
     }
 }
 
+struct LicenseImportSaveResult: Sendable {
+    let savedCount: Int
+    let failedCount: Int
+    let unmatchedCount: Int
+    let ambiguousCount: Int
+
+    var summary: String {
+        "\(savedCount) Lizenzdaten gespeichert, \(unmatchedCount) ohne passenden Katalogeintrag, \(ambiguousCount) nicht eindeutig, \(failedCount) Speicherfehler."
+    }
+}
+
 enum LicenseDataImportError: LocalizedError {
     case unsupportedFormat
     case malformedData

@@ -1,6 +1,12 @@
 import Foundation
 import Security
 
+extension Notification.Name {
+    static let appAtlasLicenseDataDidChange = Notification.Name(
+        "AppAtlasLicenseDataDidChange"
+    )
+}
+
 struct LicenseKeychainStore: Sendable {
     static let shared = LicenseKeychainStore()
     private let service = "at.schrotty.appatlas.licenses"

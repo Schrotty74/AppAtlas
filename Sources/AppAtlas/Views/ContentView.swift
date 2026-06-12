@@ -283,7 +283,7 @@ struct ContentView: View {
             Text(themeErrorMessage ?? "")
         }
         .alert(
-            "Katalogfehler",
+            "AppAtlas",
             isPresented: Binding(
                 get: { catalogErrorMessage != nil },
                 set: { if !$0 { catalogErrorMessage = nil } }
@@ -432,16 +432,35 @@ struct ContentView: View {
                 fileExtension: url.pathExtension
             )
             let plan = importer.plan(licenses: licenses, apps: store.apps)
+            var savedCount = 0
+            var failedCount = 0
             for match in plan.matches {
-                let existing = LicenseKeychainStore.shared.load(
-                    for: match.appID
-                ) ?? AppLicenseRecord()
-                try LicenseKeychainStore.shared.save(
-                    existing.mergingMissingValues(from: match.record),
-                    for: match.appID
+                do {
+                    let existing = LicenseKeychainStore.shared.load(
+                        for: match.appID
+                    ) ?? AppLicenseRecord()
+                    try LicenseKeychainStore.shared.save(
+                        existing.mergingMissingValues(from: match.record),
+                        for: match.appID
+                    )
+                    savedCount += 1
+                } catch {
+                    failedCount += 1
+                }
+            }
+            let saveResult = LicenseImportSaveResult(
+                savedCount: savedCount,
+                failedCount: failedCount,
+                unmatchedCount: plan.unmatchedNames.count,
+                ambiguousCount: plan.ambiguousNames.count
+            )
+            if savedCount > 0 {
+                NotificationCenter.default.post(
+                    name: .appAtlasLicenseDataDidChange,
+                    object: nil
                 )
             }
-            catalogErrorMessage = "Lizenzimport abgeschlossen\n\n\(plan.summary)"
+            catalogErrorMessage = "Lizenzimport\n\n\(saveResult.summary)"
         } catch {
             catalogErrorMessage = error.localizedDescription
         }
