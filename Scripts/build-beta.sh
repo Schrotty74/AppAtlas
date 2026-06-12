@@ -26,6 +26,33 @@ swift build \
     -Xlinker -rpath \
     -Xlinker /Library/Developer/CommandLineTools/Library/Developer/usr/lib
 
+resource_accessor="$(
+    find "$scratch_directory" \
+        -path '*/AppAtlas.build/DerivedSources/resource_bundle_accessor.swift' \
+        -print -quit
+)"
+if [[ -z "$resource_accessor" ]]; then
+    echo "Build abgebrochen: SwiftPM-Ressourcenzugriff fehlt." >&2
+    exit 1
+fi
+perl -0pi -e \
+    's/Bundle\.main\.bundleURL/Bundle.main.resourceURL!/g' \
+    "$resource_accessor"
+touch "$resource_accessor"
+
+swift build \
+    --package-path "$root_directory" \
+    --scratch-path "$scratch_directory" \
+    --configuration release \
+    -Xswiftc -F \
+    -Xswiftc /Library/Developer/CommandLineTools/Library/Developer/Frameworks \
+    -Xlinker -F \
+    -Xlinker /Library/Developer/CommandLineTools/Library/Developer/Frameworks \
+    -Xlinker -rpath \
+    -Xlinker /Library/Developer/CommandLineTools/Library/Developer/Frameworks \
+    -Xlinker -rpath \
+    -Xlinker /Library/Developer/CommandLineTools/Library/Developer/usr/lib
+
 binary_directory="$(
     swift build \
         --package-path "$root_directory" \
@@ -66,6 +93,22 @@ if [[ -n "$private_file" ]]; then
     exit 1
 fi
 
+strip -S "$app_bundle/Contents/MacOS/AppAtlas"
+build_resource_path="$binary_directory/AppAtlas_AppAtlas.bundle"
+BUILD_RESOURCE_PATH="$build_resource_path" perl -0pi -e '
+    $replacement = "AppAtlas_AppAtlas.bundle";
+    $replacement .= "\0" x (
+        length($ENV{"BUILD_RESOURCE_PATH"}) - length($replacement)
+    );
+    s/\Q$ENV{"BUILD_RESOURCE_PATH"}\E/$replacement/g;
+' "$app_bundle/Contents/MacOS/AppAtlas"
+local_path_pattern="/""Users/[^/]+|/""Volumes/[^/]+"
+if strings "$app_bundle/Contents/MacOS/AppAtlas" \
+    | grep -E "$local_path_pattern" >/dev/null; then
+    echo "Build abgebrochen: lokaler Pfad im App-Binary gefunden." >&2
+    exit 1
+fi
+
 sed \
     -e "s/__VERSION__/$version/g" \
     -e "s/__BUILD_NUMBER__/$build_number/g" \
@@ -88,7 +131,7 @@ ditto -c -k --sequesterRsrc --keepParent "$app_bundle" "$zip_file"
         > "$(basename "$checksum_file")"
 )
 
-echo "Beta erstellt:"
+echo "Lokales Release-Paket erstellt (kein Backup):"
 echo "  $app_bundle"
 echo "  $zip_file"
 echo "  $checksum_file"

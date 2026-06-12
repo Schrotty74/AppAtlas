@@ -16,6 +16,9 @@ und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 - Lizenzdaten aus LicenseManager-Exporten können getrennt vom Katalog aus JSON
   oder CSV importiert werden. Sicher zugeordnete Daten landen ausschließlich
   im macOS-Schlüsselbund; unklare Treffer werden übersprungen.
+- Lokale Release-Pakete werden vor Abschluss zusätzlich auf eingebettete
+  Benutzer- und Volume-Pfade geprüft. Das Ressourcenpaket wird vollständig in
+  die App eingebettet und benötigt keinen lokalen Build-Ordner mehr.
 - Ein erneuter Scan trennt ältere, fälschlich zusammengeführte App-Ausgaben
   anhand ihrer tatsächlichen Dateipfade wieder auf.
 - Bereits zusammengeführte Einträge werden nun zusätzlich beim App-Start
