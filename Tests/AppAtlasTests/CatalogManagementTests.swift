@@ -1209,6 +1209,68 @@ struct CatalogManagementTests {
         try? FileManager.default.removeItem(at: root)
     }
 
+    @Test @MainActor
+    func rescanSplitsPreviouslyMergedNumberedEditions() {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = CatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let firstPath = "Benchmark/Benchmark2024_macOS.dmg"
+        let secondPath = "Benchmark/Benchmark2026_macOS.dmg"
+        let makeFile: (String, String) -> LocalAppFile = { name, path in
+            LocalAppFile(
+                fileName: name,
+                fileType: "dmg",
+                sourceCategory: "Benchmark",
+                sourceSubcategory: "",
+                relativePath: path,
+                sizeInBytes: 0,
+                modifiedAt: nil,
+                detectedVersion: nil
+            )
+        }
+        store.add(
+            AppEntry(
+                name: "Benchmark",
+                category: "Benchmark",
+                subcategory: "",
+                files: [
+                    makeFile("Benchmark2024_macOS.dmg", firstPath),
+                    makeFile("Benchmark2026_macOS.dmg", secondPath)
+                ]
+            )
+        )
+
+        store.mergeScannedApps([
+            AppEntry(
+                name: "Benchmark2024",
+                category: "Benchmark",
+                subcategory: "",
+                files: [
+                    makeFile("Benchmark2024_macOS.dmg", firstPath)
+                ]
+            ),
+            AppEntry(
+                name: "Benchmark2026",
+                category: "Benchmark",
+                subcategory: "",
+                files: [
+                    makeFile("Benchmark2026_macOS.dmg", secondPath)
+                ]
+            )
+        ])
+
+        #expect(Set(store.apps.map(\.name)) == Set([
+            "Benchmark2024", "Benchmark2026"
+        ]))
+        #expect(store.apps.allSatisfy { $0.files.count == 1 })
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
     @Test
     func scannerNeverMergesSameNamedAppsAcrossFolders() throws {
         let root = FileManager.default.temporaryDirectory

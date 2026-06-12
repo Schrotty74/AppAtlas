@@ -3,7 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.1`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -46,6 +46,10 @@
   Apps mit ähnlichen oder gleichen Namen werden über Ordnergrenzen hinweg
   nicht mehr versehentlich zusammengelegt; mehrere Formate derselben App im
   selben Ordner können weiterhin gemeinsam verwaltet werden.
+- Erneute Scans trennen außerdem ältere, fälschlich zusammengeführte
+  Katalogeinträge anhand ihrer tatsächlichen Dateipfade wieder auf.
+- „Alle Apps“ setzt den Kategorie-Filter zuverlässig zurück. Einzelne Apps
+  können direkt aus ihrer Detailansicht aus dem Katalog gelöscht werden.
 
 ## Offene Aufgaben
 

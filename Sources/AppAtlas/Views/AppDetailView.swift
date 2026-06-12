@@ -20,9 +20,11 @@ struct AppDetailWindow: View {
 }
 
 struct AppDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: CatalogStore
     @Environment(\.appAtlasTheme) private var theme
     @State private var showEditor = false
+    @State private var showDeleteConfirmation = false
     @State private var licenseRecord: AppLicenseRecord?
     @State private var revealSerial = false
     let app: AppEntry
@@ -102,13 +104,27 @@ struct AppDetailView: View {
         .foregroundStyle(theme.text)
         .navigationTitle(displayedApp.name)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     showEditor = true
                 } label: {
                     Label("Bearbeiten", systemImage: "pencil")
                 }
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Aus Katalog löschen", systemImage: "trash")
+                }
             }
+        }
+        .alert("App aus dem Katalog löschen?", isPresented: $showDeleteConfirmation) {
+            Button("Abbrechen", role: .cancel) {}
+            Button("Nur aus Katalog löschen", role: .destructive) {
+                store.delete(displayedApp)
+                dismiss()
+            }
+        } message: {
+            Text("„\(displayedApp.name)“ wird nur aus AppAtlas entfernt. Zugehörige Dateien auf Datenträgern werden nicht verändert.")
         }
         .sheet(isPresented: $showEditor) {
             AppEditorView(existingApp: displayedApp) { updatedApp in

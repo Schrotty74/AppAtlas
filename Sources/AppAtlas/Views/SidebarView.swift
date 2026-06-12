@@ -8,17 +8,26 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $store.selectedCategory) {
             Section("Mediathek") {
-                Label {
-                    HStack {
-                        Text("Alle Apps")
-                        Spacer()
-                        Text(store.apps.count, format: .number)
-                            .foregroundStyle(theme.mutedText)
+                Button {
+                    store.selectedCategory = nil
+                } label: {
+                    Label {
+                        HStack {
+                            Text("Alle Apps")
+                            Spacer()
+                            Text(store.apps.count, format: .number)
+                                .foregroundStyle(theme.mutedText)
+                        }
+                    } icon: {
+                        Image(systemName: "square.grid.2x2")
                     }
-                } icon: {
-                    Image(systemName: "square.grid.2x2")
                 }
-                .tag(nil as String?)
+                .buttonStyle(.plain)
+                .listRowBackground(
+                    store.selectedCategory == nil
+                        ? theme.accent.opacity(0.18)
+                        : Color.clear
+                )
 
                 Label {
                     HStack {

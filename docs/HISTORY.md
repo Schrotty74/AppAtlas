@@ -1,5 +1,15 @@
 # Projekthistorie
 
+## 1.0.0-beta.2
+
+- Theme-Dokumentation, Theme-Vorlage, Beispieltheme und Projektstruktur sind
+  direkt auf der GitHub-Startseite verlinkt.
+- „Alle Apps“ ist nun eine zuverlässig anklickbare Aktion zum Zurücksetzen des
+  Kategorie-Filters.
+- Einzelne Apps können direkt aus der Detailansicht gelöscht werden.
+- Erneute Scans teilen ältere, fälschlich zusammengeführte App-Ausgaben anhand
+  ihrer tatsächlichen Dateipfade wieder in getrennte Katalogeinträge auf.
+
 ## 1.0.0-beta.1 – Erste offizielle Beta
 
 - Erste zusammengefasste Beta der nativen macOS-App unter GPLv3.

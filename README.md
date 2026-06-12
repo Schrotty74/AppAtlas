@@ -9,7 +9,7 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern, verwaltet Icons,
 Beschreibungen, Links und Lizenzinformationen und startet für jeden Benutzer
 mit einem leeren lokalen Katalog.
 
-> Aktueller Release: **AppAtlas 1.0.0-beta.1**
+> Aktueller Release: **AppAtlas 1.0.0-beta.2**
 
 ## Transparenz
 
@@ -37,6 +37,13 @@ wurde ebenfalls mit Codex erstellt.
 
 - macOS 14 oder neuer
 - macOS 15 oder neuer für Apples lokale Übersetzungsfunktion
+
+## Themes und Projektstruktur
+
+- [Theme-Dokumentation](docs/themes/README.md)
+- [Vorlage für eigene Themes](docs/themes/appatlas-theme-template.json)
+- [Vollständiges Beispieltheme](docs/themes/example-custom-theme.json)
+- [Projektstruktur](docs/PROJECT_STRUCTURE.md)
 
 ## Hinweis zur macOS-Sicherheitswarnung
 
