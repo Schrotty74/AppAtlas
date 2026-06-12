@@ -174,6 +174,12 @@
 "Registrierte E-Mail-Adresse" = "Registered email address";
 "Seriennummer oder Lizenzschlüssel" = "Serial number or license key";
 "Lizenzdaten" = "License data";
+"Lizenzdaten importieren …" = "Import license data…";
+"Lizenzimport abgeschlossen" = "License import completed";
+"Das gewählte Lizenzformat wird nicht unterstützt." = "The selected license format is not supported.";
+"Die Lizenzdatei konnte nicht gelesen werden." = "The license file could not be read.";
+"Die Datei enthält keine importierbaren Lizenzdaten." = "The file contains no importable license data.";
+"%lld Lizenzdaten zugeordnet, %lld ohne passenden Katalogeintrag, %lld nicht eindeutig." = "%lld license records matched, %lld without a matching catalog entry, %lld ambiguous.";
 "Lizenzdaten konnten nicht gespeichert werden" = "License data could not be saved";
 "Die erweiterte Suche kann deutlich länger dauern, besonders bei großen Katalogen." = "Extended search can take significantly longer, especially for large catalogs.";
 "GitHub wird nach Projektinformationen, Beschreibungen, Download-Seiten und möglichen App-Icons durchsucht." = "GitHub is searched for project information, descriptions, download pages, and possible app icons.";

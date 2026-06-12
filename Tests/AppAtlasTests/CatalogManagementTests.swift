@@ -4,6 +4,94 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
+    func importsLicenseManagerJSONAndMatchesOnlyConfidentApps() throws {
+        let json = """
+        {
+          "licenses": [
+            {
+              "softwareName": "Example Pro",
+              "licenseKey": "value-one",
+              "licenseKey2": "value-two",
+              "licenseType": "Lifetime",
+              "userEmail": "user@example.com",
+              "notes": "Private note"
+            },
+            {
+              "softwareName": "Unknown Tool",
+              "licenseKey": "unknown-value",
+              "licenseType": "Lifetime"
+            }
+          ]
+        }
+        """
+        let importer = LicenseDataImporter()
+        let licenses = try importer.decode(
+            data: Data(json.utf8),
+            fileExtension: "json"
+        )
+        let app = AppEntry(
+            name: "Example",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+
+        let plan = importer.plan(licenses: licenses, apps: [app])
+
+        #expect(plan.matches.count == 1)
+        #expect(plan.matches.first?.appID == app.id)
+        #expect(plan.matches.first?.record.serialNumber == "value-one\nvalue-two")
+        #expect(plan.unmatchedNames == ["Unknown Tool"])
+    }
+
+    @Test
+    func importsLicenseManagerCSVLicenseSection() throws {
+        let csv = """
+        # CATEGORIES
+        # Name,Color,SortOrder
+        Utilities,#000000,0
+
+        # LICENSES
+        softwareName,licenseKey,licenseKey2,licenseType,userEmail,notes
+        "Example, App",value-one,value-two,Lifetime,user@example.com,"Private, note"
+        """
+        let licenses = try LicenseDataImporter().decode(
+            data: Data(csv.utf8),
+            fileExtension: "csv"
+        )
+
+        #expect(licenses.count == 1)
+        #expect(licenses.first?.softwareName == "Example, App")
+        #expect(licenses.first?.record.serialNumber == "value-one\nvalue-two")
+        #expect(licenses.first?.record.notes == "Private, note")
+    }
+
+    @Test
+    func licenseImportKeepsExistingValues() {
+        let existingValue = UUID().uuidString
+        let importedValue = UUID().uuidString
+        let existing = AppLicenseRecord(
+            serialNumber: existingValue,
+            registeredEmail: "",
+            licenseType: "Existing",
+            notes: ""
+        )
+        let imported = AppLicenseRecord(
+            serialNumber: importedValue,
+            registeredEmail: "user@example.com",
+            licenseType: "Imported",
+            notes: "Imported note"
+        )
+
+        let merged = existing.mergingMissingValues(from: imported)
+
+        #expect(merged.serialNumber == existingValue)
+        #expect(merged.registeredEmail == "user@example.com")
+        #expect(merged.licenseType == "Existing")
+        #expect(merged.notes == "Imported note")
+    }
+
+    @Test
     func automaticLanguageUsesGermanOnlyForDACHRegions() {
         for region in ["DE", "AT", "CH", "LI"] {
             #expect(

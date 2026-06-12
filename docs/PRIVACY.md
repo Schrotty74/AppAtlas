@@ -26,6 +26,11 @@ Seriennummern, registrierte E-Mail-Adressen, Lizenztypen und private Notizen
 liegen im macOS-Schlüsselbund. Sie werden nur nach einer ausdrücklichen
 Benutzerauswahl in eine Exportdatei aufgenommen.
 
+Lizenzdaten können bewusst aus einer JSON- oder CSV-Datei importiert werden.
+Dabei werden ausschließlich sicher zuordenbare Einträge in den macOS-
+Schlüsselbund übernommen. Die Importdatei wird weder kopiert noch in AppAtlas
+gespeichert und niemals an Onlinedienste übertragen.
+
 ## Katalogexport
 
 Der Standardexport enthält keine Schlüsselbunddaten. Optional kann der Benutzer

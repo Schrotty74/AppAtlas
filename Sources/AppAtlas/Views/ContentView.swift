@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showScanner = false
     @State private var showThemeImporter = false
     @State private var showCatalogImporter = false
+    @State private var showLicenseImporter = false
     @State private var showCatalogExporter = false
     @State private var encryptedCatalogData: Data?
     @State private var pendingCatalogExport: CatalogExportProtection?
@@ -181,6 +182,9 @@ struct ContentView: View {
                     Button("Katalog importieren und ersetzen …") {
                         showCatalogImporter = true
                     }
+                    Button("Lizenzdaten importieren …") {
+                        showLicenseImporter = true
+                    }
 
                     Divider()
 
@@ -258,6 +262,12 @@ struct ContentView: View {
             allowedContentTypes: [.json]
         ) { result in
             prepareCatalogImport(result)
+        }
+        .fileImporter(
+            isPresented: $showLicenseImporter,
+            allowedContentTypes: [.json, .commaSeparatedText]
+        ) { result in
+            importLicenseData(result)
         }
         .alert(
             "Theme importieren",
@@ -402,6 +412,36 @@ struct ContentView: View {
                     CatalogTransferDocument.decode(data)
                 )
             }
+        } catch {
+            catalogErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func importLicenseData(_ result: Result<URL, Error>) {
+        do {
+            let url = try result.get()
+            let hasAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            let importer = LicenseDataImporter()
+            let licenses = try importer.decode(
+                data: Data(contentsOf: url),
+                fileExtension: url.pathExtension
+            )
+            let plan = importer.plan(licenses: licenses, apps: store.apps)
+            for match in plan.matches {
+                let existing = LicenseKeychainStore.shared.load(
+                    for: match.appID
+                ) ?? AppLicenseRecord()
+                try LicenseKeychainStore.shared.save(
+                    existing.mergingMissingValues(from: match.record),
+                    for: match.appID
+                )
+            }
+            catalogErrorMessage = "Lizenzimport abgeschlossen\n\n\(plan.summary)"
         } catch {
             catalogErrorMessage = error.localizedDescription
         }

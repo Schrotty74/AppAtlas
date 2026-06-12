@@ -13,6 +13,9 @@ und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 - Beim Löschen kann der Benutzer wählen, ob nur der Katalogeintrag entfernt
   oder dessen zugeordnete lokale Dateien in den macOS-Papierkorb gelegt werden.
   Lokale Dateien werden niemals ohne ausdrückliche Bestätigung verändert.
+- Lizenzdaten aus LicenseManager-Exporten können getrennt vom Katalog aus JSON
+  oder CSV importiert werden. Sicher zugeordnete Daten landen ausschließlich
+  im macOS-Schlüsselbund; unklare Treffer werden übersprungen.
 - Ein erneuter Scan trennt ältere, fälschlich zusammengeführte App-Ausgaben
   anhand ihrer tatsächlichen Dateipfade wieder auf.
 - Bereits zusammengeführte Einträge werden nun zusätzlich beim App-Start
