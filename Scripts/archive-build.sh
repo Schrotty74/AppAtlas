@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+if [[ "${APPATLAS_ALLOW_BACKUP:-}" != "YES" ]]; then
+    echo "Backup abgebrochen: ausdrückliche Freigabe fehlt." >&2
+    echo "Nur nach Benutzerfreigabe mit APPATLAS_ALLOW_BACKUP=YES ausführen." >&2
+    exit 1
+fi
+
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 version="${APPATLAS_VERSION:-0.1.0-beta.3}"
 timestamp="${APPATLAS_BACKUP_TIMESTAMP:-$(date '+%Y-%m-%d_%H-%M-%S')}"

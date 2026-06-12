@@ -1,6 +1,6 @@
 # Projekthistorie
 
-## 1.0.0-beta.2
+## Unveröffentlicht seit 1.0.0-beta.1
 
 - Theme-Dokumentation, Theme-Vorlage, Beispieltheme und Projektstruktur sind
   direkt auf der GitHub-Startseite verlinkt.
@@ -9,6 +9,8 @@
 - Einzelne Apps können direkt aus der Detailansicht gelöscht werden.
 - Erneute Scans teilen ältere, fälschlich zusammengeführte App-Ausgaben anhand
   ihrer tatsächlichen Dateipfade wieder in getrennte Katalogeinträge auf.
+- Direkter Download-Link für den jeweils offiziellen Build auf der Startseite.
+- Explizite Verknüpfung der Frameworks NaturalLanguage und Translation.
 
 ## 1.0.0-beta.1 – Erste offizielle Beta
 

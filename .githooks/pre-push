@@ -2,5 +2,11 @@
 
 set -euo pipefail
 
+if [[ "${APPATLAS_ALLOW_PUSH:-}" != "YES" ]]; then
+    echo "Push abgebrochen: ausdrückliche Benutzerfreigabe fehlt." >&2
+    echo "Nur nach Benutzerfreigabe mit APPATLAS_ALLOW_PUSH=YES pushen." >&2
+    exit 1
+fi
+
 root_directory="$(git rev-parse --show-toplevel)"
 "$root_directory/Scripts/privacy-check.sh"

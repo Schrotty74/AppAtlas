@@ -3,7 +3,9 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.1`.
+- Alle danach umgesetzten Änderungen sind unveröffentlicht und bleiben für
+  eine spätere, ausdrücklich freigegebene Version erhalten.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -67,3 +69,5 @@
 - Bei Datenschutzfragen vor der Umsetzung informieren und eine
   datensparsame Alternative vorschlagen.
 - Keine Backups ohne ausdrückliche Anweisung.
+- Keine Pushes, Tags, GitHub-Releases oder neuen Beta-Builds ohne ausdrückliche
+  Anweisung.

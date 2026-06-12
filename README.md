@@ -9,9 +9,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern, verwaltet Icons,
 Beschreibungen, Links und Lizenzinformationen und startet für jeden Benutzer
 mit einem leeren lokalen Katalog.
 
-> Aktueller Release: **AppAtlas 1.0.0-beta.2**
+> Aktueller Release: **AppAtlas 1.0.0-beta.1**
 
-[AppAtlas 1.0.0-beta.2 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.2/AppAtlas-1.0.0-beta.2-macos.zip)
+[AppAtlas 1.0.0-beta.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.1/AppAtlas-1.0.0-beta.1-macos.zip)
 
 ## Transparenz
 

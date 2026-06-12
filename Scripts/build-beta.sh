@@ -3,7 +3,7 @@
 set -euo pipefail
 
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
-version="${APPATLAS_VERSION:-1.0.0-beta.2}"
+version="${APPATLAS_VERSION:-1.0.0-dev}"
 build_number="${APPATLAS_BUILD_NUMBER:-33}"
 scratch_directory="$root_directory/.build/beta"
 release_directory="$root_directory/dist/AppAtlas-$version"

@@ -31,6 +31,19 @@ eines lokalen App-Katalogs.
   Umsetzung genannt und eine datensparsame Alternative vorgeschlagen werden.
 - Vor jedem Commit, Push und Release muss ein Datenschutzcheck erfolgen.
 
+## Veröffentlichungs- und Backup-Regeln
+
+- Änderungen dürfen lokal umgesetzt, getestet und dokumentiert werden.
+- Git-Pushes, GitHub-Releases, Tags und andere Veröffentlichungen erfolgen
+  ausschließlich nach einer ausdrücklichen Anweisung des Benutzers.
+- Neue Beta-Builds oder Beta-Versionsnummern werden ausschließlich nach einer
+  ausdrücklichen Anweisung des Benutzers erstellt.
+- Backups und iCloud-Kopien werden ausschließlich nach einer ausdrücklichen
+  Anweisung des Benutzers erstellt.
+- Alle Änderungen seit `1.0.0-beta.1` bleiben als unveröffentlichter
+  Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
+  freigegeben wird.
+
 ## Produktregeln
 
 - Ordner werden nur nach bewusster Auswahl rein lesend gescannt.

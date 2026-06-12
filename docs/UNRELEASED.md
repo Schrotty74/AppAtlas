@@ -1,7 +1,8 @@
-# AppAtlas 1.0.0-beta.2
+# Unveröffentlichte Änderungen seit AppAtlas 1.0.0-beta.1
 
-Diese Beta verbessert Katalognavigation, Einzellöschung und die Trennung
-ähnlich benannter oder nummerierter Apps.
+Dieser Entwicklungsstand verbessert Katalognavigation, Einzellöschung und die
+Trennung ähnlich benannter oder nummerierter Apps. Er ist noch kein Release
+und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 
 ## Änderungen
 
