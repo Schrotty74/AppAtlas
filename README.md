@@ -11,6 +11,8 @@ mit einem leeren lokalen Katalog.
 
 > Aktueller Release: **AppAtlas 1.0.0-beta.2**
 
+[AppAtlas 1.0.0-beta.2 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.2/AppAtlas-1.0.0-beta.2-macos.zip)
+
 ## Transparenz
 
 AppAtlas wurde gemeinsam mit OpenAI Codex konzipiert und programmiert. Auch

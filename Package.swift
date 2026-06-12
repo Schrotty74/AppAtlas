@@ -18,7 +18,9 @@ let package = Package(
                 .process("Resources")
             ],
             linkerSettings: [
-                .linkedFramework("Security")
+                .linkedFramework("Security"),
+                .linkedFramework("NaturalLanguage"),
+                .linkedFramework("Translation")
             ]
         ),
         .testTarget(
