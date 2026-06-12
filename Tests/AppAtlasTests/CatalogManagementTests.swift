@@ -1271,6 +1271,44 @@ struct CatalogManagementTests {
         )
     }
 
+    @Test @MainActor
+    func loadingCatalogSplitsPreviouslyMergedNumberedEditions() {
+        let first = LocalAppFile(
+            fileName: "Benchmark2024_macOS.dmg",
+            fileType: "dmg",
+            sourceCategory: "Benchmark",
+            sourceSubcategory: "",
+            relativePath: "Benchmark/Benchmark2024_macOS.dmg",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        let second = LocalAppFile(
+            fileName: "Benchmark2026_macOS.dmg",
+            fileType: "dmg",
+            sourceCategory: "Benchmark",
+            sourceSubcategory: "",
+            relativePath: "Benchmark/Benchmark2026_macOS.dmg",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        let merged = AppEntry(
+            name: "Benchmark2024",
+            category: "Benchmark",
+            subcategory: "",
+            files: [first, second]
+        )
+
+        let repaired = CatalogStore.splittingMergedEntries(in: [merged])
+
+        #expect(Set(repaired.map(\.name)) == Set([
+            "Benchmark2024", "Benchmark2026"
+        ]))
+        #expect(repaired.allSatisfy { $0.files.count == 1 })
+        #expect(repaired.first { $0.name == "Benchmark2024" }?.id == merged.id)
+    }
+
     @Test
     func scannerNeverMergesSameNamedAppsAcrossFolders() throws {
         let root = FileManager.default.temporaryDirectory

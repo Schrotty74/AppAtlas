@@ -277,6 +277,8 @@ private struct FocusHero: View {
             }
 
             Spacer()
+
+            CatalogDeleteButton(app: app)
         }
         .padding(24)
         .themedPanel(cornerRadius: 24)
@@ -308,6 +310,8 @@ private struct CompactAppRow: View {
                 .foregroundStyle(theme.mutedText)
                 .monospacedDigit()
                 .help("Lokale Dateien")
+
+            CatalogDeleteButton(app: app)
         }
         .padding(.vertical, 3)
     }
@@ -362,6 +366,10 @@ private struct LibraryPosterCard: View {
                     lineWidth: store.selectedAppID == app.id ? 2 : 1
                 )
         }
+        .overlay(alignment: .topTrailing) {
+            CatalogDeleteButton(app: app)
+                .padding(14)
+        }
         .foregroundStyle(theme.text)
         .contentShape(Rectangle())
         .onTapGesture {
@@ -400,6 +408,10 @@ private struct LibrarySquareCard: View {
         .overlay {
             RoundedRectangle(cornerRadius: 18)
                 .stroke(theme.border.opacity(0.65), lineWidth: 1)
+        }
+        .overlay(alignment: .topTrailing) {
+            CatalogDeleteButton(app: app)
+                .padding(10)
         }
         .foregroundStyle(theme.text)
         .contentShape(Rectangle())

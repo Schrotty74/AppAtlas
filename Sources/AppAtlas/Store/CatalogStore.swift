@@ -184,8 +184,9 @@ final class CatalogStore: ObservableObject {
             if let savedApps = try await Task.detached(
                 operation: { try persistence.load() }
             ).value {
+                let repairedApps = Self.splittingMergedEntries(in: savedApps)
                 let enrichedApps = AppMetadataEnricher().enrich(
-                    savedApps.filter(CatalogEntryFilter().shouldInclude)
+                    repairedApps.filter(CatalogEntryFilter().shouldInclude)
                 )
                 apps = migrateIcons(in: enrichedApps)
                     .sorted(by: Self.sortApps)
@@ -203,6 +204,32 @@ final class CatalogStore: ObservableObject {
         apps = []
         importError = nil
         persist()
+    }
+
+    static func splittingMergedEntries(in entries: [AppEntry]) -> [AppEntry] {
+        entries.flatMap { entry in
+            let splitEntries = AppCatalogBuilder().buildEntries(
+                from: entry.files
+            )
+            guard splitEntries.count > 1 else {
+                return [entry]
+            }
+            let retainedIndex = splitEntries.firstIndex {
+                $0.name.normalizedForCatalogSearch
+                    == entry.name.normalizedForCatalogSearch
+            } ?? 0
+            return splitEntries.enumerated().map { index, splitEntry in
+                guard index == retainedIndex else {
+                    return splitEntry
+                }
+                var retainedEntry = entry
+                retainedEntry.name = splitEntry.name
+                retainedEntry.category = splitEntry.category
+                retainedEntry.subcategory = splitEntry.subcategory
+                retainedEntry.files = splitEntry.files
+                return retainedEntry
+            }
+        }
     }
 
     func refreshDescriptionTranslations() {

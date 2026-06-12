@@ -7,8 +7,11 @@
 - „Alle Apps“ ist nun eine zuverlässig anklickbare Aktion zum Zurücksetzen des
   Kategorie-Filters.
 - Einzelne Apps können direkt aus der Detailansicht gelöscht werden.
+- Jede App-Karte und Listenzeile besitzt eine sichtbare Löschaktion.
 - Erneute Scans teilen ältere, fälschlich zusammengeführte App-Ausgaben anhand
   ihrer tatsächlichen Dateipfade wieder in getrennte Katalogeinträge auf.
+- Bereits falsch zusammengeführte Einträge werden außerdem beim Laden des
+  lokalen Katalogs automatisch getrennt.
 - Direkter Download-Link für den jeweils offiziellen Build auf der Startseite.
 - Explizite Verknüpfung der Frameworks NaturalLanguage und Translation.
 

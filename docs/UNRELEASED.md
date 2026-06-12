@@ -8,8 +8,12 @@ und erhält erst nach ausdrücklicher Freigabe eine Versionsnummer.
 
 - „Alle Apps“ setzt den Kategorie-Filter nun zuverlässig zurück.
 - Apps können direkt aus ihrer Detailansicht aus dem Katalog gelöscht werden.
+- Jede App-Karte und Listenzeile zeigt eine direkt sichtbare Löschaktion mit
+  Bestätigung.
 - Ein erneuter Scan trennt ältere, fälschlich zusammengeführte App-Ausgaben
   anhand ihrer tatsächlichen Dateipfade wieder auf.
+- Bereits zusammengeführte Einträge werden nun zusätzlich beim App-Start
+  automatisch getrennt; ein erneuter Scan ist dafür nicht mehr erforderlich.
 - Theme-Dokumentation, Theme-Vorlage, Beispieltheme und Projektstruktur sind
   direkt auf der GitHub-Startseite verlinkt.
 - Die Theme-Dokumentation enthält nun eine Schritt-für-Schritt-Anleitung,

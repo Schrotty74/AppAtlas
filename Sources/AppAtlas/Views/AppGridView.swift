@@ -81,6 +81,10 @@ private struct AppCardView: View {
                     lineWidth: isSelected ? 2 : 1
                 )
         }
+        .overlay(alignment: .topTrailing) {
+            CatalogDeleteButton(app: app)
+                .padding(8)
+        }
         .foregroundStyle(theme.text)
         .contentShape(Rectangle())
     }
