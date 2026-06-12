@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+if [[ "${APPATLAS_ALLOW_RELEASE_PACKAGE:-}" != "YES" ]]; then
+    echo "Release-Paket abgebrochen: ausdrückliche Freigabe fehlt." >&2
+    echo "Für normale Prüfungen ausschließlich 'swift build' und 'swift test' verwenden." >&2
+    echo "Nur nach Benutzerfreigabe mit APPATLAS_ALLOW_RELEASE_PACKAGE=YES ausführen." >&2
+    exit 1
+fi
+
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 version="${APPATLAS_VERSION:-1.0.0-dev}"
 build_number="${APPATLAS_BUILD_NUMBER:-33}"

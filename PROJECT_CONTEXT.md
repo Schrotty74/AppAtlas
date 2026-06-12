@@ -33,6 +33,17 @@ eines lokalen App-Katalogs.
 
 ## Veröffentlichungs- und Backup-Regeln
 
+- Normale Entwicklungsprüfungen verwenden ausschließlich `swift build` und
+  `swift test`. Dabei werden weder AppAtlas geöffnet noch ZIP-Dateien,
+  Prüfsummen, Backups oder iCloud-Kopien erzeugt.
+- AppAtlas wird bei Änderungen und Tests niemals automatisch geöffnet,
+  aktiviert oder in den Vordergrund gebracht.
+- Lokale Release-Pakete und ZIP-Dateien werden ausschließlich nach einer
+  ausdrücklichen Benutzeranweisung erstellt.
+- Lokale Benutzerpfade, Volume-Pfade, Kataloge, App-Namen, Lizenzdaten und
+  andere Nutzerdaten dürfen weder in Quellcode noch in Binärdateien,
+  Release-Pakete, Backups oder GitHub gelangen.
+
 - Änderungen dürfen lokal umgesetzt, getestet und dokumentiert werden.
 - Git-Pushes, GitHub-Releases, Tags und andere Veröffentlichungen erfolgen
   ausschließlich nach einer ausdrücklichen Anweisung des Benutzers.

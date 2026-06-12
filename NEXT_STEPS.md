@@ -69,5 +69,10 @@
 - Bei Datenschutzfragen vor der Umsetzung informieren und eine
   datensparsame Alternative vorschlagen.
 - Keine Backups ohne ausdrückliche Anweisung.
+- Keine Release-ZIPs oder Prüfsummen ohne ausdrückliche Anweisung.
+- AppAtlas bei Builds und Tests niemals automatisch öffnen oder in den
+  Vordergrund bringen.
+- Keine lokalen Benutzer- oder Volume-Pfade und keine Nutzerdaten in
+  Quellcode, Binärdateien, Release-Pakete, Backups oder GitHub aufnehmen.
 - Keine Pushes, Tags, GitHub-Releases oder neuen Beta-Builds ohne ausdrückliche
   Anweisung.

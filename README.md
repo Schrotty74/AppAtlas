@@ -92,8 +92,12 @@ Details: [docs/PRIVACY.md](docs/PRIVACY.md)
 
 ```sh
 swift test
-./Scripts/build-beta.sh
+APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
 ```
+
+Das Release-Skript darf nur nach ausdrücklicher Freigabe ausgeführt werden.
+Für normale Entwicklungsprüfungen genügen `swift build` und `swift test`; sie
+erzeugen keine ZIP-Dateien und öffnen AppAtlas nicht automatisch.
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
 nur auf ausdrückliche Anweisung erstellt. Lokale Git-Prüfungen vor jedem
