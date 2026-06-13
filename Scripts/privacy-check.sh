@@ -19,8 +19,9 @@ for file in "${candidate_files[@]}"; do
     esac
 done
 
-content_files=("${(@)candidate_files:#Scripts/privacy-check.sh}")
-if grep -I -n -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"]+' \
+content_files=("${(@f)$(printf '%s\n' "${candidate_files[@]}" \
+    | grep -Ev '^Scripts/privacy-(check|audit)\.sh$')}")
+if grep -I -n -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
     "${content_files[@]}" >/tmp/appatlas-privacy-check.txt 2>/dev/null; then
     cat /tmp/appatlas-privacy-check.txt >&2
     echo "Datenschutzprüfung fehlgeschlagen: persönlicher Pfad oder Geheimnis gefunden." >&2

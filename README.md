@@ -88,6 +88,9 @@ Onlinequellen werden ausschließlich nach einem bewussten Klick auf
 
 Details: [docs/PRIVACY.md](docs/PRIVACY.md)
 
+Öffentlicher Prüfbericht:
+[Datenschutzaudit vom 13. Juni 2026](docs/PRIVACY_AUDIT_2026-06-13.md)
+
 ## Entwicklung
 
 ```sh

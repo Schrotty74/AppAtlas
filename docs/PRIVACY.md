@@ -7,6 +7,10 @@ Datenschutz hat bei AppAtlas Vorrang vor Funktionalität.
 Git und veröffentlichte Builds enthalten keine persönlichen Kataloge,
 Scanlisten, App-Namen, Lizenzdaten, Importdateien oder lokalen Benutzerpfade.
 Der Build bricht ab, falls private Katalog- oder Importdateien gefunden werden.
+Vor Commit und Push prüft AppAtlas zusätzlich alle veröffentlichbaren Dateien.
+Ein erweitertes Audit kontrolliert auch Dateinamen in der erreichbaren
+Git-Historie. Der aktuelle Prüfbericht ist unter
+[Datenschutzaudit vom 13. Juni 2026](PRIVACY_AUDIT_2026-06-13.md) dokumentiert.
 
 ## Lokale Daten
 
@@ -43,20 +47,38 @@ Exportdateien sind persönliche Daten und müssen vom Benutzer geschützt werden
 
 Online-Anfragen für Icons, Beschreibungen und Links werden nur nach einem
 bewussten Klick auf „Katalog aktualisieren“ ausgelöst. Das bloße Anzeigen oder
-Scannen eines Katalogs startet keine Anreicherung. Für die Suche wird nur der
-normalisierte App-Name an iTunes beziehungsweise DuckDuckGo gesendet; lokale
-Dateipfade, Katalogstruktur und Lizenzdaten verlassen das Gerät nicht.
-GitHub und Reddit r/macapps werden erst innerhalb derselben ausdrücklich
-gestarteten Aktualisierung abgefragt. Dabei wird ebenfalls ausschließlich der
-normalisierte App-Name übertragen. Bereits vom Benutzer gespeicherte oder
-bestätigte Webseiten können direkt abgerufen werden, um deren Metadaten zu
-prüfen.
+Scannen eines Katalogs startet keine Anreicherung. Für die Suche wird der
+normalisierte App-Name sowie gegebenenfalls ein allgemeiner Kategoriehinweis
+an iTunes, GitHub, Reddit r/macapps beziehungsweise DuckDuckGo gesendet.
+Lokale Dateipfade, die Katalogstruktur und Lizenzdaten werden dabei nicht
+übertragen. Bereits vom Benutzer gespeicherte oder bestätigte Webseiten können
+direkt abgerufen werden, um deren Metadaten zu prüfen. Wie bei jedem
+Webseitenaufruf erhält der jeweilige Server dabei technisch notwendige
+Verbindungsdaten wie die IP-Adresse.
 
 Unsichere Funde werden als lokale Vorschläge mit Quellenangabe gespeichert und
 nicht ungeprüft übernommen. Fremdsprachige Beschreibungen werden ab macOS 15
-mit Apples Translation-Framework lokal zur Übersetzung vorbereitet. Falls die
-Übersetzung nicht möglich ist, bleibt der Originaltext sichtbar gekennzeichnet
-und muss vom Benutzer geprüft werden.
+mit Apples Translation-Framework verarbeitet. AppAtlas baut dafür selbst keine
+Verbindung zu einem Übersetzungsdienst auf; das Verhalten des
+macOS-Systemframeworks und mögliche Modelldownloads liegen unter Apples
+Kontrolle. Falls die Übersetzung nicht möglich ist, bleibt der Originaltext
+sichtbar gekennzeichnet und muss vom Benutzer geprüft werden.
+
+## Assistent
+
+Die normale Kataloganalyse und Apple-Intelligence-Auswertung verwenden lokale
+Katalogdaten auf dem Mac. Wird die optionale Internetrecherche bewusst
+aktiviert, sendet AppAtlas die eingegebene Frage unverändert an die
+Reddit-Suche in r/macapps und r/macos. Katalog, lokale Dateipfade und
+Lizenzdaten werden nicht mitgesendet.
+
+## Keine absolute Netzwerkaussage
+
+AppAtlas lädt persönliche Kataloge, lokale Dateipfade und Lizenzdaten nicht
+hoch. Eine Aussage, dass die App niemals irgendeine Information sendet, wäre
+dennoch falsch: ausdrücklich gestartete Online-Aktualisierungen,
+Internetrecherchen und Webseitenaufrufe benötigen Netzwerkverbindungen und
+übertragen die oben beschriebenen Suchbegriffe oder Fragen.
 
 ## Neue Funktionen
 
