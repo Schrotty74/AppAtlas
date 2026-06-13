@@ -811,6 +811,40 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func onlineIconChecksRequireQualityAndIconLikeURLs() throws {
+        let iconURL = try #require(
+            AppResources.bundle.url(
+                forResource: "AppIcon",
+                withExtension: "png"
+            )
+        )
+        let iconData = try Data(contentsOf: iconURL)
+
+        #expect(IconQualityInspector.isLikelyOnlineAppIcon(iconData))
+        #expect(
+            WebMetadataLookup.isLikelyIconURL(
+                try #require(
+                    URL(string: "https://example.com/assets/app-icon.png")
+                )
+            )
+        )
+        #expect(
+            !WebMetadataLookup.isLikelyIconURL(
+                try #require(
+                    URL(string: "https://example.com/images/screenshot.png")
+                )
+            )
+        )
+        #expect(
+            !WebMetadataLookup.isLikelyIconURL(
+                try #require(
+                    URL(string: "https://example.com/images/banner-logo.png")
+                )
+            )
+        )
+    }
+
+    @Test
     func repositoryPagesAreMetadataSourcesButNotGenericIconSources() throws {
         let github = try #require(URL(string: "https://github.com/example/app"))
         let gitlab = try #require(URL(string: "https://gitlab.com/example/app"))
@@ -1777,10 +1811,106 @@ struct CatalogManagementTests {
 
         #expect(result.files.count == 1)
         #expect(result.files[0].relativePath == "Multimedia/Video/VideoTool-2.1.dmg")
-        #expect(result.files[0].sizeInBytes == 0)
-        #expect(result.files[0].modifiedAt == nil)
+        #expect(result.files[0].sizeInBytes == 9)
+        #expect(result.files[0].modifiedAt != nil)
         #expect(result.files[0].iconData == nil)
         #expect(try String(contentsOf: installer, encoding: .utf8) == "unchanged")
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test
+    func scannerAppliesCustomDirectoryExclusions() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        for path in [
+            "Tools/Visible.dmg",
+            "Archive/Hidden.dmg",
+            "Media/Old/Hidden.pkg",
+            "Media/New/Visible.pkg"
+        ] {
+            let url = root.appendingPathComponent(path)
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try Data().write(to: url)
+        }
+
+        let result = try VolumeScanner(
+            excludedDirectories: ["Archive", "Media/Old"]
+        ).scan(root)
+
+        #expect(Set(result.files.map(\.relativePath)) == Set([
+            "Tools/Visible.dmg",
+            "Media/New/Visible.pkg"
+        ]))
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test
+    func scannerSettingsNormalizeAndDeduplicateEntries() {
+        let parsed = ScannerSettings.parse(
+            " Archive \nMedia/Old\nArchive\n\n"
+        )
+
+        #expect(parsed == ["Archive", "Media/Old"])
+        #expect(
+            ScannerSettings.encode(["Media/Old", "Archive", "Archive"])
+                == "Archive\nMedia/Old"
+        )
+    }
+
+    @Test
+    func scannerAppliesAndNormalizesFileExtensionExclusions() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: root,
+            withIntermediateDirectories: true
+        )
+        for fileName in ["Application.dmg", "Archive.ISO", "Package.pkg"] {
+            try Data().write(to: root.appendingPathComponent(fileName))
+        }
+
+        let parsed = ScannerSettings.parseFileExtensions(
+            " .ISO \niso\n ZIP\ninvalid value\n"
+        )
+        let result = try VolumeScanner(
+            excludedFileExtensions: parsed
+        ).scan(root)
+
+        #expect(parsed == ["iso", "zip"])
+        #expect(
+            ScannerSettings.encodeFileExtensions([".ISO", "zip", "ISO"])
+                == "iso\nzip"
+        )
+        #expect(Set(result.files.map(\.fileType)) == Set(["dmg", "pkg"]))
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test
+    func scannerExcludesDirectlySelectedLocalFolder() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let included = root.appendingPathComponent("Included/App.dmg")
+        let excludedFolder = root.appendingPathComponent(
+            "Excluded",
+            isDirectory: true
+        )
+        let excluded = excludedFolder.appendingPathComponent("Hidden.dmg")
+        for url in [included, excluded] {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try Data().write(to: url)
+        }
+
+        let result = try VolumeScanner(
+            excludedDirectoryURLs: [excludedFolder]
+        ).scan(root)
+
+        #expect(result.files.map(\.relativePath) == ["Included/App.dmg"])
         try? FileManager.default.removeItem(at: root)
     }
 

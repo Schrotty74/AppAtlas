@@ -3,7 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.3`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -70,13 +70,20 @@
   führt doppelte Lizenzzeilen zusammen und kann fehlende App-Store- oder
   Lizenz-Apps nach bewusster Auswahl als manuelle Einträge unter „Lizenzen“
   anlegen. Private Lizenzwerte bleiben ausschließlich im Schlüsselbund.
+- Ein vollständiger Scan gleicht neue, geänderte und entfernte lokale Dateien
+  mit dem Katalog ab. Dateigröße und Änderungsdatum werden aktualisiert;
+  manuelle Einträge ohne lokale Datei bleiben erhalten.
+- Zusätzliche Ausschlussordner lassen sich in den Einstellungen als
+  Ordnername oder relativer Pfad verwalten. Lokale Ordner können außerdem
+  direkt ausgewählt werden und werden unabhängig von der Scanquelle ausgelassen.
+- Eigene Dateiendungen können ebenfalls lokal vom Scan ausgeschlossen werden.
+- Lokale `.app`-Icons werden direkt beim Scan gelesen. Bei einer bewussten
+  Online-Aktualisierung werden zunächst eindeutig passende installierte Apps
+  geprüft; Onlinebilder benötigen höhere Auflösung und icon-typische Pfade.
+  Screenshots, Vorschauen und Banner werden abgewiesen.
 
 ## Offene Aufgaben
 
-- Scanner-Abgleich für neue, geänderte und entfernte Dateien.
-- Optional frei konfigurierbare Ausschlussordner für den Scanner ergänzen.
-- Icon-Erkennung weiter verbessern. Sie findet inzwischen mehr passende Icons,
-  ist bei einigen Apps aber weiterhin unzuverlässig.
 - Rückmeldungen aus der aktuellen offiziellen Beta sammeln und priorisieren.
 
 ## Verbindliche Regeln
@@ -96,3 +103,6 @@
   Quellcode, Binärdateien, Release-Pakete, Backups oder GitHub aufnehmen.
 - Keine Pushes, Tags, GitHub-Releases oder neuen Beta-Builds ohne ausdrückliche
   Anweisung.
+- Umfangreiches Datenschutzaudit und ergänzenden öffentlichen Prüfbericht bei
+  jeder finalen Version erstellen, nicht bei Betas. Frühere Prüfberichte
+  dauerhaft als chronologische Audit-Historie behalten.

@@ -9,9 +9,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern, verwaltet Icons,
 Beschreibungen, Links und Lizenzinformationen und startet für jeden Benutzer
 mit einem leeren lokalen Katalog.
 
-> Aktueller Release: **AppAtlas 1.0.0-beta.2**
+> Aktueller Release: **AppAtlas 1.0.0-beta.3**
 
-[AppAtlas 1.0.0-beta.2 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.2/AppAtlas-1.0.0-beta.2-macos.zip)
+[AppAtlas 1.0.0-beta.3 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.3/AppAtlas-1.0.0-beta.3-macos.zip)
 
 ## Transparenz
 
@@ -23,6 +23,8 @@ wurde ebenfalls mit Codex erstellt.
 
 - frei wählbare Ordner rein lesend scannen, technische Daten und typische
   Backup-Archive herausfiltern und Vorschläge einzeln auswählen
+- lokale Ordner und selbst definierte Dateiendungen dauerhaft vom Scan
+  ausschließen
 - Apps manuell hinzufügen, bearbeiten und löschen
 - Beschreibungen, Links und hochwertige Icons verwalten
 - fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen

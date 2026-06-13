@@ -213,6 +213,93 @@ struct StabilityTests {
     }
 
     @Test
+    func scanReconciliationRemovesMissingFilesAndKeepsManualEntries() {
+        let scannedFile = makeFile(index: 40)
+        let missingFile = makeFile(index: 41)
+        let retained = AppEntry(
+            name: "Retained",
+            category: "Category",
+            subcategory: "",
+            files: [scannedFile]
+        )
+        let missing = AppEntry(
+            name: "Missing",
+            category: "Category",
+            subcategory: "",
+            files: [missingFile]
+        )
+        let manual = AppEntry(
+            name: "Manual",
+            category: "Category",
+            subcategory: "",
+            files: [],
+            sourceStatus: .manual
+        )
+        let rescanned = AppEntry(
+            name: "Retained",
+            category: "Category",
+            subcategory: "",
+            files: [scannedFile]
+        )
+
+        let result = CatalogScanReconciler().reconcile(
+            existingApps: [retained, missing, manual],
+            scannedApps: [rescanned]
+        )
+
+        #expect(Set(result.apps.map(\.id)) == Set([retained.id, manual.id]))
+        #expect(result.removedApps.map(\.id) == [missing.id])
+    }
+
+    @Test
+    func scanReconciliationReplacesChangedFileMetadata() throws {
+        let originalFile = LocalAppFile(
+            fileName: "Application.dmg",
+            fileType: "dmg",
+            sourceCategory: "Category",
+            sourceSubcategory: "",
+            relativePath: "Category/Application.dmg",
+            sizeInBytes: 10,
+            modifiedAt: Date(timeIntervalSince1970: 100),
+            detectedVersion: "1"
+        )
+        let changedFile = LocalAppFile(
+            fileName: "Application.dmg",
+            fileType: "dmg",
+            sourceCategory: "Category",
+            sourceSubcategory: "",
+            relativePath: "Category/Application.dmg",
+            sizeInBytes: 20,
+            modifiedAt: Date(timeIntervalSince1970: 200),
+            detectedVersion: "2"
+        )
+        let original = AppEntry(
+            name: "Application",
+            category: "Category",
+            subcategory: "",
+            files: [originalFile]
+        )
+        let rescanned = AppEntry(
+            name: "Application",
+            category: "Category",
+            subcategory: "",
+            files: [changedFile]
+        )
+
+        let result = CatalogScanReconciler().reconcile(
+            existingApps: [original],
+            scannedApps: [rescanned]
+        )
+        let file = try #require(result.apps.first?.files.first)
+
+        #expect(result.apps.first?.id == original.id)
+        #expect(file.sizeInBytes == 20)
+        #expect(file.modifiedAt == Date(timeIntervalSince1970: 200))
+        #expect(file.detectedVersion == "2")
+        #expect(result.removedApps.isEmpty)
+    }
+
+    @Test
     func largeCatalogOperationsStayWithinRegressionBudgets() throws {
         let count = 5_000
         let existing = (0..<count).map(makeApp)

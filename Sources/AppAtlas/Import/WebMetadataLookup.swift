@@ -37,6 +37,9 @@ actor WebMetadataLookup {
                     .flatMap {
                         URL(string: $0, relativeTo: homepage)?.absoluteURL
                     }
+                    .flatMap {
+                        Self.isLikelyIconURL($0) ? $0 : nil
+                    }
                 : nil
             let previewIcon: Data? = if let previewURL {
                 await OnlineIconLoader.shared.iconData(from: previewURL)
@@ -92,5 +95,20 @@ actor WebMetadataLookup {
             .replacingOccurrences(of: "&#39;", with: "'")
             .replacingOccurrences(of: "&lt;", with: "<")
             .replacingOccurrences(of: "&gt;", with: ">")
+    }
+
+    nonisolated static func isLikelyIconURL(_ url: URL) -> Bool {
+        let value = url.path.lowercased()
+        return [
+            "appicon",
+            "app-icon",
+            "apple-touch-icon",
+            "favicon",
+            "/icon",
+            "logo"
+        ].contains { value.contains($0) }
+            && !value.contains("screenshot")
+            && !value.contains("preview")
+            && !value.contains("banner")
     }
 }

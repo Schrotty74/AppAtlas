@@ -173,7 +173,7 @@ actor GitHubRepositoryLookup {
                     )
             }
             .map { ($0.path, iconScore($0.path)) }
-            .filter { $0.1 > 0 }
+            .filter { $0.1 >= 60 }
             .sorted { $0.1 > $1.1 }
             .first?
             .0
@@ -229,8 +229,15 @@ actor GitHubRepositoryLookup {
         if value.contains("/art/") || value.contains("/resources/") {
             score += 20
         }
+        if value.contains(".appiconset/") { score += 80 }
+        if value.contains("/assets/") { score += 15 }
         if value.contains("logo") { score += 15 }
-        if value.contains("screenshot") || value.contains("thumbnail") {
+        if value.contains("screenshot")
+            || value.contains("thumbnail")
+            || value.contains("preview")
+            || value.contains("banner")
+            || value.contains("/docs/")
+        {
             score -= 100
         }
         return score

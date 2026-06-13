@@ -9,7 +9,10 @@ Scanlisten, App-Namen, Lizenzdaten, Importdateien oder lokalen Benutzerpfade.
 Der Build bricht ab, falls private Katalog- oder Importdateien gefunden werden.
 Vor Commit und Push prüft AppAtlas zusätzlich alle veröffentlichbaren Dateien.
 Ein erweitertes Audit kontrolliert auch Dateinamen in der erreichbaren
-Git-Historie. Der aktuelle Prüfbericht ist unter
+Git-Historie. Dieses umfangreiche Audit wird bei jeder finalen Version
+durchgeführt, nicht bei Betas. Jeder neue Final-Bericht ergänzt die bestehende
+chronologische Audit-Historie; frühere Berichte bleiben erhalten. Der bisherige
+Prüfbericht ist unter
 [Datenschutzaudit vom 13. Juni 2026](PRIVACY_AUDIT_2026-06-13.md) dokumentiert.
 
 ## Lokale Daten

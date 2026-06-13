@@ -19,6 +19,14 @@ struct ScanImportView: View {
                     .font(.title2.bold())
                 Text("AppAtlas sucht nach APP, DMG, PKG, ZIP, ISO, APK und EXE. Du bestimmst selbst, wo gesucht wird; der ausgewählte Ordner wird nicht verändert.")
                     .foregroundStyle(theme.mutedText)
+                Text(
+                    "Der Scan gleicht den Katalog mit dem vollständigen Inhalt "
+                        + "dieses Ordners ab. Nicht mehr vorhandene oder nicht "
+                        + "ausgewählte lokale Einträge werden aus dem Katalog "
+                        + "entfernt; manuelle Einträge ohne Datei bleiben erhalten."
+                )
+                .font(.callout)
+                .foregroundStyle(theme.mutedText)
 
                 HStack {
                     Button("Quellordner auswählen …", action: chooseFolder)
@@ -118,7 +126,7 @@ struct ScanImportView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("\(selectedAppIDs.count) in Katalog aufnehmen") {
+                    Button("Katalog mit \(selectedAppIDs.count) Apps abgleichen") {
                         if let result {
                             store.mergeScannedApps(
                                 result.apps.filter {
@@ -128,7 +136,7 @@ struct ScanImportView: View {
                         }
                         dismiss()
                     }
-                    .disabled(selectedAppIDs.isEmpty || isScanning)
+                    .disabled(result == nil || isScanning)
                 }
             }
             .alert(

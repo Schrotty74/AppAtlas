@@ -87,6 +87,8 @@ mögliche Modelldownloads liegen unter Apples Kontrolle.
 
 Das Ergebnis gilt für den geprüften Stand. Absolute Sicherheit für jede
 zukünftige Änderung oder das Verhalten externer Dienste kann seriös nicht
-garantiert werden. Deshalb werden die automatischen Prüfungen vor jeder
-Veröffentlichung erneut ausgeführt und die tatsächlich übertragenen Daten
-offengelegt.
+garantiert werden. Der normale Datenschutzcheck bleibt vor Commit und Push
+aktiv. Das umfangreiche Audit wird bei jeder finalen Version erneut
+durchgeführt, nicht bei Betas. Jeder neue Final-Bericht ergänzt diesen Bericht
+als chronologische Audit-Historie und legt die tatsächlich übertragenen Daten
+offen.

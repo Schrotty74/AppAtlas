@@ -57,15 +57,20 @@ final class InstalledAppIconCatalog {
             return exact
         }
 
-        let candidates = appURLs.filter { installedKey, _ in
-            keys.contains {
-                $0.count >= 5
-                    && installedKey.count >= 5
-                    && ($0.hasPrefix(installedKey)
-                    || installedKey.hasPrefix($0))
-            }
+        let candidates = appURLs.compactMap { installedKey, url -> (URL, Double)? in
+            let score = keys.map {
+                AppNameMatcher.similarity($0, installedKey)
+            }.max() ?? 0
+            return score >= 0.9 ? (url, score) : nil
         }
-        return candidates.count == 1 ? candidates.first?.value : nil
+        .sorted { $0.1 > $1.1 }
+        guard let best = candidates.first,
+              candidates.count == 1
+                || best.1 - candidates[1].1 >= 0.08
+        else {
+            return nil
+        }
+        return best.0
     }
 
     private static func matchingKeys(for value: String) -> [String] {

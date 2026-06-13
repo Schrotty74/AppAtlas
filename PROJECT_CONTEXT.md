@@ -15,7 +15,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.3`.
 
 ## Datenschutz hat Vorrang
 
@@ -30,6 +30,12 @@ eines lokalen App-Katalogs.
 - Bei jeder neuen Funktion mit Datenschutzwirkung muss diese Wirkung vor der
   Umsetzung genannt und eine datensparsame Alternative vorgeschlagen werden.
 - Vor jedem Commit, Push und Release muss ein Datenschutzcheck erfolgen.
+- Das umfangreiche Datenschutzaudit einschließlich Prüfung der Git-Historie,
+  Release-Dateien und Netzwerkzugriffe wird ausschließlich bei jeder finalen
+  Version durchgeführt, nicht bei Betas.
+- Für jede finale Version wird der bestehende öffentliche Datenschutzbericht
+  um einen neuen chronologischen Prüfbericht ergänzt. Frühere Berichte bleiben
+  erhalten und werden nicht ersetzt.
 
 ## Veröffentlichungs- und Backup-Regeln
 
@@ -49,13 +55,17 @@ eines lokalen App-Katalogs.
   ausschließlich nach einer ausdrücklichen Anweisung des Benutzers.
 - Neue Beta-Builds oder Beta-Versionsnummern werden ausschließlich nach einer
   ausdrücklichen Anweisung des Benutzers erstellt.
+- Beta-Veröffentlichungen benötigen den normalen Datenschutzcheck, aber kein
+  umfangreiches Datenschutzaudit und keinen neuen öffentlichen Prüfbericht.
+- Vor jeder finalen Veröffentlichung sind das umfangreiche Datenschutzaudit
+  und ein ergänzender öffentlicher Prüfbericht verpflichtend.
 - Backups und iCloud-Kopien werden ausschließlich nach einer ausdrücklichen
   Anweisung des Benutzers erstellt.
 - Im festgelegten iCloud-Ordner bleiben höchstens zwei AppAtlas-Backups
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.0.0-beta.2` bleiben als unveröffentlichter
+- Änderungen nach `1.0.0-beta.3` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 
@@ -80,7 +90,19 @@ eines lokalen App-Katalogs.
   validiert eine Schreibkopie und hält die letzte gültige Fassung zur
   automatischen Wiederherstellung bereit.
 - Scan-Ergebnisse werden in einem eigenen, indexierten Abgleichsdienst mit dem
-  Katalog zusammengeführt. Manuelle Icons und Beschreibungen bleiben geschützt.
+  Katalog zusammengeführt. Ein vollständiger Scan ersetzt den lokalen
+  Dateistand: neue und geänderte Dateien werden übernommen, entfernte Dateien
+  werden aus dem Katalog gelöscht. Manuelle Einträge ohne Datei sowie manuelle
+  Icons und Beschreibungen bleiben geschützt.
+- Frei konfigurierbare Scanner-Ausschlussordner liegen ausschließlich in den
+  lokalen Benutzereinstellungen und können als Ordnername oder relativer Pfad
+  hinterlegt werden. Direkt ausgewählte lokale Ordner werden als
+  Security-Scoped Bookmarks nur auf dem jeweiligen Mac gespeichert.
+- Zusätzlich lassen sich einzelne Dateiendungen lokal vom Scan ausschließen.
+- Lokale `.app`-Icons haben Vorrang. Danach werden eindeutig passende
+  installierte Apps geprüft. Onlinebilder müssen mindestens 128 Pixel groß,
+  nahezu quadratisch und als Icon oder Logo erkennbar sein; Screenshots,
+  Vorschauen, Banner und Dokumentationsbilder werden abgewiesen.
 - Die Hauptansicht verwendet einen zentralen Zustand für Dialoge, Importe und
   Bestätigungen. Import-/Exportformate liegen in getrennten Diensten.
 - Sidebar-Ordner stammen aus den gespeicherten Quell-Unterordnern; Dateinamen

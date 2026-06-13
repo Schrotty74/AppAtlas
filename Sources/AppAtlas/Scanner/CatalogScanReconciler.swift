@@ -3,6 +3,7 @@ import Foundation
 struct CatalogScanReconcileResult: Sendable {
     let apps: [AppEntry]
     let matchedExistingIDs: Set<AppEntry.ID>
+    let removedApps: [AppEntry]
 }
 
 struct CatalogScanReconciler: Sendable {
@@ -11,9 +12,6 @@ struct CatalogScanReconciler: Sendable {
         scannedApps: [AppEntry]
     ) -> CatalogScanReconcileResult {
         var apps = existingApps
-        let scannedPaths = Set(
-            scannedApps.flatMap(\.files).map(\.relativePath)
-        )
         let originalPathOwners = Dictionary(
             uniqueKeysWithValues: apps.map {
                 ($0.id, Set($0.files.map(\.relativePath)))
@@ -21,9 +19,7 @@ struct CatalogScanReconciler: Sendable {
         )
 
         for index in apps.indices {
-            apps[index].files.removeAll {
-                scannedPaths.contains($0.relativePath)
-            }
+            apps[index].files.removeAll()
         }
 
         var identityIndices = [String: [Int]]()
@@ -39,19 +35,19 @@ struct CatalogScanReconciler: Sendable {
         for scannedApp in scannedApps {
             let scannedKey = identityKey(for: scannedApp)
             let appPaths = Set(scannedApp.files.map(\.relativePath))
-            let identityIndex = identityIndices[scannedKey]?.first {
-                !claimedExistingIDs.contains(apps[$0].id)
-            }
             let pathOwnerIndex = appPaths
                 .flatMap { pathOwnerIndices[$0] ?? [] }
                 .filter { !claimedExistingIDs.contains(apps[$0].id) }
                 .min()
+            let identityIndex = identityIndices[scannedKey]?.first {
+                !claimedExistingIDs.contains(apps[$0].id)
+            }
 
-            if let index = identityIndex ?? pathOwnerIndex {
+            if let index = pathOwnerIndex ?? identityIndex {
                 merge(
                     scannedApp,
                     into: &apps[index],
-                    matchedByPath: pathOwnerIndex == index
+                    preservesIdentity: true
                 )
                 claimedExistingIDs.insert(apps[index].id)
             } else {
@@ -65,33 +61,27 @@ struct CatalogScanReconciler: Sendable {
             }
         }
 
-        let scannedOriginalIDs = Set(originalPathOwners.compactMap {
-            $0.value.isDisjoint(with: scannedPaths) ? nil : $0.key
-        })
-        apps.removeAll {
-            scannedOriginalIDs.contains($0.id)
+        let removedApps = apps.filter {
+            !(originalPathOwners[$0.id] ?? []).isEmpty
                 && !claimedExistingIDs.contains($0.id)
-                && $0.files.isEmpty
         }
+        let removedIDs = Set(removedApps.map(\.id))
+        apps.removeAll { removedIDs.contains($0.id) }
 
         return CatalogScanReconcileResult(
             apps: apps,
-            matchedExistingIDs: claimedExistingIDs
+            matchedExistingIDs: claimedExistingIDs,
+            removedApps: removedApps
         )
     }
 
     private func merge(
         _ scannedApp: AppEntry,
         into existingApp: inout AppEntry,
-        matchedByPath: Bool
+        preservesIdentity: Bool
     ) {
-        let existingPaths = Set(existingApp.files.map(\.relativePath))
-        existingApp.files.append(
-            contentsOf: scannedApp.files.filter {
-                !existingPaths.contains($0.relativePath)
-            }
-        )
-        if matchedByPath {
+        existingApp.files = scannedApp.files
+        if preservesIdentity {
             existingApp.name = scannedApp.name
             existingApp.category = scannedApp.category
             existingApp.subcategory = scannedApp.subcategory

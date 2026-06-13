@@ -1,5 +1,31 @@
 # Projekthistorie
 
+## 1.0.0-beta.3 – Scanner-Abgleich und bessere Icon-Auswahl
+
+- Vollständige Scans gleichen neue, geänderte und entfernte lokale Dateien mit
+  dem Katalog ab. Dateigröße und Änderungsdatum werden aktualisiert, während
+  rein manuelle Einträge erhalten bleiben.
+- Lokale Ordner können direkt über den macOS-Ordnerdialog dauerhaft vom Scan
+  ausgeschlossen werden. Die Auswahl wird nur lokal als
+  Security-Scoped Bookmark gespeichert.
+- Zusätzlich lassen sich Ordnernamen, relative Pfade und selbst definierte
+  Dateiendungen vom Scan ausschließen.
+- Lokale `.app`-Bundles liefern bereits beim Scan ihr Originalicon.
+- Bei der bewussten Katalogaktualisierung werden eindeutig passende lokal
+  installierte Apps vor Onlinequellen geprüft.
+- Onlinebilder benötigen eine höhere Mindestauflösung und ein nahezu
+  quadratisches Format. Screenshots, Vorschauen, Banner und
+  Dokumentationsbilder werden nicht mehr als App-Icons akzeptiert.
+- GitHub-Repositories werden gezielter nach echten AppIcon- und
+  Ressourcen-Dateien durchsucht.
+- Die Scanbestätigung erklärt den vollständigen Katalogabgleich einschließlich
+  der Behandlung nicht mehr vorhandener Dateien.
+- Die Scanner-Einstellungen sind in einem eigenen Reiter zusammengefasst.
+- Datenschutzdokumentation und öffentliche Offenlegung der bewusst
+  ausgelösten Netzwerkzugriffe wurden erweitert.
+- Automatisierte Scanner-, Abgleich-, Ausschluss- und Icon-Qualitätstests
+  sichern die neuen Abläufe ab.
+
 ## 1.0.0-beta.2 – Stabilität, Navigation und private Lizenzimporte
 
 - Theme-Dokumentation, Theme-Vorlage, Beispieltheme und Projektstruktur sind

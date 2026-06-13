@@ -14,7 +14,7 @@ actor OnlineIconLoader {
             guard let http = response as? HTTPURLResponse,
                   (200..<300).contains(http.statusCode),
                   data.count <= 5_000_000,
-                  IconQualityInspector.isLikelyAppIcon(data)
+                  IconQualityInspector.isLikelyOnlineAppIcon(data)
             else {
                 return nil
             }

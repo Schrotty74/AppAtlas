@@ -416,6 +416,16 @@ final class CatalogStore: ObservableObject {
                 apps[index].homepage = nil
             }
         }
+        for index in apps.indices where shouldReplaceIcon(in: apps[index]) {
+            if let iconData = InstalledAppIconCatalog.shared.compactIconData(
+                for: apps[index].name
+            ) {
+                apps[index].iconData = iconData
+                apps[index].iconOrigin = .localBundle
+                apps[index] = migrateIcon(in: apps[index])
+                addSource("Lokal installierte App", to: index)
+            }
+        }
         persist()
 
         let candidates = apps.filter {
@@ -814,10 +824,15 @@ final class CatalogStore: ObservableObject {
     }
 
     func mergeScannedApps(_ scannedApps: [AppEntry]) {
-        apps = CatalogScanReconciler().reconcile(
+        let result = CatalogScanReconciler().reconcile(
             existingApps: apps,
             scannedApps: scannedApps
-        ).apps
+        )
+        for removedApp in result.removedApps {
+            IconStore.shared.delete(fileName: removedApp.iconFileName)
+            LicenseKeychainStore.shared.delete(for: removedApp.id)
+        }
+        apps = result.apps
         apps = migrateIcons(in: apps)
         apps.sort(by: Self.sortApps)
         persist()

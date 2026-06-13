@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 enum OnlineUpdateSettings {
@@ -53,9 +54,50 @@ struct AppSettingsView: View {
     private var performanceData = Data()
     @AppStorage(OnlineUpdateSettings.extendedSearchKey)
     private var extendedSearch = false
+    @AppStorage(ScannerSettings.excludedDirectoriesKey)
+    private var excludedDirectoriesRaw = ""
+    @AppStorage(ScannerSettings.excludedFileExtensionsKey)
+    private var excludedFileExtensionsRaw = ""
     @State private var showExtendedSearchInfo = false
+    @State private var newExcludedDirectory = ""
+    @State private var newExcludedFileExtension = ""
+    @State private var excludedFolderPaths =
+        ScannerSettings.excludedFolderDisplayPaths
+    @State private var scannerErrorMessage: String?
 
     var body: some View {
+        TabView {
+            generalSettings
+                .tabItem {
+                    Label("Allgemein", systemImage: "gearshape")
+                }
+
+            scannerSettings
+                .tabItem {
+                    Label("Scanner", systemImage: "folder.badge.gearshape")
+                }
+        }
+        .padding(12)
+        .frame(width: 580, height: 650)
+        .sheet(isPresented: $showExtendedSearchInfo) {
+            ExtendedOnlineSearchInfoView()
+        }
+        .alert(
+            "Ordner konnte nicht übernommen werden",
+            isPresented: Binding(
+                get: { scannerErrorMessage != nil },
+                set: { if !$0 { scannerErrorMessage = nil } }
+            )
+        ) {
+            Button("OK") {
+                scannerErrorMessage = nil
+            }
+        } message: {
+            Text(scannerErrorMessage ?? "")
+        }
+    }
+
+    private var generalSettings: some View {
         Form {
             Section("Sprache") {
                 Picker("App-Sprache", selection: $languageChoice) {
@@ -144,11 +186,124 @@ struct AppSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .padding(20)
-        .frame(width: 500)
-        .sheet(isPresented: $showExtendedSearchInfo) {
-            ExtendedOnlineSearchInfoView()
+    }
+
+    private var scannerSettings: some View {
+        Form {
+            Section("Scanner-Ausschlussordner") {
+                Button("Ordner auswählen …") {
+                    chooseExcludedDirectories()
+                }
+
+                if excludedFolderPaths.isEmpty {
+                    Text("Keine lokalen Ordner ausgewählt.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(excludedFolderPaths, id: \.self) { path in
+                        HStack {
+                            Image(systemName: "folder.badge.minus")
+                            Text(path)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Spacer()
+                            Button {
+                                removeSelectedExcludedFolder(path)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.plain)
+                            .help("Ausschlussordner entfernen")
+                        }
+                    }
+                }
+
+                Text(
+                    "Die ausgewählten lokalen Ordner werden unabhängig von "
+                        + "der Scanquelle ausgelassen. Die Auswahl bleibt "
+                        + "ausschließlich lokal auf diesem Mac gespeichert."
+                )
+                .foregroundStyle(.secondary)
+
+                Divider()
+
+                HStack {
+                    TextField(
+                        "Ordnername oder relativer Pfad",
+                        text: $newExcludedDirectory
+                    )
+                    Button("Hinzufügen") {
+                        addExcludedDirectory()
+                    }
+                }
+
+                if excludedDirectories.isEmpty {
+                    Text("Keine zusätzlichen Ausschlussordner.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(excludedDirectories, id: \.self) { directory in
+                        HStack {
+                            Image(systemName: "folder.badge.minus")
+                            Text(directory)
+                            Spacer()
+                            Button {
+                                removeExcludedDirectory(directory)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.plain)
+                            .help("Ausschlussordner entfernen")
+                        }
+                    }
+                }
+
+                Text(
+                    "Ein Ordnername gilt in jeder Ebene. Ein relativer Pfad "
+                        + "wie „Kategorie/Archiv“ gilt nur für diesen Pfad. "
+                        + "Die Änderung wird beim nächsten Scan angewendet."
+                )
+                .foregroundStyle(.secondary)
+            }
+
+            Section("Ausgeschlossene Dateiendungen") {
+                HStack {
+                    TextField(
+                        "Dateiendung, zum Beispiel ISO",
+                        text: $newExcludedFileExtension
+                    )
+                    Button("Hinzufügen") {
+                        addExcludedFileExtension()
+                    }
+                }
+
+                if excludedFileExtensions.isEmpty {
+                    Text("Keine Dateiendungen ausgeschlossen.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(excludedFileExtensions, id: \.self) { fileExtension in
+                        HStack {
+                            Image(systemName: "doc.badge.minus")
+                            Text(".\(fileExtension)")
+                            Spacer()
+                            Button {
+                                removeExcludedFileExtension(fileExtension)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.plain)
+                            .help("Dateiendung wieder zulassen")
+                        }
+                    }
+                }
+
+                Text(
+                    "Ausgeschlossene Dateitypen werden beim nächsten Scan "
+                        + "nicht in den Katalog aufgenommen. Eingaben mit und "
+                        + "ohne Punkt werden gleich behandelt."
+                )
+                .foregroundStyle(.secondary)
+            }
         }
+        .formStyle(.grouped)
     }
 
     private var explanation: String {
@@ -166,6 +321,88 @@ struct AppSettingsView: View {
         try? JSONDecoder().decode(
             OnlineUpdatePerformance.self,
             from: performanceData
+        )
+    }
+
+    private var excludedDirectories: [String] {
+        ScannerSettings.parse(excludedDirectoriesRaw)
+    }
+
+    private var excludedFileExtensions: [String] {
+        ScannerSettings.parseFileExtensions(excludedFileExtensionsRaw)
+    }
+
+    private var normalizedNewFileExtension: String? {
+        ScannerSettings.parseFileExtensions(newExcludedFileExtension).first
+    }
+
+    private func addExcludedDirectory() {
+        let value = newExcludedDirectory.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        guard !value.isEmpty else {
+            scannerErrorMessage =
+                "Gib einen Ordnernamen ein oder wähle den Ordner aus."
+            return
+        }
+        excludedDirectoriesRaw = ScannerSettings.encode(
+            excludedDirectories + [value]
+        )
+        newExcludedDirectory = ""
+    }
+
+    private func removeExcludedDirectory(_ directory: String) {
+        excludedDirectoriesRaw = ScannerSettings.encode(
+            excludedDirectories.filter { $0 != directory }
+        )
+    }
+
+    private func chooseExcludedDirectories() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = true
+        panel.prompt = "Ausschließen"
+        panel.message =
+            "Wähle einen oder mehrere lokale Ordner, die nie gescannt werden sollen."
+
+        guard panel.runModal() == .OK else {
+            return
+        }
+
+        do {
+            for url in panel.urls {
+                try ScannerSettings.addExcludedFolder(url)
+            }
+            excludedFolderPaths =
+                ScannerSettings.excludedFolderDisplayPaths
+        } catch {
+            scannerErrorMessage =
+                "Der lokale Ausschlussordner konnte nicht gespeichert werden: "
+                + error.localizedDescription
+        }
+    }
+
+    private func removeSelectedExcludedFolder(_ path: String) {
+        ScannerSettings.removeExcludedFolder(displayPath: path)
+        excludedFolderPaths = ScannerSettings.excludedFolderDisplayPaths
+    }
+
+    private func addExcludedFileExtension() {
+        guard let fileExtension = normalizedNewFileExtension else {
+            scannerErrorMessage =
+                "Gib eine gültige Dateiendung wie ISO oder .ISO ein."
+            return
+        }
+        excludedFileExtensionsRaw = ScannerSettings.encodeFileExtensions(
+            excludedFileExtensions + [fileExtension]
+        )
+        newExcludedFileExtension = ""
+    }
+
+    private func removeExcludedFileExtension(_ fileExtension: String) {
+        excludedFileExtensionsRaw = ScannerSettings.encodeFileExtensions(
+            excludedFileExtensions.filter { $0 != fileExtension }
         )
     }
 
