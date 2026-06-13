@@ -1,19 +1,39 @@
 # Projekthistorie
 
-## Unveröffentlicht seit 1.0.0-beta.1
+## 1.0.0-beta.2 – Stabilität, Navigation und private Lizenzimporte
 
 - Theme-Dokumentation, Theme-Vorlage, Beispieltheme und Projektstruktur sind
   direkt auf der GitHub-Startseite verlinkt.
 - „Alle Apps“ ist nun eine zuverlässig anklickbare Aktion zum Zurücksetzen des
   Kategorie-Filters.
-- Einzelne Apps können direkt aus der Detailansicht gelöscht werden.
-- Jede App-Karte und Listenzeile besitzt eine sichtbare Löschaktion.
+- Einzelne Apps können aus der Detailansicht, von Karten und aus Listen
+  gelöscht werden. Zugeordnete lokale Dateien lassen sich nach ausdrücklicher
+  Bestätigung in den macOS-Papierkorb legen.
 - Erneute Scans teilen ältere, fälschlich zusammengeführte App-Ausgaben anhand
   ihrer tatsächlichen Dateipfade wieder in getrennte Katalogeinträge auf.
 - Bereits falsch zusammengeführte Einträge werden außerdem beim Laden des
-  lokalen Katalogs automatisch getrennt.
+  lokalen Katalogs automatisch getrennt und anhand ihres tatsächlichen
+  Speicherorts wieder der richtigen Kategorie und dem richtigen Unterordner
+  zugeordnet.
+- Die Sidebar zeigt ausschließlich echte Ordner aus den Scanpfaden. Datei- und
+  App-Namen werden nicht mehr als vermeintliche Unterordner dargestellt.
+- Lizenzdaten können getrennt vom Katalog aus JSON oder CSV importiert werden.
+  Eine Vorschau zeigt Zuordnungen und Konflikte, ohne private Lizenzwerte
+  offenzulegen. Versions- und Verpackungszusätze werden besser erkannt,
+  doppelte Einträge zusammengeführt und fehlende Apps können bewusst als
+  private manuelle Einträge angelegt werden.
+- Katalogdateien werden vor und nach dem Schreiben validiert. Bei einer
+  beschädigten Hauptdatei kann die letzte gültige Fassung wiederhergestellt
+  werden.
+- Scan-Abgleich, Dateiübertragungen und Dialogsteuerung wurden in eigene
+  Dienste aufgeteilt. Der indexierte Abgleich und Leistungstests verbessern
+  Stabilität und Geschwindigkeit bei großen Katalogen.
+- Import, Export, Themes, Lizenzdateien und manuell gewählte Icons verwenden
+  einen gemeinsamen geschützten Dateizugriff.
 - Direkter Download-Link für den jeweils offiziellen Build auf der Startseite.
 - Explizite Verknüpfung der Frameworks NaturalLanguage und Translation.
+- Release-, Backup- und Push-Aktionen benötigen eine ausdrückliche Freigabe
+  und führen vorab Datenschutzprüfungen aus.
 
 ## 1.0.0-beta.1 – Erste offizielle Beta
 

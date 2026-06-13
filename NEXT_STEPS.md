@@ -3,9 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.1`.
-- Alle danach umgesetzten Änderungen sind unveröffentlicht und bleiben für
-  eine spätere, ausdrücklich freigegebene Version erhalten.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -52,6 +50,26 @@
   Katalogeinträge anhand ihrer tatsächlichen Dateipfade wieder auf.
 - „Alle Apps“ setzt den Kategorie-Filter zuverlässig zurück. Einzelne Apps
   können direkt aus ihrer Detailansicht aus dem Katalog gelöscht werden.
+- Import und Export, Theme-Dateien, Lizenzdateien und manuell gewählte Icons
+  nutzen einen gemeinsamen geschützten Dateizugriff.
+- Lizenzimporte werden vor dem Speichern in einer Vorschau geprüft. Angezeigt
+  werden nur zugeordnete App-Namen und Summen, keine privaten Lizenzwerte.
+- Dialoge, Dateiauswahlen und Bestätigungen der Hauptansicht werden über einen
+  zentralen Zustand gesteuert; die fachlichen Import-/Exportabläufe sind aus
+  der Hauptansicht in eigene Dienste ausgelagert.
+- Die Katalogdatei wird vor und nach dem Schreiben validiert. Bei einer
+  beschädigten Hauptdatei kann AppAtlas automatisch die letzte gültige
+  Fassung wiederherstellen und bewahrt die beschädigte Datei zur Diagnose auf.
+- Der Scan-Abgleich ist als eigener indexierter Dienst umgesetzt und schützt
+  manuell gesetzte Metadaten. Feste Ablauf- und Leistungstests decken große
+  Kataloge, Wiederherstellung und zentrale Benutzerabläufe ab.
+- Die Sidebar verwendet ausschließlich echte gespeicherte Ordnerpfade und
+  behandelt Dateinamen nicht mehr als Unterordner. Ordnerauswahlen setzen den
+  Filter explizit, sodass Zähler und angezeigte Apps übereinstimmen.
+- Der Lizenzimport erkennt Versions- und Verpackungszusätze zuverlässiger,
+  führt doppelte Lizenzzeilen zusammen und kann fehlende App-Store- oder
+  Lizenz-Apps nach bewusster Auswahl als manuelle Einträge unter „Lizenzen“
+  anlegen. Private Lizenzwerte bleiben ausschließlich im Schlüsselbund.
 
 ## Offene Aufgaben
 
@@ -59,7 +77,7 @@
 - Optional frei konfigurierbare Ausschlussordner für den Scanner ergänzen.
 - Icon-Erkennung weiter verbessern. Sie findet inzwischen mehr passende Icons,
   ist bei einigen Apps aber weiterhin unzuverlässig.
-- Rückmeldungen aus der ersten offiziellen Beta sammeln und priorisieren.
+- Rückmeldungen aus der aktuellen offiziellen Beta sammeln und priorisieren.
 
 ## Verbindliche Regeln
 

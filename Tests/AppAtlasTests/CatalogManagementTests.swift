@@ -45,6 +45,104 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func licenseImportMatchesPackagingSuffixesAndMergesDuplicates() throws {
+        let firstValue = UUID().uuidString
+        let secondValue = UUID().uuidString
+        let json = """
+        {
+          "licenses": [
+            {
+              "softwareName": "Example Tool",
+              "licenseKey": "\(firstValue)"
+            },
+            {
+              "softwareName": "Example Tool",
+              "licenseKey": "\(secondValue)"
+            },
+            {
+              "softwareName": "Mouse Utility for Mac",
+              "licenseKey": "value"
+            }
+          ]
+        }
+        """
+        let apps = [
+            AppEntry(
+                name: "Example Tool v2 2 1",
+                category: "Test",
+                subcategory: "",
+                files: []
+            ),
+            AppEntry(
+                name: "MouseUtilityApp",
+                category: "Test",
+                subcategory: "",
+                files: []
+            )
+        ]
+        let importer = LicenseDataImporter()
+        let licenses = try importer.decode(
+            data: Data(json.utf8),
+            fileExtension: "json"
+        )
+
+        let plan = importer.plan(licenses: licenses, apps: apps)
+
+        #expect(plan.matches.count == 2)
+        #expect(plan.unmatchedNames.isEmpty)
+        #expect(plan.ambiguousNames.isEmpty)
+        let merged = try #require(
+            plan.matches.first { $0.appName == "Example Tool v2 2 1" }
+        )
+        #expect(merged.record.serialNumber.contains(firstValue))
+        #expect(merged.record.serialNumber.contains(secondValue))
+    }
+
+    @Test
+    func licenseImportKeepsTrulyMissingAppsAvailableForManualCreation() {
+        let missing = ImportedLicense(
+            softwareName: "Store Only Utility",
+            record: AppLicenseRecord(serialNumber: UUID().uuidString)
+        )
+
+        let plan = LicenseDataImporter().plan(licenses: [missing], apps: [])
+
+        #expect(plan.matches.isEmpty)
+        #expect(plan.unmatchedNames == ["Store Only Utility"])
+        #expect(plan.unmatchedLicenses.first?.record.isEmpty == false)
+    }
+
+    @Test
+    func licenseImportCanCreatePrivateManualCatalogEntries() throws {
+        let privateValue = UUID().uuidString
+        let missing = ImportedLicense(
+            softwareName: "Store Only Utility",
+            record: AppLicenseRecord(serialNumber: privateValue)
+        )
+        let plan = LicenseDataImporter().plan(licenses: [missing], apps: [])
+
+        let outcome = LicenseImportService().apply(
+            plan,
+            createMissingEntries: true
+        )
+        defer {
+            for app in outcome.createdApps {
+                LicenseKeychainStore.shared.delete(for: app.id)
+            }
+        }
+
+        let app = try #require(outcome.createdApps.first)
+        #expect(app.name == "Store Only Utility")
+        #expect(app.category == "Lizenzen")
+        #expect(app.files.isEmpty)
+        #expect(outcome.saveResult.savedCount == 1)
+        #expect(
+            LicenseKeychainStore.shared.load(for: app.id)?.serialNumber
+                == privateValue
+        )
+    }
+
+    @Test
     func importsLicenseManagerCSVLicenseSection() throws {
         let csv = """
         # CATEGORIES
@@ -1027,7 +1125,18 @@ struct CatalogManagementTests {
                 name: "Screenshot App",
                 category: "Grafik",
                 subcategory: "Screenshot",
-                files: []
+                files: [
+                    LocalAppFile(
+                        fileName: "Screenshot App.dmg",
+                        fileType: "dmg",
+                        sourceCategory: "Grafik",
+                        sourceSubcategory: "Screenshot",
+                        relativePath: "Grafik/Screenshot/Screenshot App.dmg",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
             )
         )
         store.add(
@@ -1035,7 +1144,18 @@ struct CatalogManagementTests {
                 name: "Vector App",
                 category: "Grafik",
                 subcategory: "Vektor",
-                files: []
+                files: [
+                    LocalAppFile(
+                        fileName: "Vector App.dmg",
+                        fileType: "dmg",
+                        sourceCategory: "Grafik",
+                        sourceSubcategory: "Vektor",
+                        relativePath: "Grafik/Vektor/Vector App.dmg",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
             )
         )
         store.selectedCategory = CatalogStore.subcategoryFilter(
@@ -1092,6 +1212,110 @@ struct CatalogManagementTests {
             subcategory: "Package-Manager/Homebrew"
         )
         #expect(store.filteredApps.map(\.name) == ["Nested App"])
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func folderTreeUsesStoredFoldersAndNeverTreatsFilesAsFolders() {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = CatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        store.add(
+            AppEntry(
+                name: "Direct App",
+                category: "Benchmark",
+                subcategory: "",
+                files: [
+                    LocalAppFile(
+                        fileName: "Direct App.dmg",
+                        fileType: "dmg",
+                        sourceCategory: "Benchmark",
+                        sourceSubcategory: "",
+                        relativePath: "Benchmark/Direct App.dmg",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
+            )
+        )
+        store.add(
+            AppEntry(
+                name: "Nested App",
+                category: "Grafik",
+                subcategory: "Icons",
+                files: [
+                    LocalAppFile(
+                        fileName: "Nested App.zip",
+                        fileType: "zip",
+                        sourceCategory: "Grafik",
+                        sourceSubcategory: "Icons",
+                        relativePath: "Grafik/Icons/Nested App.zip",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
+            )
+        )
+
+        #expect(store.folderTree(for: "Benchmark").isEmpty)
+        #expect(store.folderTree(for: "Grafik").map(\.name) == ["Icons"])
+
+        store.selectedCategory = CatalogStore.subcategoryFilter(
+            category: "Grafik",
+            subcategory: "Icons"
+        )
+        #expect(store.filteredApps.map(\.name) == ["Nested App"])
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func folderTreeIgnoresStoredSubcategoriesThatAreNotRealFolders() {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = CatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        store.add(
+            AppEntry(
+                name: "Direct App",
+                category: "Benchmark",
+                subcategory: "Direct App",
+                files: [
+                    LocalAppFile(
+                        fileName: "Direct App.dmg",
+                        fileType: "dmg",
+                        sourceCategory: "Benchmark",
+                        sourceSubcategory: "Direct App",
+                        relativePath: "Benchmark/Direct App.dmg",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
+            )
+        )
+        store.add(
+            AppEntry(
+                name: "Manual App",
+                category: "Benchmark",
+                subcategory: "Manual App",
+                files: []
+            )
+        )
+
+        #expect(store.folderTree(for: "Benchmark").isEmpty)
+        store.selectedCategory = "Benchmark"
+        #expect(Set(store.filteredApps.map(\.name)) == Set(["Direct App", "Manual App"]))
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
@@ -1395,6 +1619,42 @@ struct CatalogManagementTests {
         ]))
         #expect(repaired.allSatisfy { $0.files.count == 1 })
         #expect(repaired.first { $0.name == "Benchmark2024" }?.id == merged.id)
+    }
+
+    @Test @MainActor
+    func loadingCatalogRepairsSingleEntryLocationFromItsFile() throws {
+        let file = LocalAppFile(
+            fileName: "Package Tool.app",
+            fileType: "app",
+            sourceCategory: "Downloads",
+            sourceSubcategory: "Package Managers",
+            relativePath: "Downloads/Package Managers/Package Tool.app",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        let originalID = UUID()
+        let misplaced = AppEntry(
+            id: originalID,
+            name: "Package Tool",
+            summary: "Existing summary",
+            details: "Existing description",
+            category: "Development",
+            subcategory: "Tools",
+            homepage: URL(string: "https://example.com"),
+            files: [file]
+        )
+
+        let repaired = try #require(
+            CatalogStore.splittingMergedEntries(in: [misplaced]).first
+        )
+
+        #expect(repaired.id == originalID)
+        #expect(repaired.category == "Downloads")
+        #expect(repaired.subcategory == "Package Managers")
+        #expect(repaired.summary == "Existing summary")
+        #expect(repaired.details == "Existing description")
+        #expect(repaired.homepage == misplaced.homepage)
     }
 
     @Test

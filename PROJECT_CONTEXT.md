@@ -15,7 +15,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Erster offizieller Beta-Release: `1.0.0-beta.1`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.2`.
 
 ## Datenschutz hat Vorrang
 
@@ -55,7 +55,7 @@ eines lokalen App-Katalogs.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Alle Änderungen seit `1.0.0-beta.1` bleiben als unveröffentlichter
+- Änderungen nach `1.0.0-beta.2` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 
@@ -73,6 +73,22 @@ eines lokalen App-Katalogs.
   Standardexport enthält keine Lizenzdaten; geschützte Lizenzexporte
   verwenden PBKDF2-HMAC-SHA256 und AES-256-GCM.
 - Der datensparsame Standardexport enthält keine Schlüsselbunddaten.
+- Import, Export und manuell gewählte Dateien verwenden einen gemeinsamen
+  Security-Scoped-Dateizugriff. Lizenzimporte zeigen vor dem Speichern nur die
+  eindeutig zugeordneten App-Namen, niemals die privaten Lizenzwerte.
+- Die Katalogspeicherung prüft Kennungen und Dateipfade vor dem Schreiben,
+  validiert eine Schreibkopie und hält die letzte gültige Fassung zur
+  automatischen Wiederherstellung bereit.
+- Scan-Ergebnisse werden in einem eigenen, indexierten Abgleichsdienst mit dem
+  Katalog zusammengeführt. Manuelle Icons und Beschreibungen bleiben geschützt.
+- Die Hauptansicht verwendet einen zentralen Zustand für Dialoge, Importe und
+  Bestätigungen. Import-/Exportformate liegen in getrennten Diensten.
+- Sidebar-Ordner stammen aus den gespeicherten Quell-Unterordnern; Dateinamen
+  dürfen niemals als Ordner erscheinen. Ein Ordnerfilter muss dieselben Apps
+  liefern, die sein Zähler umfasst.
+- Der Lizenzimport normalisiert Versions- und Verpackungszusätze, führt
+  doppelte Lizenzzeilen zusammen und bietet für wirklich fehlende Einträge
+  optional private manuelle Katalogeinträge ohne lokale Datei an.
 - Lokale Icons liegen separat als Originale und 256-Pixel-Vorschaubilder in
   Application Support. Der lokale Katalog enthält nur Icon-Referenzen;
   portable Exporte enthalten weiterhin die Originalicons.

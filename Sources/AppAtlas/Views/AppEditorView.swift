@@ -343,13 +343,7 @@ struct AppEditorView: View {
     }
 
     private func importIcon(from url: URL) -> Bool {
-        let hasAccess = url.startAccessingSecurityScopedResource()
-        defer {
-            if hasAccess {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        guard let sourceData = try? Data(contentsOf: url),
+        guard let sourceData = try? SecurityScopedFileAccess.readData(from: url),
               let png = IconImageConverter.compactPNG(from: sourceData)
         else {
             return false

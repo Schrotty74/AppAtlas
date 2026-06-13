@@ -138,17 +138,22 @@ final class CatalogStore: ObservableObject {
                 continue
             }
             let folders = Array(components.dropFirst().dropLast())
-            for depth in 1...folders.count {
-                paths.insert(folders.prefix(depth).joined(separator: "/"))
-            }
-        }
-        if paths.isEmpty, !app.subcategory.isEmpty, app.subcategory != app.category {
-            let folders = app.subcategory.split(separator: "/").map(String.init)
-            for depth in 1...folders.count {
-                paths.insert(folders.prefix(depth).joined(separator: "/"))
-            }
+            addFolderHierarchy(folders.joined(separator: "/"), to: &paths)
         }
         return paths
+    }
+
+    private func addFolderHierarchy(
+        _ path: String,
+        to paths: inout Set<String>
+    ) {
+        let folders = path.split(separator: "/").map(String.init)
+        guard !folders.isEmpty else {
+            return
+        }
+        for depth in 1...folders.count {
+            paths.insert(folders.prefix(depth).joined(separator: "/"))
+        }
     }
 
     private func makeFolderNode(
@@ -211,7 +216,7 @@ final class CatalogStore: ObservableObject {
             let splitEntries = AppCatalogBuilder().buildEntries(
                 from: entry.files
             )
-            guard splitEntries.count > 1 else {
+            guard !splitEntries.isEmpty else {
                 return [entry]
             }
             let retainedIndex = splitEntries.firstIndex {
@@ -279,12 +284,19 @@ final class CatalogStore: ObservableObject {
     }
 
     func add(_ app: AppEntry) {
-        let enrichedApp = migrateIcon(
-            in: AppMetadataEnricher().enrich(app)
-        )
-        apps.append(enrichedApp)
+        add([app])
+    }
+
+    func add(_ newApps: [AppEntry]) {
+        guard !newApps.isEmpty else {
+            return
+        }
+        let enrichedApps = newApps.map {
+            migrateIcon(in: AppMetadataEnricher().enrich($0))
+        }
+        apps.append(contentsOf: enrichedApps)
         apps.sort(by: Self.sortApps)
-        selectedAppID = enrichedApp.id
+        selectedAppID = enrichedApps.last?.id
         persist()
     }
 
@@ -802,74 +814,11 @@ final class CatalogStore: ObservableObject {
     }
 
     func mergeScannedApps(_ scannedApps: [AppEntry]) {
-        let scannedPaths = Set(
-            scannedApps.flatMap(\.files).map(\.relativePath)
-        )
-        let originalPathOwners = Dictionary(
-            uniqueKeysWithValues: apps.map {
-                ($0.id, Set($0.files.map(\.relativePath)))
-            }
-        )
-        for index in apps.indices {
-            apps[index].files.removeAll {
-                scannedPaths.contains($0.relativePath)
-            }
-        }
-        var claimedExistingIDs = Set<AppEntry.ID>()
-
-        for scannedApp in scannedApps {
-            let scannedKey = AppNameNormalizer.catalogIdentityKey(
-                name: scannedApp.name,
-                category: scannedApp.category,
-                subcategory: scannedApp.subcategory
-            )
-            let scannedPaths = Set(scannedApp.files.map(\.relativePath))
-            let identityIndex = apps.firstIndex(where: {
-                !claimedExistingIDs.contains($0.id)
-                    && AppNameNormalizer.catalogIdentityKey(
-                        name: $0.name,
-                        category: $0.category,
-                        subcategory: $0.subcategory
-                    ) == scannedKey
-            })
-            let pathOwnerIndex = apps.firstIndex {
-                !claimedExistingIDs.contains($0.id)
-                    && !(originalPathOwners[$0.id] ?? [])
-                        .isDisjoint(with: scannedPaths)
-            }
-            if let index = identityIndex ?? pathOwnerIndex {
-                let matchedByPath = pathOwnerIndex == index
-                claimedExistingIDs.insert(apps[index].id)
-                let existingPaths = Set(apps[index].files.map(\.relativePath))
-                let newFiles = scannedApp.files.filter { !existingPaths.contains($0.relativePath) }
-                apps[index].files.append(contentsOf: newFiles)
-                if matchedByPath {
-                    apps[index].name = scannedApp.name
-                    apps[index].category = scannedApp.category
-                    apps[index].subcategory = scannedApp.subcategory
-                }
-                if !apps[index].hasIcon {
-                    apps[index].iconData = scannedApp.iconData
-                    apps[index].iconOrigin = .localBundle
-                    apps[index] = migrateIcon(in: apps[index])
-                }
-                apps[index] = AppMetadataEnricher().enrich(apps[index])
-            } else {
-                apps.append(
-                    migrateIcon(
-                        in: AppMetadataEnricher().enrich(scannedApp)
-                    )
-                )
-            }
-        }
-        let scannedOriginalIDs = Set(originalPathOwners.compactMap {
-            $0.value.isDisjoint(with: scannedPaths) ? nil : $0.key
-        })
-        apps.removeAll {
-            scannedOriginalIDs.contains($0.id)
-                && !claimedExistingIDs.contains($0.id)
-                && $0.files.isEmpty
-        }
+        apps = CatalogScanReconciler().reconcile(
+            existingApps: apps,
+            scannedApps: scannedApps
+        ).apps
+        apps = migrateIcons(in: apps)
         apps.sort(by: Self.sortApps)
         persist()
     }

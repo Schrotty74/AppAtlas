@@ -9,9 +9,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern, verwaltet Icons,
 Beschreibungen, Links und Lizenzinformationen und startet für jeden Benutzer
 mit einem leeren lokalen Katalog.
 
-> Aktueller Release: **AppAtlas 1.0.0-beta.1**
+> Aktueller Release: **AppAtlas 1.0.0-beta.2**
 
-[AppAtlas 1.0.0-beta.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.1/AppAtlas-1.0.0-beta.1-macos.zip)
+[AppAtlas 1.0.0-beta.2 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.0-beta.2/AppAtlas-1.0.0-beta.2-macos.zip)
 
 ## Transparenz
 
@@ -98,6 +98,15 @@ APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
 Das Release-Skript darf nur nach ausdrücklicher Freigabe ausgeführt werden.
 Für normale Entwicklungsprüfungen genügen `swift build` und `swift test`; sie
 erzeugen keine ZIP-Dateien und öffnen AppAtlas nicht automatisch.
+
+Für einen manuell startbaren Entwicklungsstand ohne Beta, ZIP oder Backup:
+
+```sh
+./Scripts/build-development.sh
+```
+
+Die App liegt anschließend unter `dist/AppAtlas-Development/AppAtlas.app` und
+wird nicht automatisch geöffnet.
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
 nur auf ausdrückliche Anweisung erstellt. Lokale Git-Prüfungen vor jedem

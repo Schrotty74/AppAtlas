@@ -7,13 +7,23 @@ struct ImportedLicense: Sendable {
 
 struct LicenseImportMatch: Sendable {
     let appID: UUID
+    let appName: String
+    let record: AppLicenseRecord
+}
+
+struct UnmatchedLicense: Sendable {
+    let appName: String
     let record: AppLicenseRecord
 }
 
 struct LicenseImportPlan: Sendable {
     let matches: [LicenseImportMatch]
-    let unmatchedNames: [String]
+    let unmatchedLicenses: [UnmatchedLicense]
     let ambiguousNames: [String]
+
+    var unmatchedNames: [String] {
+        unmatchedLicenses.map(\.appName)
+    }
 
     var summary: String {
         "\(matches.count) Lizenzdaten zugeordnet, \(unmatchedNames.count) ohne passenden Katalogeintrag, \(ambiguousNames.count) nicht eindeutig."
@@ -70,36 +80,103 @@ struct LicenseDataImporter: Sendable {
         apps: [AppEntry]
     ) -> LicenseImportPlan {
         var matches: [LicenseImportMatch] = []
-        var unmatched: [String] = []
+        var unmatched: [UnmatchedLicense] = []
         var ambiguous: [String] = []
 
-        for license in licenses where !license.record.isEmpty {
+        for license in mergedLicenses(licenses) where !license.record.isEmpty {
             let ranked = apps
-                .map { ($0, AppNameMatcher.similarity(license.softwareName, $0.name)) }
+                .map {
+                    (
+                        $0,
+                        AppNameMatcher.licenseSimilarity(
+                            license.softwareName,
+                            $0.name
+                        )
+                    )
+                }
                 .sorted { $0.1 > $1.1 }
             guard let best = ranked.first else {
-                unmatched.append(license.softwareName)
+                unmatched.append(
+                    UnmatchedLicense(
+                        appName: license.softwareName,
+                        record: license.record
+                    )
+                )
                 continue
             }
             let secondScore = ranked.dropFirst().first?.1 ?? 0
-            let exact = AppNameMatcher.normalized(license.softwareName)
-                == AppNameMatcher.normalized(best.0.name)
-            guard exact || (best.1 >= 0.9 && best.1 - secondScore >= 0.08) else {
+            let exact = AppNameMatcher.licenseNormalized(license.softwareName)
+                == AppNameMatcher.licenseNormalized(best.0.name)
+            guard exact || (best.1 >= 0.85 && best.1 - secondScore >= 0.08) else {
                 if best.1 >= 0.8 {
                     ambiguous.append(license.softwareName)
                 } else {
-                    unmatched.append(license.softwareName)
+                    unmatched.append(
+                        UnmatchedLicense(
+                            appName: license.softwareName,
+                            record: license.record
+                        )
+                    )
                 }
                 continue
             }
             matches.append(
-                LicenseImportMatch(appID: best.0.id, record: license.record)
+                LicenseImportMatch(
+                    appID: best.0.id,
+                    appName: best.0.name,
+                    record: license.record
+                )
             )
         }
         return LicenseImportPlan(
             matches: matches,
-            unmatchedNames: unmatched.sorted(),
+            unmatchedLicenses: unmatched.sorted {
+                $0.appName.localizedStandardCompare($1.appName)
+                    == .orderedAscending
+            },
             ambiguousNames: ambiguous.sorted()
+        )
+    }
+
+    private func mergedLicenses(
+        _ licenses: [ImportedLicense]
+    ) -> [ImportedLicense] {
+        Dictionary(grouping: licenses) {
+            AppNameMatcher.licenseNormalized($0.softwareName)
+        }
+        .values
+        .compactMap { group in
+            guard let first = group.first else {
+                return nil
+            }
+            return ImportedLicense(
+                softwareName: first.softwareName,
+                record: group.dropFirst().reduce(first.record) {
+                    merge($0, with: $1.record)
+                }
+            )
+        }
+    }
+
+    private func merge(
+        _ lhs: AppLicenseRecord,
+        with rhs: AppLicenseRecord
+    ) -> AppLicenseRecord {
+        let serials = (lhs.serialNumber + "\n" + rhs.serialNumber)
+            .split(whereSeparator: \.isNewline)
+            .map(String.init)
+            .filter { !$0.isEmpty }
+        return AppLicenseRecord(
+            serialNumber: Array(NSOrderedSet(array: serials))
+                .compactMap { $0 as? String }
+                .joined(separator: "\n"),
+            registeredEmail: lhs.registeredEmail.isEmpty
+                ? rhs.registeredEmail
+                : lhs.registeredEmail,
+            licenseType: lhs.licenseType.isEmpty
+                ? rhs.licenseType
+                : lhs.licenseType,
+            notes: lhs.notes.isEmpty ? rhs.notes : lhs.notes
         )
     }
 

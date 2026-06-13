@@ -6,7 +6,7 @@ struct SidebarView: View {
     @State private var expandedCategories = Set<String>()
 
     var body: some View {
-        List(selection: $store.selectedCategory) {
+        List {
             Section("Mediathek") {
                 Button {
                     store.selectedCategory = nil
@@ -39,7 +39,15 @@ struct SidebarView: View {
                 } icon: {
                     Image(systemName: "checklist")
                 }
-                .tag(CatalogStore.needsReviewFilter as String?)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    store.selectedCategory = CatalogStore.needsReviewFilter
+                }
+                .listRowBackground(
+                    store.selectedCategory == CatalogStore.needsReviewFilter
+                        ? theme.accent.opacity(0.18)
+                        : Color.clear
+                )
             }
 
             Section("Kategorien") {
@@ -47,7 +55,15 @@ struct SidebarView: View {
                     let folders = store.folderTree(for: category.name)
                     if folders.isEmpty {
                         categoryLabel(category.name, count: category.count)
-                            .tag(category.name as String?)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                store.selectedCategory = category.name
+                            }
+                            .listRowBackground(
+                                store.selectedCategory == category.name
+                                    ? theme.accent.opacity(0.18)
+                                    : Color.clear
+                            )
                     } else {
                         DisclosureGroup(
                             isExpanded: expansionBinding(for: category.name)
@@ -125,7 +141,15 @@ private struct SidebarFolderNode: View {
     var body: some View {
         if folder.children.isEmpty {
             folderLabel
-                .tag(filterValue as String?)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    store.selectedCategory = filterValue
+                }
+                .listRowBackground(
+                    store.selectedCategory == filterValue
+                        ? theme.accent.opacity(0.18)
+                        : Color.clear
+                )
         } else {
             DisclosureGroup {
                 ForEach(folder.children) { child in
@@ -138,7 +162,6 @@ private struct SidebarFolderNode: View {
                         store.selectedCategory = filterValue
                     }
             }
-            .tag(filterValue as String?)
         }
     }
 

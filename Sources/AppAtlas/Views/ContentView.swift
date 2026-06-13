@@ -9,22 +9,7 @@ struct ContentView: View {
     @AppStorage("appAtlasCustomThemes") private var customThemesRaw = "[]"
     @AppStorage(AppLanguageChoice.storageKey)
     private var languageChoice = AppLanguageChoice.automatic.rawValue
-    @State private var showAddApp = false
-    @State private var editingApp: AppEntry?
-    @State private var appPendingDeletion: AppEntry?
-    @State private var showAssistant = false
-    @State private var showScanner = false
-    @State private var showThemeImporter = false
-    @State private var showCatalogImporter = false
-    @State private var showLicenseImporter = false
-    @State private var showCatalogExporter = false
-    @State private var encryptedCatalogData: Data?
-    @State private var pendingCatalogExport: CatalogExportProtection?
-    @State private var themeErrorMessage: String?
-    @State private var catalogErrorMessage: String?
-    @State private var themePendingDeletion: AppAtlasThemeDefinition?
-    @State private var showDeleteAllConfirmation = false
-    @State private var showWebsitePromptExclusions = false
+    @StateObject private var presentation = ContentPresentationState()
 
     private var customThemes: [AppAtlasThemeDefinition] {
         AppAtlasThemeDefinition.decodeList(customThemesRaw)
@@ -71,44 +56,44 @@ struct ContentView: View {
                 selectedLayout: $selectedLayout,
                 selectedThemeID: $selectedThemeID,
                 customThemes: customThemes,
-                importTheme: { showThemeImporter = true },
+                importTheme: { presentation.importer = .theme },
                 exportTheme: exportSelectedTheme,
                 deleteTheme: prepareDeleteSelectedTheme,
-                showScanner: { showScanner = true },
-                showAssistant: { showAssistant = true },
-                showAddApp: { showAddApp = true },
+                showScanner: { presentation.sheet = .scanner },
+                showAssistant: { presentation.sheet = .assistant },
+                showAddApp: { presentation.sheet = .addApp },
                 showWebsitePromptExclusions: {
-                    showWebsitePromptExclusions = true
+                    presentation.sheet = .websiteExclusions
                 },
-                showCatalogExporter: { showCatalogExporter = true },
-                showCatalogImporter: { showCatalogImporter = true },
-                showLicenseImporter: { showLicenseImporter = true },
-                editSelectedApp: { editingApp = store.selectedApp },
+                showCatalogExporter: {
+                    presentation.sheet = .catalogExporter
+                },
+                showCatalogImporter: { presentation.importer = .catalog },
+                showLicenseImporter: { presentation.importer = .licenses },
+                editSelectedApp: {
+                    if let app = store.selectedApp {
+                        presentation.sheet = .editApp(app)
+                    }
+                },
                 deleteSelectedApp: {
-                    appPendingDeletion = store.selectedApp
+                    if let app = store.selectedApp {
+                        presentation.alert = .deleteApp(app)
+                    }
                 },
-                deleteAllApps: { showDeleteAllConfirmation = true }
+                deleteAllApps: { presentation.alert = .deleteAll }
             )
         }
         .modifier(
             ContentSheetsModifier(
-                showAddApp: $showAddApp,
-                editingApp: $editingApp,
-                showAssistant: $showAssistant,
-                showScanner: $showScanner,
-                showWebsitePromptExclusions: $showWebsitePromptExclusions,
-                showCatalogExporter: $showCatalogExporter,
-                encryptedCatalogData: $encryptedCatalogData,
-                pendingCatalogExport: $pendingCatalogExport,
+                presentation: presentation,
                 performPendingCatalogExport: performPendingCatalogExport,
-                importEncryptedCatalog: importEncryptedCatalog
+                importEncryptedCatalog: importEncryptedCatalog,
+                applyLicenseImport: applyLicenseImport
             )
         )
         .modifier(
             ContentFileImportersModifier(
-                showThemeImporter: $showThemeImporter,
-                showCatalogImporter: $showCatalogImporter,
-                showLicenseImporter: $showLicenseImporter,
+                presentation: presentation,
                 importTheme: importCustomTheme,
                 importCatalog: prepareCatalogImport,
                 importLicenses: importLicenseData
@@ -116,11 +101,7 @@ struct ContentView: View {
         )
         .modifier(
             ContentAlertsModifier(
-                themeErrorMessage: $themeErrorMessage,
-                catalogMessage: $catalogErrorMessage,
-                themePendingDeletion: $themePendingDeletion,
-                appPendingDeletion: $appPendingDeletion,
-                showDeleteAllConfirmation: $showDeleteAllConfirmation,
+                presentation: presentation,
                 deleteTheme: deleteCustomTheme
             )
         )
@@ -133,15 +114,7 @@ struct ContentView: View {
     private func importCustomTheme(_ result: Result<URL, Error>) {
         do {
             let url = try result.get()
-            let hasAccess = url.startAccessingSecurityScopedResource()
-            defer {
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
-            }
-
-            let data = try Data(contentsOf: url)
-            let theme = try ThemeDocumentDecoder.decode(data)
+            let theme = try ThemeTransferService().importTheme(from: url)
             let themes = (
                 customThemes.filter { $0.id != theme.id } + [theme]
             )
@@ -149,84 +122,62 @@ struct ContentView: View {
             customThemesRaw = AppAtlasThemeDefinition.encodeList(themes)
             selectedThemeID = theme.id
         } catch {
-            themeErrorMessage = error.localizedDescription
+            showError("Theme importieren", error)
         }
     }
 
     private func prepareCatalogImport(_ result: Result<URL, Error>) {
         do {
             let url = try result.get()
-            let hasAccess = url.startAccessingSecurityScopedResource()
-            defer {
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
-            }
-            let data = try Data(contentsOf: url)
-            if CatalogTransferDocument.requiresPassword(data) {
-                encryptedCatalogData = data
-            } else {
-                try applyCatalogImport(
-                    CatalogTransferDocument.decode(data)
-                )
+            switch try CatalogTransferService().prepareImport(from: url) {
+            case .ready(let result):
+                try applyCatalogImport(result)
+            case .passwordRequired(let data):
+                presentation.encryptedCatalogData = data
+                presentation.sheet = .catalogPassword
             }
         } catch {
-            catalogErrorMessage = error.localizedDescription
+            showError("Katalog importieren", error)
         }
     }
 
     private func importLicenseData(_ result: Result<URL, Error>) {
         do {
             let url = try result.get()
-            let hasAccess = url.startAccessingSecurityScopedResource()
-            defer {
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
-            }
-            let importer = LicenseDataImporter()
-            let licenses = try importer.decode(
-                data: Data(contentsOf: url),
-                fileExtension: url.pathExtension
+            let plan = try LicenseImportService().prepare(
+                from: url,
+                apps: store.apps
             )
-            let plan = importer.plan(licenses: licenses, apps: store.apps)
-            var savedCount = 0
-            var failedCount = 0
-            for match in plan.matches {
-                do {
-                    let existing = LicenseKeychainStore.shared.load(
-                        for: match.appID
-                    ) ?? AppLicenseRecord()
-                    try LicenseKeychainStore.shared.save(
-                        existing.mergingMissingValues(from: match.record),
-                        for: match.appID
-                    )
-                    savedCount += 1
-                } catch {
-                    failedCount += 1
-                }
-            }
-            let saveResult = LicenseImportSaveResult(
-                savedCount: savedCount,
-                failedCount: failedCount,
-                unmatchedCount: plan.unmatchedNames.count,
-                ambiguousCount: plan.ambiguousNames.count
-            )
-            if savedCount > 0 {
-                NotificationCenter.default.post(
-                    name: .appAtlasLicenseDataDidChange,
-                    object: nil
-                )
-            }
-            catalogErrorMessage = "Lizenzimport\n\n\(saveResult.summary)"
+            presentation.sheet = .licensePreview(plan)
         } catch {
-            catalogErrorMessage = error.localizedDescription
+            showError("Lizenzdaten importieren", error)
         }
+    }
+
+    private func applyLicenseImport(
+        _ plan: LicenseImportPlan,
+        createMissingEntries: Bool
+    ) {
+        let outcome = LicenseImportService().apply(
+            plan,
+            createMissingEntries: createMissingEntries
+        )
+        store.add(outcome.createdApps)
+        if outcome.saveResult.savedCount > 0 {
+            NotificationCenter.default.post(
+                name: .appAtlasLicenseDataDidChange,
+                object: nil
+            )
+        }
+        presentation.alert = .message(
+            title: "Lizenzimport",
+            message: outcome.saveResult.summary
+        )
     }
 
     private func exportCatalog(_ protection: CatalogExportProtection) {
         do {
-            let data = try CatalogTransferDocument.encoded(
+            let data = try CatalogTransferService().exportData(
                 apps: store.exportApps(),
                 protection: protection
             )
@@ -240,41 +191,41 @@ struct ContentView: View {
                     return
                 }
                 do {
-                    try data.write(to: url, options: .atomic)
+                    try SecurityScopedFileAccess.write(data, to: url)
                 } catch {
-                    catalogErrorMessage = error.localizedDescription
+                    showError("Katalog exportieren", error)
                 }
             }
         } catch {
-            catalogErrorMessage = error.localizedDescription
+            showError("Katalog exportieren", error)
         }
     }
 
     private func performPendingCatalogExport() {
-        guard let protection = pendingCatalogExport else {
+        guard let protection = presentation.pendingCatalogExport else {
             return
         }
-        pendingCatalogExport = nil
+        presentation.pendingCatalogExport = nil
         DispatchQueue.main.async {
             exportCatalog(protection)
         }
     }
 
     private func importEncryptedCatalog(password: String) -> Bool {
-        guard let encryptedCatalogData else {
+        guard let data = presentation.encryptedCatalogData else {
             return false
         }
         do {
             try applyCatalogImport(
-                CatalogTransferDocument.decode(
-                    encryptedCatalogData,
+                CatalogTransferService().decodeEncrypted(
+                    data,
                     password: password
                 )
             )
-            self.encryptedCatalogData = nil
+            presentation.encryptedCatalogData = nil
             return true
         } catch {
-            catalogErrorMessage = error.localizedDescription
+            showError("Katalog importieren", error)
             return false
         }
     }
@@ -298,7 +249,7 @@ struct ContentView: View {
                     existingIDs: Set(customThemes.map(\.id))
                 )
             } catch {
-                themeErrorMessage = error.localizedDescription
+                showError("Theme exportieren", error)
                 return
             }
         } else {
@@ -306,39 +257,33 @@ struct ContentView: View {
         }
 
         do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(theme)
-            guard var text = String(data: data, encoding: .utf8) else {
-                throw CocoaError(.fileWriteInapplicableStringEncoding)
-            }
-            text += "\n"
+            let text = try ThemeTransferService().exportText(for: theme)
             saveTheme(
                 text: text,
                 defaultName: "appatlas-theme-\(theme.id).json"
             )
         } catch {
-            themeErrorMessage = error.localizedDescription
+            showError("Theme exportieren", error)
         }
     }
 
     private func prepareDeleteSelectedTheme() {
-        themePendingDeletion = customThemes.first {
+        guard let theme = customThemes.first(where: {
             $0.id == selectedThemeID
-        }
-    }
-
-    private func deleteCustomTheme(_ theme: AppAtlasThemeDefinition?) {
-        guard let theme else {
+        }) else {
             return
         }
+        presentation.alert = .deleteTheme(theme)
+    }
+
+    private func deleteCustomTheme(_ theme: AppAtlasThemeDefinition) {
         customThemesRaw = AppAtlasThemeDefinition.encodeList(
             customThemes.filter { $0.id != theme.id }
         )
         if selectedThemeID == theme.id {
             selectedThemeID = AppAtlasTheme.system.rawValue
         }
-        themePendingDeletion = nil
+        presentation.alert = nil
     }
 
     private func saveTheme(text: String, defaultName: String) {
@@ -350,14 +295,17 @@ struct ContentView: View {
                 return
             }
             do {
-                try text.write(
-                    to: url,
-                    atomically: true,
-                    encoding: .utf8
-                )
+                try SecurityScopedFileAccess.write(text, to: url)
             } catch {
-                themeErrorMessage = error.localizedDescription
+                showError("Theme exportieren", error)
             }
         }
+    }
+
+    private func showError(_ title: String, _ error: Error) {
+        presentation.alert = .message(
+            title: title,
+            message: error.localizedDescription
+        )
     }
 }
