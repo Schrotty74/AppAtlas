@@ -1,0 +1,26 @@
+{
+  "format": "appatlas-theme",
+  "version": 1,
+  "id": "autumn-ember",
+  "name": {
+    "de": "Herbstglut",
+    "en": "Autumn Ember"
+  },
+  "mode": "dark",
+  "colors": {
+    "text": "#FFF1DF",
+    "mutedText": "#D8B39B",
+    "background": "#26100F",
+    "backgroundAlt": "#51201C",
+    "panel": "#371A18",
+    "panelSoft": "#653024",
+    "border": "#A65738",
+    "accent": "#F09A32",
+    "accentText": "#2A1008"
+  },
+  "effects": {
+    "glassOpacity": 0.82,
+    "glassBorderOpacity": 0.3,
+    "shadowOpacity": 0.34
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "format": "appatlas-theme",
+  "version": 1,
+  "id": "winter-festival",
+  "name": {
+    "de": "Winterfest",
+    "en": "Winter Festival"
+  },
+  "mode": "light",
+  "colors": {
+    "text": "#17372F",
+    "mutedText": "#657D76",
+    "background": "#F5FAF8",
+    "backgroundAlt": "#DCECE7",
+    "panel": "#FFFCF5",
+    "panelSoft": "#E8F2EE",
+    "border": "#9DBDAE",
+    "accent": "#C9952E",
+    "accentText": "#241A08"
+  },
+  "effects": {
+    "glassOpacity": 0.8,
+    "glassBorderOpacity": 0.28,
+    "shadowOpacity": 0.16
+  }
+}
