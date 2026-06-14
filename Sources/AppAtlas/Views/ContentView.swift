@@ -62,6 +62,7 @@ struct ContentView: View {
                 showScanner: { presentation.sheet = .scanner },
                 showAssistant: { presentation.sheet = .assistant },
                 showAddApp: { presentation.sheet = .addApp },
+                showErrorReport: { presentation.sheet = .errorReport },
                 showWebsitePromptExclusions: {
                     presentation.sheet = .websiteExclusions
                 },

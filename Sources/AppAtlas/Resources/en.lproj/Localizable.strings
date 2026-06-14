@@ -230,3 +230,14 @@
 "Keine ausgeschlossenen Apps" = "No excluded apps";
 "Für alle Apps darf AppAtlas bei Bedarf nach einer Website fragen." = "AppAtlas may ask for a website for any app when needed.";
 "Wieder fragen" = "Ask again";
+"Fehler melden" = "Report a bug";
+"Beschreibe den Fehler. AppAtlas fügt nur technische Basisangaben hinzu, niemals Katalog-, Lizenz- oder Pfaddaten." = "Describe the bug. AppAtlas adds only basic technical information, never catalog, license, or file path data.";
+"Kurzer Titel" = "Short title";
+"Was ist passiert?" = "What happened?";
+"Schritte zum Nachstellen" = "Steps to reproduce";
+"Erwartetes Verhalten" = "Expected behavior";
+"Für Codex kopieren" = "Copy for Codex";
+"Für Codex kopiert" = "Copied for Codex";
+"E-Mail erstellen" = "Create email";
+"E-Mail konnte nicht erstellt werden" = "Email could not be created";
+"Auf diesem Mac ist kein E-Mail-Programm eingerichtet. Kopiere den Bericht stattdessen für Codex oder sende ihn manuell an %@." = "No email app is configured on this Mac. Copy the report for Codex instead or send it manually to %@.";

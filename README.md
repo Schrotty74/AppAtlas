@@ -93,6 +93,13 @@ Details: [docs/PRIVACY.md](docs/PRIVACY.md)
 Öffentlicher Prüfbericht:
 [Datenschutzaudit vom 13. Juni 2026](docs/PRIVACY_AUDIT_2026-06-13.md)
 
+## Fehler melden
+
+Fehlerberichte und Rückfragen können an
+[appatlas@mailbox.org](mailto:appatlas@mailbox.org) gesendet werden. AppAtlas
+enthält außerdem einen Fehlerbericht-Dialog, der einen datensparsamen Bericht
+für eine E-Mail oder zum Einfügen in Codex erstellt.
+
 ## Entwicklung
 
 ```sh

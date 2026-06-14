@@ -40,6 +40,8 @@ struct ContentSheetsModifier: ViewModifier {
         case .scanner:
             ScanImportView()
                 .environmentObject(store)
+        case .errorReport:
+            ErrorReportView()
         case .websiteExclusions:
             WebsitePromptExclusionsView()
                 .environmentObject(store)

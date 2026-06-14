@@ -13,6 +13,7 @@ struct ContentToolbar: ToolbarContent {
     let showScanner: () -> Void
     let showAssistant: () -> Void
     let showAddApp: () -> Void
+    let showErrorReport: () -> Void
     let showWebsitePromptExclusions: () -> Void
     let showCatalogExporter: () -> Void
     let showCatalogImporter: () -> Void
@@ -78,6 +79,10 @@ struct ContentToolbar: ToolbarContent {
 
             SettingsLink {
                 Label("Einstellungen …", systemImage: "gearshape")
+            }
+
+            Button(action: showErrorReport) {
+                Label("Fehler melden", systemImage: "exclamationmark.bubble")
             }
 
             Divider()

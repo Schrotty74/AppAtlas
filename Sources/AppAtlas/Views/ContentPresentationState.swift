@@ -23,6 +23,7 @@ enum ContentSheet: Identifiable {
     case editApp(AppEntry)
     case assistant
     case scanner
+    case errorReport
     case websiteExclusions
     case catalogExporter
     case catalogPassword
@@ -38,6 +39,8 @@ enum ContentSheet: Identifiable {
             "assistant"
         case .scanner:
             "scanner"
+        case .errorReport:
+            "error-report"
         case .websiteExclusions:
             "website-exclusions"
         case .catalogExporter:
