@@ -25,18 +25,30 @@ wurde ebenfalls mit Codex erstellt.
   Backup-Archive herausfiltern und Vorschläge einzeln auswählen
 - lokale Ordner und selbst definierte Dateiendungen dauerhaft vom Scan
   ausschließen
+- neue, geänderte und entfernte Dateien bei erneuten Scans mit dem Katalog
+  abgleichen
 - Apps manuell hinzufügen, bearbeiten und löschen
+- lokale App-Dateien nach ausdrücklicher Bestätigung in den Papierkorb legen
 - Beschreibungen, Links und hochwertige Icons verwalten
 - fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen
 - unsichere Treffer mit Quellenangabe unter „Zu prüfen“ bestätigen oder
   verwerfen
+- Online-Abfragen, Parallelität und erweiterte Suche lokal konfigurieren
+- Website-Rückfragen pro App über eine Ausschlussliste verwalten
 - fremdsprachige Beschreibungen vor der Übernahme lokal übersetzen
 - Icons lokal als separate Originale und schnelle Vorschaubilder speichern
-- mehrere Layouts und eigenes Theme-System
-- natives Liquid Glass unter macOS 26 mit kompatibler Darstellung auf
-  älteren macOS-Versionen
-- Katalog als JSON exportieren und importieren, optional mit Lizenzdaten
+- Apps über Namen, Beschreibungen, Kategorien und Ordner durchsuchen
+- hierarchische Kategorien und Unterordner verwenden
+- App-Assistent mit optionaler Reddit-Recherche
+- mehrere Layouts sowie Themes importieren, exportieren und löschen
+- native Liquid-Glass-Effekte für Bedienelemente und Karten ab macOS 26 mit
+  kompatibler Darstellung auf älteren macOS-Versionen
+- Katalog als JSON exportieren und importieren, wahlweise ohne Lizenzdaten,
+  unverschlüsselt oder passwortgeschützt mit AES-256-GCM
+- Lizenzdaten aus JSON- und CSV-Dateien importieren
 - private Lizenzdaten im macOS-Schlüsselbund speichern
+- einzelne Apps oder den gesamten Katalog löschen
+- datensparsamen Fehlerbericht für E-Mail oder Codex erstellen
 - deutsche und englische Oberfläche
 
 ## Voraussetzungen
@@ -49,6 +61,8 @@ wurde ebenfalls mit Codex erstellt.
 - [Theme-Dokumentation](docs/themes/README.md)
 - [Vorlage für eigene Themes](docs/themes/appatlas-theme-template.json)
 - [Vollständiges Beispieltheme](docs/themes/example-custom-theme.json)
+- [Beispieltheme Herbstglut](docs/themes/example-autumn-ember.json)
+- [Beispieltheme Winterfest](docs/themes/example-winter-frost.json)
 - [Projektstruktur](docs/PROJECT_STRUCTURE.md)
 
 ## Hinweis zur macOS-Sicherheitswarnung
