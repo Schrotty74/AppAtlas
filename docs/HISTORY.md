@@ -1,5 +1,15 @@
 # Projekthistorie
 
+## 1.0.0-beta.5 – Theme- und Cache-Stabilität
+
+- Zuverlässige vollständige Hell-/Dunkel-Umschaltung des System-Themes.
+- Einheitlichere Theme-Darstellung ohne doppelt gezeichneten Hintergrund in
+  der eingebetteten Detailspalte.
+- Stabile kompakte Suche und lesbarer App-Zähler in der Toolbar.
+- Kein automatischer Übersetzungsdownload-Dialog beim App-Start.
+- Automatische Wiederherstellung fehlender Icon-Cache-Ordner.
+- Release-ZIPs und Prüfsummen ausschließlich im lokalen Backup-Ordner.
+
 ## 1.0.0-beta.4 – Metadaten-Vertrauen, Fehlerberichte und Liquid Glass
 
 - Gemeinsame Vertrauensbewertung für Apple, GitHub, Websuche und Reddit.

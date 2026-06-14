@@ -15,10 +15,11 @@ build_number="${APPATLAS_BUILD_NUMBER:-33}"
 scratch_directory="$root_directory/.build/beta"
 release_directory="$root_directory/dist/AppAtlas-$version"
 app_bundle="$release_directory/AppAtlas.app"
-zip_file="$root_directory/dist/AppAtlas-$version-macos.zip"
+zip_file="$root_directory/Backup/AppAtlas-$version-macos.zip"
 checksum_file="$zip_file.sha256"
 
 "$root_directory/Scripts/privacy-check.sh"
+mkdir -p "$root_directory/Backup"
 
 swift build \
     --package-path "$root_directory" \
@@ -142,7 +143,7 @@ codesign --verify --deep --strict "$app_bundle"
 
 ditto -c -k --sequesterRsrc --keepParent "$app_bundle" "$zip_file"
 (
-    cd "$root_directory/dist"
+    cd "$root_directory/Backup"
     shasum -a 256 "$(basename "$zip_file")" \
         > "$(basename "$checksum_file")"
 )

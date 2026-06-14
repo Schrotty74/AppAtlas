@@ -4,6 +4,7 @@
 .swiftpm/
 dist/
 Backup/*.zip
+Backup/*.sha256
 Private/
 *.csv
 *.tsv

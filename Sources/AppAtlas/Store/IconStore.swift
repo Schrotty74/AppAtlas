@@ -22,6 +22,10 @@ final class IconStore: @unchecked Sendable {
         cache.totalCostLimit = 48_000_000
     }
 
+    func prepareDirectories() throws {
+        try createDirectories()
+    }
+
     func save(_ data: Data, for appID: UUID) throws -> String {
         guard let original = IconImageConverter.compactPNG(from: data),
               let thumbnail = IconImageConverter.compactPNG(

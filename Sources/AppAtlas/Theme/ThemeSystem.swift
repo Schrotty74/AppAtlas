@@ -73,7 +73,7 @@ enum AppAtlasTheme: String, CaseIterable, Identifiable {
                 background: "#000000",
                 backgroundAlt: "#000000",
                 panel: "#000000",
-                panelSoft: "#111111",
+                panelSoft: "#000000",
                 border: "#FFFFFF",
                 accent: "#FFFF00",
                 accentText: "#000000"
@@ -82,10 +82,14 @@ enum AppAtlasTheme: String, CaseIterable, Identifiable {
     }
 
     var style: ThemeStyle {
+        style(for: nil)
+    }
+
+    func style(for systemColorScheme: ColorScheme?) -> ThemeStyle {
         if self == .system {
             return ThemeStyle(
                 id: rawValue,
-                preferredScheme: nil,
+                preferredScheme: systemColorScheme,
                 isHighContrast: false,
                 text: Color(nsColor: .labelColor),
                 mutedText: Color(nsColor: .secondaryLabelColor),
@@ -183,10 +187,11 @@ struct ThemeStyle {
 
     static func resolve(
         id: String,
-        customThemes: [AppAtlasThemeDefinition]
+        customThemes: [AppAtlasThemeDefinition],
+        systemColorScheme: ColorScheme? = nil
     ) -> ThemeStyle {
         if let builtIn = AppAtlasTheme(rawValue: id) {
-            return builtIn.style
+            return builtIn.style(for: systemColorScheme)
         }
         if let custom = customThemes.first(where: { $0.id == id }) {
             return custom.style
@@ -483,13 +488,19 @@ extension EnvironmentValues {
 struct AppAtlasBackground: View {
     @Environment(\.appAtlasTheme) private var theme
 
+    @ViewBuilder
     var body: some View {
-        LinearGradient(
-            colors: theme.background,
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        if theme.id == AppAtlasTheme.system.rawValue {
+            Color(nsColor: .windowBackgroundColor)
+                .ignoresSafeArea()
+        } else {
+            LinearGradient(
+                colors: theme.background,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+        }
     }
 }
 

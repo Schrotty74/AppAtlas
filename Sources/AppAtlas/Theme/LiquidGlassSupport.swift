@@ -26,13 +26,8 @@ struct AppAtlasGlassSurfaceModifier<S: Shape>: ViewModifier {
 struct AppAtlasSidebarSurfaceModifier: ViewModifier {
     @Environment(\.appAtlasTheme) private var theme
 
-    @ViewBuilder
     func body(content: Content) -> some View {
-        if #available(macOS 26.0, *), !theme.isHighContrast {
-            content.background(.clear)
-        } else {
-            content.background(theme.panelSoft)
-        }
+        content.background(theme.panelSoft)
     }
 }
 

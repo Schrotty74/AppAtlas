@@ -30,12 +30,6 @@ struct AppGridView: View {
             }
         }
         .navigationTitle(navigationTitle)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Text("\(store.filteredApps.count) Apps")
-                    .foregroundStyle(theme.mutedText)
-            }
-        }
     }
 
     private var navigationTitle: String {

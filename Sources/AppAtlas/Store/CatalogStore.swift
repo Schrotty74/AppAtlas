@@ -196,7 +196,6 @@ final class CatalogStore: ObservableObject {
                 apps = migrateIcons(in: enrichedApps)
                     .sorted(by: Self.sortApps)
                 importError = nil
-                refreshDescriptionTranslations()
                 if apps != savedApps {
                     persist()
                 }

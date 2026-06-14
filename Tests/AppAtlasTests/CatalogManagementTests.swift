@@ -214,7 +214,7 @@ struct CatalogManagementTests {
     }
 
     @Test @MainActor
-    func loadQueuesStoredEnglishDescriptionsForLocalTranslation() async throws {
+    func loadedDescriptionsTranslateOnlyAfterExplicitRefresh() async throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
@@ -239,8 +239,13 @@ struct CatalogManagementTests {
         await store.loadBundledCatalog()
 
         let app = try #require(store.apps.first)
+        #expect(store.pendingTranslation == nil)
+
+        store.refreshDescriptionTranslations()
+
+        let refreshedApp = try #require(store.apps.first)
         #expect(
-            app.suggestions.contains {
+            refreshedApp.suggestions.contains {
                 $0.kind == .description
                     && $0.needsTranslation
                     && $0.detectedLanguage == "en"
@@ -284,11 +289,20 @@ struct CatalogManagementTests {
 
         await store.loadBundledCatalog()
 
-        let english = try #require(store.apps.first { $0.name == "English" })
         let german = try #require(store.apps.first { $0.name == "German" })
-        #expect(!english.suggestions.contains { $0.kind == .description })
+        #expect(store.pendingTranslation == nil)
+
+        store.refreshDescriptionTranslations()
+
+        let refreshedEnglish = try #require(
+            store.apps.first { $0.name == "English" }
+        )
+        let refreshedGerman = try #require(
+            store.apps.first { $0.name == "German" }
+        )
+        #expect(!refreshedEnglish.suggestions.contains { $0.kind == .description })
         #expect(
-            german.suggestions.contains {
+            refreshedGerman.suggestions.contains {
                 $0.kind == .description
                     && $0.needsTranslation
                     && $0.detectedLanguage == "de"
@@ -703,6 +717,27 @@ struct CatalogManagementTests {
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
+    }
+
+    @Test
+    func iconStorePreparesCacheDirectoriesWithoutSavingAnIcon() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let iconStore = IconStore(rootURL: directory)
+
+        try iconStore.prepareDirectories()
+
+        #expect(
+            FileManager.default.fileExists(
+                atPath: directory.appendingPathComponent("Icons").path
+            )
+        )
+        #expect(
+            FileManager.default.fileExists(
+                atPath: directory.appendingPathComponent("IconThumbnails").path
+            )
+        )
+        try? FileManager.default.removeItem(at: directory)
     }
 
     @Test

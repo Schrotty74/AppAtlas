@@ -29,6 +29,7 @@ struct AppDetailView: View {
     @State private var licenseRecord: AppLicenseRecord?
     @State private var revealSerial = false
     let app: AppEntry
+    var drawsBackground = true
 
     var body: some View {
         ScrollView {
@@ -101,7 +102,11 @@ struct AppDetailView: View {
             .padding(24)
             .frame(maxWidth: 600, alignment: .leading)
         }
-        .background(AppAtlasBackground())
+        .background {
+            if drawsBackground {
+                AppAtlasBackground()
+            }
+        }
         .foregroundStyle(theme.text)
         .navigationTitle(displayedApp.name)
         .toolbar {

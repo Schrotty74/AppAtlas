@@ -8,6 +8,8 @@ struct AppAtlasApp: App {
     private var languageChoice = AppLanguageChoice.automatic.rawValue
 
     init() {
+        try? IconStore.shared.prepareDirectories()
+
         if let iconURL = AppResources.bundle.url(forResource: "AppIcon", withExtension: "png"),
            let icon = NSImage(contentsOf: iconURL) {
             NSApplication.shared.applicationIconImage = icon

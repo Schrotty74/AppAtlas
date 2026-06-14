@@ -10,6 +10,7 @@ struct ContentView: View {
     @AppStorage(AppLanguageChoice.storageKey)
     private var languageChoice = AppLanguageChoice.automatic.rawValue
     @StateObject private var presentation = ContentPresentationState()
+    @StateObject private var systemAppearance = SystemAppearanceObserver()
 
     private var customThemes: [AppAtlasThemeDefinition] {
         AppAtlasThemeDefinition.decodeList(customThemesRaw)
@@ -18,7 +19,8 @@ struct ContentView: View {
     var body: some View {
         let theme = ThemeStyle.resolve(
             id: selectedThemeID,
-            customThemes: customThemes
+            customThemes: customThemes,
+            systemColorScheme: systemAppearance.colorScheme
         )
 
         Group {
@@ -35,6 +37,11 @@ struct ContentView: View {
                 ShelvesLibraryLayout()
             }
         }
+        .id(
+            selectedThemeID == AppAtlasTheme.system.rawValue
+                ? systemAppearance.colorScheme
+                : nil
+        )
         .environment(\.appAtlasTheme, theme)
         .preferredColorScheme(theme.preferredScheme)
         .tint(theme.accent)
@@ -47,7 +54,6 @@ struct ContentView: View {
             CatalogTranslationView()
                 .environmentObject(store)
         }
-        .searchable(text: $store.searchText, prompt: "Apps, Kategorien und Dateinamen")
         .onChange(of: languageChoice) { _, _ in
             store.refreshDescriptionTranslations()
         }

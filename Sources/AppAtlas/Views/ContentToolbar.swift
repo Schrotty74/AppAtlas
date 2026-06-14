@@ -30,7 +30,9 @@ struct ContentToolbar: ToolbarContent {
             )
         }
 
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItemGroup(placement: .primaryAction) {
+            AppCountToolbarItem()
+
             ThemeMenu(
                 selectedThemeID: $selectedThemeID,
                 customThemes: customThemes,
@@ -52,6 +54,8 @@ struct ContentToolbar: ToolbarContent {
             .help("Eine App manuell hinzufügen")
 
             actionsMenu
+
+            CatalogSearchToolbarButton()
         }
     }
 
@@ -126,6 +130,46 @@ struct ContentToolbar: ToolbarContent {
         } label: {
             Label("App-Aktionen", systemImage: "ellipsis.circle")
         }
+    }
+}
+
+private struct CatalogSearchToolbarButton: View {
+    @EnvironmentObject private var store: CatalogStore
+    @State private var isPresented = false
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button {
+            isPresented.toggle()
+        } label: {
+            Label("Suchen", systemImage: "magnifyingglass")
+        }
+        .help("Apps, Kategorien und Dateinamen durchsuchen")
+        .popover(isPresented: $isPresented, arrowEdge: .bottom) {
+            TextField(
+                "Apps, Kategorien und Dateinamen",
+                text: $store.searchText
+            )
+            .textFieldStyle(.roundedBorder)
+            .focused($isFocused)
+            .frame(width: 320)
+            .padding()
+            .onAppear {
+                isFocused = true
+            }
+        }
+    }
+}
+
+private struct AppCountToolbarItem: View {
+    @EnvironmentObject private var store: CatalogStore
+
+    var body: some View {
+        Text("\(store.filteredApps.count) Apps")
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .frame(minWidth: 110)
     }
 }
 

@@ -3,7 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.4`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.5`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -19,8 +19,8 @@
 - Theme-System, mehrere Layouts, Icons und lokale Suche.
 - Deutsche und englische Oberfläche mit manueller Sprachwahl. Die automatische
   Auswahl verwendet Deutsch für DACH und Englisch für alle anderen Regionen.
-- Bereits gespeicherte automatisch bezogene Beschreibungen werden beim Laden
-  und nach einem Sprachwechsel für die lokale Apple-Übersetzung eingeplant,
+- Bereits gespeicherte automatisch bezogene Beschreibungen werden nach einem
+  bewussten Sprachwechsel für die lokale Apple-Übersetzung eingeplant,
   sofern sie nicht der gewählten Sprache entsprechen. Deutsch ist die
   Zielsprache für DACH beziehungsweise manuell Deutsch, Englisch für alle
   anderen Regionen beziehungsweise manuell Englisch. Manuell gepflegte
@@ -91,7 +91,7 @@
 
 ## Offene Aufgaben
 
-- Rückmeldungen aus Beta 4 sammeln und priorisieren.
+- Rückmeldungen aus Beta 5 sammeln und priorisieren.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
 

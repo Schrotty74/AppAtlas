@@ -83,6 +83,17 @@ struct ThemeSystemTests {
         #expect(decoded == [theme])
     }
 
+    @Test
+    func systemThemeResolvesExplicitLightAndDarkAppearances() {
+        let light = AppAtlasTheme.system.style(for: .light)
+        let dark = AppAtlasTheme.system.style(for: .dark)
+
+        #expect(light.preferredScheme == .light)
+        #expect(dark.preferredScheme == .dark)
+        #expect(light.id == AppAtlasTheme.system.rawValue)
+        #expect(dark.id == AppAtlasTheme.system.rawValue)
+    }
+
     private func themeFile(_ name: String) -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

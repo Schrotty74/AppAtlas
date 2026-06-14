@@ -241,7 +241,7 @@ private struct LibraryDetailOrPlaceholder: View {
 
     var body: some View {
         if let app = store.selectedApp {
-            AppDetailView(app: app)
+            AppDetailView(app: app, drawsBackground: false)
         } else {
             ContentUnavailableView(
                 "Keine App ausgewählt",
