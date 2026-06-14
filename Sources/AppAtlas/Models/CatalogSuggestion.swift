@@ -6,6 +6,7 @@ struct CatalogSuggestion: Identifiable, Hashable, Codable, Sendable {
     var value: String
     var sourceLabel: String
     var sourceURL: URL?
+    var sourceIdentifier: String?
     var detectedLanguage: String?
     var needsTranslation: Bool
 
@@ -15,6 +16,7 @@ struct CatalogSuggestion: Identifiable, Hashable, Codable, Sendable {
         value: String,
         sourceLabel: String,
         sourceURL: URL? = nil,
+        sourceIdentifier: String? = nil,
         detectedLanguage: String? = nil,
         needsTranslation: Bool = false
     ) {
@@ -23,6 +25,7 @@ struct CatalogSuggestion: Identifiable, Hashable, Codable, Sendable {
         self.value = value
         self.sourceLabel = sourceLabel
         self.sourceURL = sourceURL
+        self.sourceIdentifier = sourceIdentifier
         self.detectedLanguage = detectedLanguage
         self.needsTranslation = needsTranslation
     }

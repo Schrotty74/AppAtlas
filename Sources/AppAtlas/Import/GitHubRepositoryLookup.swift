@@ -9,32 +9,40 @@ actor GitHubRepositoryLookup {
         let projectURL: URL
         let homepageURL: URL?
         let downloadURL: URL
+        let match: MetadataMatchScore
     }
 
-    private var searchCache: [String: URL] = [:]
+    private var searchCache: [String: CachedSearch] = [:]
     private var searchMisses: Set<String> = []
     private var searchUnavailableUntil: Date?
 
     func metadata(
-        forAppNamed appName: String,
-        category: String = "",
-        subcategory: String = "",
+        for app: AppEntry,
         needsIcon: Bool
     ) async -> Metadata? {
         let key = [
-            AppNameMatcher.normalized(appName),
-            category.lowercased(),
-            subcategory.lowercased()
+            AppNameMatcher.normalized(app.name),
+            app.category.lowercased(),
+            app.subcategory.lowercased()
         ].joined(separator: "|")
         guard !key.isEmpty else {
             return nil
         }
-        if let cachedURL = searchCache[key] {
-            return await metadata(
-                for: cachedURL,
-                category: category,
-                subcategory: subcategory,
+        if let cached = searchCache[key],
+           let metadata = await metadata(
+                for: cached.url,
+                category: app.category,
+                subcategory: app.subcategory,
                 needsIcon: needsIcon
+           )
+        {
+            return Metadata(
+                description: metadata.description,
+                iconData: metadata.iconData,
+                projectURL: metadata.projectURL,
+                homepageURL: metadata.homepageURL,
+                downloadURL: metadata.downloadURL,
+                match: cached.match
             )
         }
         if searchMisses.contains(key)
@@ -51,7 +59,7 @@ actor GitHubRepositoryLookup {
         components.queryItems = [
             URLQueryItem(
                 name: "q",
-                value: "\(AppNameMatcher.searchName(appName)) in:name"
+                value: "\(AppNameMatcher.searchName(app.name)) in:name"
             ),
             URLQueryItem(name: "per_page", value: "5")
         ]
@@ -61,23 +69,37 @@ actor GitHubRepositoryLookup {
                 SearchResponse.self,
                 from: searchData
               ),
-              let match = bestMatch(
-                for: appName,
-                category: category,
-                subcategory: subcategory,
+              let selection = bestMatch(
+                for: app,
                 in: response.items
               ),
-              let repositoryURL = URL(string: match.htmlURL)
+              selection.match.decision != .reject,
+              let repositoryURL = URL(
+                string: selection.repository.htmlURL
+              )
         else {
             searchMisses.insert(key)
             return nil
         }
-        searchCache[key] = repositoryURL
-        return await metadata(
+        searchCache[key] = CachedSearch(
+            url: repositoryURL,
+            match: selection.match
+        )
+        guard let metadata = await metadata(
             for: repositoryURL,
-            category: category,
-            subcategory: subcategory,
+            category: app.category,
+            subcategory: app.subcategory,
             needsIcon: needsIcon
+        ) else {
+            return nil
+        }
+        return Metadata(
+            description: metadata.description,
+            iconData: metadata.iconData,
+            projectURL: metadata.projectURL,
+            homepageURL: metadata.homepageURL,
+            downloadURL: metadata.downloadURL,
+            match: selection.match
         )
     }
 
@@ -145,7 +167,12 @@ actor GitHubRepositoryLookup {
             iconData: iconData,
             projectURL: projectURL,
             homepageURL: officialHomepage(from: info.homepage),
-            downloadURL: releasesURL
+            downloadURL: releasesURL,
+            match: MetadataMatchScore(
+                value: 1,
+                margin: 1,
+                decision: .automatic
+            )
         )
     }
 
@@ -180,41 +207,40 @@ actor GitHubRepositoryLookup {
     }
 
     private func bestMatch(
-        for appName: String,
-        category: String,
-        subcategory: String,
+        for app: AppEntry,
         in repositories: [SearchRepository]
-    ) -> SearchRepository? {
-        repositories
-            .filter {
-                !$0.archived
-                    && !$0.fork
-                    && AppContextMatcher.isPlausible(
-                        category: category,
-                        subcategory: subcategory,
-                        candidateText: [
-                            $0.description ?? "",
-                            $0.language ?? "",
-                            $0.topics?.joined(separator: " ") ?? ""
-                        ].joined(separator: " ")
-                    )
+    ) -> (repository: SearchRepository, match: MetadataMatchScore)? {
+        let ranked = MetadataMatchScorer.ranked(
+            app: app,
+            candidates: repositories.filter {
+                !$0.archived && !$0.fork
             }
-            .map {
-                (
-                    repository: $0,
-                    similarity: AppNameMatcher.similarity(appName, $0.name)
+        ) { repository in
+            MetadataMatchCandidate(
+                name: repository.name,
+                contextText: [
+                    repository.description ?? "",
+                    repository.language ?? "",
+                    repository.topics?.joined(separator: " ") ?? ""
+                ].joined(separator: " "),
+                developer: repository.owner.login,
+                url: URL(string: repository.htmlURL),
+                bundleIdentifier: nil,
+                sourceReliability: min(
+                    0.55
+                        + log10(Double(max(repository.stargazersCount, 1)))
+                        / 20,
+                    0.85
                 )
-            }
-            .filter { $0.similarity >= 0.8 }
-            .sorted {
-                if $0.similarity != $1.similarity {
-                    return $0.similarity > $1.similarity
-                }
-                return $0.repository.stargazersCount
-                    > $1.repository.stargazersCount
-            }
-            .first?
-            .repository
+            )
+        }
+        guard let selection = MetadataMatchScorer.result(
+            app: app,
+            ranked: ranked
+        ) else {
+            return nil
+        }
+        return (selection.candidate, selection.match)
     }
 
     private func iconScore(_ path: String) -> Int {
@@ -293,6 +319,11 @@ actor GitHubRepositoryLookup {
                 ),
                 downloadURL: projectURL.appendingPathComponent(
                     "releases/latest"
+                ),
+                match: MetadataMatchScore(
+                    value: 1,
+                    margin: 1,
+                    decision: .automatic
                 )
             )
         } catch {
@@ -459,6 +490,7 @@ actor GitHubRepositoryLookup {
         let description: String?
         let language: String?
         let topics: [String]?
+        let owner: Owner
 
         enum CodingKeys: String, CodingKey {
             case name
@@ -469,6 +501,16 @@ actor GitHubRepositoryLookup {
             case description
             case language
             case topics
+            case owner
         }
+    }
+
+    private struct Owner: Decodable {
+        let login: String
+    }
+
+    private struct CachedSearch {
+        let url: URL
+        let match: MetadataMatchScore
     }
 }

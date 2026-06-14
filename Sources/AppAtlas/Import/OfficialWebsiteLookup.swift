@@ -3,6 +3,11 @@ import Foundation
 actor OfficialWebsiteLookup {
     static let shared = OfficialWebsiteLookup()
 
+    struct Result: Sendable {
+        let url: URL
+        let match: MetadataMatchScore
+    }
+
     private static let excludedHosts = [
         "apps.apple.com",
         "alternativeto.net",
@@ -17,11 +22,7 @@ actor OfficialWebsiteLookup {
         "wikipedia.org"
     ]
 
-    func homepage(
-        for appName: String,
-        category: String = "",
-        subcategory: String = ""
-    ) async -> URL? {
+    func homepage(for app: AppEntry) async -> Result? {
         guard var components = URLComponents(
             string: "https://html.duckduckgo.com/html/"
         ) else {
@@ -31,10 +32,10 @@ actor OfficialWebsiteLookup {
             URLQueryItem(
                 name: "q",
                 value: [
-                    AppNameMatcher.searchName(appName),
+                    AppNameMatcher.searchName(app.name),
                     AppContextMatcher.searchHint(
-                        category: category,
-                        subcategory: subcategory
+                        category: app.category,
+                        subcategory: app.subcategory
                     ),
                     "mac app official"
                 ]
@@ -57,22 +58,34 @@ actor OfficialWebsiteLookup {
             else {
                 return nil
             }
-            return candidates(from: html)
-                .filter {
-                    AppNameMatcher.similarity(appName, $0.title) >= 0.8
-                        && AppContextMatcher.isPlausible(
-                            category: category,
-                            subcategory: subcategory,
-                            candidateText: "\($0.title) \($0.url.absoluteString)"
-                        )
-                        && Self.isOfficialCandidate($0.url)
+            let ranked = MetadataMatchScorer.ranked(
+                app: app,
+                candidates: candidates(from: html).filter {
+                    Self.isOfficialCandidate($0.url)
                 }
-                .sorted {
-                    AppNameMatcher.similarity(appName, $0.title)
-                        > AppNameMatcher.similarity(appName, $1.title)
-                }
-                .first?
-                .url
+            ) { candidate in
+                MetadataMatchCandidate(
+                    name: candidate.title,
+                    contextText:
+                        "\(candidate.title) \(candidate.url.absoluteString)",
+                    developer: nil,
+                    url: candidate.url,
+                    bundleIdentifier: nil,
+                    sourceReliability: 0.7
+                )
+            }
+            guard let selection = MetadataMatchScorer.result(
+                app: app,
+                ranked: ranked
+            ),
+                  selection.match.decision != .reject
+            else {
+                return nil
+            }
+            return Result(
+                url: selection.candidate.url,
+                match: selection.match
+            )
         } catch {
             return nil
         }

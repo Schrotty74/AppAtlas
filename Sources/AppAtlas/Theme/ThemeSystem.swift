@@ -497,34 +497,40 @@ struct ThemedPanelModifier: ViewModifier {
     @Environment(\.appAtlasTheme) private var theme
     let cornerRadius: CGFloat
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            .background(
-                theme.panel,
-                in: RoundedRectangle(
-                    cornerRadius: cornerRadius,
-                    style: .continuous
+        let shape = RoundedRectangle(
+            cornerRadius: cornerRadius,
+            style: .continuous
+        )
+
+        if #available(macOS 26.0, *), !theme.isHighContrast {
+            content
+                .glassEffect(.regular, in: shape)
+                .shadow(
+                    color: .black.opacity(theme.shadowOpacity),
+                    radius: 12,
+                    y: 5
                 )
-            )
-            .overlay {
-                RoundedRectangle(
-                    cornerRadius: cornerRadius,
-                    style: .continuous
+        } else {
+            content
+                .background(theme.panel, in: shape)
+                .overlay {
+                    shape.stroke(
+                        theme.border.opacity(
+                            theme.isHighContrast
+                                ? 1
+                                : theme.glassBorderOpacity + 0.35
+                        ),
+                        lineWidth: theme.isHighContrast ? 1.5 : 1
+                    )
+                }
+                .shadow(
+                    color: .black.opacity(theme.shadowOpacity),
+                    radius: 12,
+                    y: 5
                 )
-                .stroke(
-                    theme.border.opacity(
-                        theme.isHighContrast
-                            ? 1
-                            : theme.glassBorderOpacity + 0.35
-                    ),
-                    lineWidth: theme.isHighContrast ? 1.5 : 1
-                )
-            }
-            .shadow(
-                color: .black.opacity(theme.shadowOpacity),
-                radius: 12,
-                y: 5
-            )
+        }
     }
 }
 

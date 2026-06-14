@@ -1,6 +1,6 @@
-# Unveröffentlichte Änderungen seit AppAtlas 1.0.0-beta.3
+# Unveröffentlichte Änderungen seit AppAtlas 1.0.0-beta.4
 
-Derzeit sind keine Änderungen nach `1.0.0-beta.3` dokumentiert.
+Derzeit keine.
 
 ## Datenschutz
 

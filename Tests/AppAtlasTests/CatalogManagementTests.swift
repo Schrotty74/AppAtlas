@@ -927,6 +927,128 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func metadataScorerRequiresConfidenceAndClearWinner() throws {
+        let app = AppEntry(
+            name: "Canvas",
+            category: "Grafik",
+            subcategory: "Bildbearbeitung",
+            files: []
+        )
+        let strong = MetadataMatchCandidate(
+            name: "Canvas",
+            contextText: "Professional graphics image editor and design app",
+            developer: nil,
+            url: URL(string: "https://canvas.example"),
+            bundleIdentifier: nil,
+            sourceReliability: 0.95
+        )
+        let weak = MetadataMatchCandidate(
+            name: "Canvas Thread",
+            contextText: "Java concurrency developer library",
+            developer: nil,
+            url: URL(string: "https://code.example"),
+            bundleIdentifier: nil,
+            sourceReliability: 0.6
+        )
+        let clearResult = try #require(
+            MetadataMatchScorer.result(
+                app: app,
+                ranked: MetadataMatchScorer.ranked(
+                    app: app,
+                    candidates: [strong, weak],
+                    candidate: { $0 }
+                )
+            )
+        )
+        let ambiguousResult = try #require(
+            MetadataMatchScorer.result(
+                app: app,
+                ranked: MetadataMatchScorer.ranked(
+                    app: app,
+                    candidates: [strong, strong],
+                    candidate: { $0 }
+                )
+            )
+        )
+
+        #expect(clearResult.match.decision == .automatic)
+        #expect(
+            clearResult.match.margin
+                >= MetadataMatchScorer.minimumAutomaticMargin
+        )
+        #expect(ambiguousResult.match.decision == .review)
+        #expect(ambiguousResult.match.margin == 0)
+    }
+
+    @Test
+    func metadataScorerUsesBundleIdentifierAndCategoryContext() {
+        let file = LocalAppFile(
+            fileName: "Affinity.app",
+            fileType: "app",
+            sourceCategory: "Grafik",
+            sourceSubcategory: "Bildbearbeitung",
+            relativePath: "Grafik/Affinity.app",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil,
+            bundleIdentifier: "com.example.affinity"
+        )
+        let app = AppEntry(
+            name: "Affinity",
+            category: "Grafik",
+            subcategory: "Bildbearbeitung",
+            files: [file]
+        )
+        let correct = MetadataMatchScorer.score(
+            app: app,
+            candidate: MetadataMatchCandidate(
+                name: "Affinity",
+                contextText: "Graphics photo image editor",
+                developer: nil,
+                url: nil,
+                bundleIdentifier: "com.example.affinity",
+                sourceReliability: 0.95
+            )
+        )
+        let technical = MetadataMatchScorer.score(
+            app: app,
+            candidate: MetadataMatchCandidate(
+                name: "Thread Affinity",
+                contextText: "Java CPU concurrency developer library",
+                developer: nil,
+                url: nil,
+                bundleIdentifier: "org.example.thread-affinity",
+                sourceReliability: 0.7
+            )
+        )
+
+        #expect(correct >= MetadataMatchScorer.automaticThreshold)
+        #expect(technical < MetadataMatchScorer.reviewThreshold)
+    }
+
+    @Test
+    func confirmedMetadataMatchesRemainLocalAndReusable() throws {
+        let suiteName = "AppAtlasTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+        let store = ConfirmedMetadataMatchStore(defaults: defaults)
+        let url = try #require(
+            URL(string: "https://developer.example/app")
+        )
+
+        store.confirm(appName: "Example", url: url)
+        store.confirm(appName: "Example", appleTrackID: 42)
+
+        #expect(store.domainScore(
+            for: "Example",
+            candidateURL: url
+        ) == 1)
+        #expect(store.isConfirmed(appName: "Example", appleTrackID: 42))
+    }
+
+    @Test
     func detectsDescriptionLanguageAndMarksOriginalFallback() {
         let german = "Diese Anwendung verwaltet Dateien und erleichtert die tägliche Arbeit auf dem Mac."
         let english = "This application manages files and improves daily workflows on the Mac."
@@ -2013,7 +2135,10 @@ struct CatalogManagementTests {
         )
 
         let info: [String: Any] = [
-            "CFBundleIconFile": "ExampleIcon.png"
+            "CFBundleIconFile": "ExampleIcon.png",
+            "CFBundleIdentifier": "com.example.app",
+            "NSHumanReadableCopyright":
+                "Copyright © 2026 Example Software. All rights reserved."
         ]
         let infoData = try PropertyListSerialization.data(
             fromPropertyList: info,
@@ -2030,8 +2155,11 @@ struct CatalogManagementTests {
         )
 
         let iconData = LocalAppIconExtractor().iconData(for: appURL)
+        let metadata = LocalAppMetadataExtractor().metadata(for: appURL)
 
         #expect(iconData?.isEmpty == false)
+        #expect(metadata.bundleIdentifier == "com.example.app")
+        #expect(metadata.developer == "Example Software")
         try? FileManager.default.removeItem(at: root)
     }
 

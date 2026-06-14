@@ -8,20 +8,46 @@ actor AppleArtworkLookup {
         let homepage: URL?
         let downloadURL: URL?
         let artworkURL: URL?
+        let developer: String?
+        let bundleIdentifier: String?
+        let trackID: Int
+        let match: MetadataMatchScore
+
+        init(
+            description: String?,
+            homepage: URL?,
+            downloadURL: URL?,
+            artworkURL: URL?,
+            developer: String? = nil,
+            bundleIdentifier: String? = nil,
+            trackID: Int = 0,
+            match: MetadataMatchScore = MetadataMatchScore(
+                value: 1,
+                margin: 1,
+                decision: .automatic
+            )
+        ) {
+            self.description = description
+            self.homepage = homepage
+            self.downloadURL = downloadURL
+            self.artworkURL = artworkURL
+            self.developer = developer
+            self.bundleIdentifier = bundleIdentifier
+            self.trackID = trackID
+            self.match = match
+        }
     }
 
     private var cache: [String: Metadata] = [:]
     private var misses: Set<String> = []
 
     func metadata(
-        for appName: String,
-        category: String = "",
-        subcategory: String = ""
+        for app: AppEntry
     ) async -> Metadata? {
         let key = [
-            AppNameMatcher.normalized(appName),
-            category.lowercased(),
-            subcategory.lowercased()
+            AppNameMatcher.normalized(app.name),
+            app.category.lowercased(),
+            app.subcategory.lowercased()
         ].joined(separator: "|")
         if let cached = cache[key] {
             return cached
@@ -37,7 +63,7 @@ actor AppleArtworkLookup {
             return nil
         }
         components.queryItems = [
-            URLQueryItem(name: "term", value: AppNameMatcher.searchName(appName)),
+            URLQueryItem(name: "term", value: AppNameMatcher.searchName(app.name)),
             URLQueryItem(name: "entity", value: "macSoftware"),
             URLQueryItem(name: "limit", value: "10")
         ]
@@ -55,36 +81,61 @@ actor AppleArtworkLookup {
                 return nil
             }
             let result = try JSONDecoder().decode(SearchResult.self, from: data)
-            let candidates = result.results
-                .filter {
-                    AppContextMatcher.isPlausible(
-                        category: category,
-                        subcategory: subcategory,
-                        candidateText: [
-                            $0.primaryGenreName ?? "",
-                            $0.genres?.joined(separator: " ") ?? "",
-                            $0.description ?? ""
-                        ].joined(separator: " ")
+            if let confirmed = result.results.first(where: {
+                ConfirmedMetadataMatchStore.shared.isConfirmed(
+                    appName: app.name,
+                    appleTrackID: $0.trackId
+                )
+            }) {
+                let metadata = makeMetadata(
+                    from: confirmed,
+                    match: MetadataMatchScore(
+                        value: 1,
+                        margin: 1,
+                        decision: .automatic
                     )
-                }
-                .map { ($0, AppNameMatcher.similarity(appName, $0.trackName)) }
-                .sorted { $0.1 > $1.1 }
-            guard let match = candidates.first,
-                  match.1 >= 0.8
+                )
+                cache[key] = metadata
+                return metadata
+            }
+            let ranked = MetadataMatchScorer.ranked(
+                app: app,
+                candidates: result.results
+            ) { result in
+                MetadataMatchCandidate(
+                    name: result.trackName,
+                    contextText: [
+                        result.primaryGenreName ?? "",
+                        result.genres?.joined(separator: " ") ?? "",
+                        result.description ?? ""
+                    ].joined(separator: " "),
+                    developer: result.sellerName,
+                    url: result.sellerUrl.flatMap(URL.init(string:)),
+                    bundleIdentifier: result.bundleId,
+                    sourceReliability: 0.95
+                )
+            }
+            guard let selection = MetadataMatchScorer.result(
+                app: app,
+                ranked: ranked
+            ),
+                  selection.match.decision != .reject
             else {
                 misses.insert(key)
                 return nil
             }
-            let metadata = Metadata(
-                description: match.0.description.map {
-                    String($0.prefix(500))
-                },
-                homepage: match.0.sellerUrl.flatMap(URL.init(string:)),
-                downloadURL: URL(string: match.0.trackViewUrl),
-                artworkURL: URL(
-                    string: match.0.artworkUrl512 ?? match.0.artworkUrl100
-                )
+            let match = selection.candidate
+            let decision = ConfirmedMetadataMatchStore.shared.isConfirmed(
+                appName: app.name,
+                appleTrackID: match.trackId
             )
+                ? MetadataMatchScore(
+                    value: 1,
+                    margin: 1,
+                    decision: .automatic
+                )
+                : selection.match
+            let metadata = makeMetadata(from: match, match: decision)
             cache[key] = metadata
             return metadata
         } catch {
@@ -94,7 +145,34 @@ actor AppleArtworkLookup {
     }
 
     func artworkURL(for appName: String) async -> URL? {
-        await metadata(for: appName)?.artworkURL
+        await metadata(
+            for: AppEntry(
+                name: appName,
+                category: "",
+                subcategory: "",
+                files: []
+            )
+        )?.artworkURL
+    }
+
+    private func makeMetadata(
+        from result: Result,
+        match: MetadataMatchScore
+    ) -> Metadata {
+        Metadata(
+            description: result.description.map {
+                String($0.prefix(500))
+            },
+            homepage: result.sellerUrl.flatMap(URL.init(string:)),
+            downloadURL: URL(string: result.trackViewUrl),
+            artworkURL: URL(
+                string: result.artworkUrl512 ?? result.artworkUrl100
+            ),
+            developer: result.sellerName,
+            bundleIdentifier: result.bundleId,
+            trackID: result.trackId,
+            match: match
+        )
     }
 
     private struct SearchResult: Decodable {
@@ -110,5 +188,8 @@ actor AppleArtworkLookup {
         let trackViewUrl: String
         let primaryGenreName: String?
         let genres: [String]?
+        let sellerName: String?
+        let bundleId: String?
+        let trackId: Int
     }
 }

@@ -158,17 +158,12 @@ struct ThemeMenu: View {
             .foregroundStyle(theme.text)
             .padding(.horizontal, 10)
             .frame(height: 32)
-            .background(
-                theme.panel,
-                in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .appAtlasGlassSurface(
+                in: RoundedRectangle(cornerRadius: 9, style: .continuous),
+                fallbackColor: theme.panel,
+                tint: theme.accent.opacity(0.10),
+                interactive: true
             )
-            .overlay {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .stroke(
-                        theme.border,
-                        lineWidth: theme.isHighContrast ? 1.5 : 1
-                    )
-            }
         }
         .buttonStyle(.plain)
         .menuStyle(.borderlessButton)

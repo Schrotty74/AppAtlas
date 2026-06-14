@@ -353,9 +353,13 @@ private struct LibraryPosterCard: View {
                 .lineLimit(2)
         }
         .padding(10)
-        .background(
-            theme.panel,
-            in: RoundedRectangle(cornerRadius: 18)
+        .appAtlasGlassSurface(
+            in: RoundedRectangle(cornerRadius: 18),
+            fallbackColor: theme.panel,
+            tint: store.selectedAppID == app.id
+                ? theme.accent.opacity(0.18)
+                : nil,
+            interactive: true
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18)
@@ -399,11 +403,15 @@ private struct LibrarySquareCard: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity)
-        .background(
-            store.selectedAppID == app.id
+        .appAtlasGlassSurface(
+            in: RoundedRectangle(cornerRadius: 18),
+            fallbackColor: store.selectedAppID == app.id
                 ? theme.accent.opacity(0.20)
                 : theme.panel,
-            in: RoundedRectangle(cornerRadius: 18)
+            tint: store.selectedAppID == app.id
+                ? theme.accent.opacity(0.20)
+                : nil,
+            interactive: true
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18)
@@ -440,9 +448,11 @@ private struct CategoryChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background(
-                isSelected ? theme.accent : theme.panelSoft,
-                in: Capsule()
+            .appAtlasGlassSurface(
+                in: Capsule(),
+                fallbackColor: isSelected ? theme.accent : theme.panelSoft,
+                tint: isSelected ? theme.accent.opacity(0.55) : nil,
+                interactive: true
             )
             .foregroundStyle(isSelected ? theme.accentText : theme.text)
         }
@@ -460,7 +470,10 @@ private struct StatusPill: View {
             .font(.callout.weight(.medium))
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background(theme.panelSoft, in: Capsule())
+            .appAtlasGlassSurface(
+                in: Capsule(),
+                fallbackColor: theme.panelSoft
+            )
             .overlay {
                 Capsule()
                     .stroke(theme.border.opacity(0.7), lineWidth: 1)

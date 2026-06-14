@@ -8,14 +8,14 @@ actor RedditDescriptionLookup {
         let sourceURL: URL
     }
 
-    func description(for appName: String) async -> Result? {
+    func description(for app: AppEntry) async -> Result? {
         guard var components = URLComponents(
             string: "https://www.reddit.com/r/macapps/search.json"
         ) else {
             return nil
         }
         components.queryItems = [
-            URLQueryItem(name: "q", value: AppNameMatcher.searchName(appName)),
+            URLQueryItem(name: "q", value: AppNameMatcher.searchName(app.name)),
             URLQueryItem(name: "restrict_sr", value: "1"),
             URLQueryItem(name: "sort", value: "relevance"),
             URLQueryItem(name: "limit", value: "5")
@@ -38,30 +38,46 @@ actor RedditDescriptionLookup {
             else {
                 return nil
             }
-            return listing.data.children
+            let candidates = listing.data.children
                 .map(\.data)
                 .filter {
                     !$0.selftext.trimmingCharacters(
                         in: .whitespacesAndNewlines
                     ).isEmpty
-                        && AppNameMatcher.similarity(appName, $0.title) >= 0.8
                 }
-                .sorted {
-                    AppNameMatcher.similarity(appName, $0.title)
-                        > AppNameMatcher.similarity(appName, $1.title)
-                }
-                .first
-                .flatMap { post in
-                    guard let sourceURL = URL(
+            let ranked = MetadataMatchScorer.ranked(
+                app: app,
+                candidates: candidates
+            ) { post in
+                MetadataMatchCandidate(
+                    name: post.title,
+                    contextText: "\(post.title) \(post.selftext)",
+                    developer: nil,
+                    url: URL(
                         string: "https://www.reddit.com\(post.permalink)"
-                    ) else {
-                        return nil
-                    }
-                    return Result(
-                        description: String(post.selftext.prefix(500)),
-                        sourceURL: sourceURL
-                    )
-                }
+                    ),
+                    bundleIdentifier: nil,
+                    sourceReliability: 0.55
+                )
+            }
+            guard let selection = MetadataMatchScorer.result(
+                app: app,
+                ranked: ranked
+            ),
+                  selection.match.decision != .reject,
+                  let sourceURL = URL(
+                    string: "https://www.reddit.com"
+                        + selection.candidate.permalink
+                  )
+            else {
+                return nil
+            }
+            return Result(
+                description: String(
+                    selection.candidate.selftext.prefix(500)
+                ),
+                sourceURL: sourceURL
+            )
         } catch {
             return nil
         }

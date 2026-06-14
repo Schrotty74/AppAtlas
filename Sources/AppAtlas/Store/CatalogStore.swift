@@ -340,6 +340,12 @@ final class CatalogStore: ObservableObject {
         if resolvedMetadata {
             updated.reviewStatus = .confirmed
         }
+        for url in [updated.homepage, updated.githubURL].compactMap({ $0 }) {
+            ConfirmedMetadataMatchStore.shared.confirm(
+                appName: updated.name,
+                url: url
+            )
+        }
         apps[index] = migrateIcon(in: updated)
         apps.sort(by: Self.sortApps)
         selectedAppID = app.id
@@ -353,6 +359,57 @@ final class CatalogStore: ObservableObject {
     ) {
         guard let index = apps.firstIndex(where: { $0.id == appID }) else {
             return
+        }
+        guard metadata.match.decision == .automatic else {
+            let identifier = "apple:\(metadata.trackID)"
+            if let homepage = metadata.homepage {
+                addSuggestion(
+                    CatalogSuggestion(
+                        kind: .homepage,
+                        value: homepage.absoluteString,
+                        sourceLabel: matchLabel(
+                            "Apple",
+                            match: metadata.match
+                        ),
+                        sourceURL: homepage,
+                        sourceIdentifier: identifier
+                    ),
+                    to: index
+                )
+            }
+            if let downloadURL = metadata.downloadURL {
+                addSuggestion(
+                    CatalogSuggestion(
+                        kind: .download,
+                        value: downloadURL.absoluteString,
+                        sourceLabel: matchLabel(
+                            "Apple",
+                            match: metadata.match
+                        ),
+                        sourceURL: downloadURL,
+                        sourceIdentifier: identifier
+                    ),
+                    to: index
+                )
+            }
+            if let description = metadata.description,
+               AppMetadataEnricher.needsDescriptionExpansion(
+                   apps[index].details
+               )
+            {
+                addDescriptionSuggestion(
+                    description,
+                    source: matchLabel("Apple", match: metadata.match),
+                    sourceURL: metadata.homepage ?? metadata.downloadURL,
+                    sourceIdentifier: identifier,
+                    to: index
+                )
+            }
+            persist()
+            return
+        }
+        if apps[index].developer == nil {
+            apps[index].developer = metadata.developer
         }
         if !apps[index].customizations.links {
             if let homepage = metadata.homepage {
@@ -516,30 +573,43 @@ final class CatalogStore: ObservableObject {
             return
         }
         if let homepage = result.homepage, apps[index].homepage == nil {
-            addSuggestion(
-                CatalogSuggestion(
-                    kind: .homepage,
-                    value: homepage.absoluteString,
-                    sourceLabel: "DuckDuckGo · mögliche Herstellerseite",
-                    sourceURL: homepage
-                ),
-                to: index
-            )
+            if homepage.match.decision == .automatic {
+                apps[index].homepage = homepage.url
+                addSource("Bestätigte Websuche", to: index)
+            } else {
+                addSuggestion(
+                    CatalogSuggestion(
+                        kind: .homepage,
+                        value: homepage.url.absoluteString,
+                        sourceLabel: matchLabel(
+                            "DuckDuckGo · mögliche Herstellerseite",
+                            match: homepage.match
+                        ),
+                        sourceURL: homepage.url
+                    ),
+                    to: index
+                )
+            }
         }
         if let metadata = result.github {
-            if !apps[index].customizations.links {
+            if metadata.match.decision == .automatic,
+               !apps[index].customizations.links
+            {
                 apps[index].githubURL = metadata.projectURL
                 apps[index].homepage = metadata.homepageURL ?? apps[index].homepage
                 apps[index].downloadURL = metadata.downloadURL
             }
             if let iconData = metadata.iconData,
+               metadata.match.decision == .automatic,
                shouldReplaceIcon(in: apps[index])
             {
                 apps[index].iconData = iconData
                 apps[index].iconOrigin = .github
                 apps[index] = migrateIcon(in: apps[index])
             }
-            if let description = metadata.description {
+            if let description = metadata.description,
+               metadata.match.decision == .automatic
+            {
                 recordDescription(
                     description,
                     source: "GitHub-Repository",
@@ -547,7 +617,47 @@ final class CatalogStore: ObservableObject {
                     for: result.appID
                 )
             }
-            addSource("GitHub-Repository", to: index)
+            if metadata.match.decision == .automatic {
+                addSource("GitHub-Repository", to: index)
+            } else {
+                addSuggestion(
+                    CatalogSuggestion(
+                        kind: .github,
+                        value: metadata.projectURL.absoluteString,
+                        sourceLabel: matchLabel(
+                            "GitHub",
+                            match: metadata.match
+                        ),
+                        sourceURL: metadata.projectURL
+                    ),
+                    to: index
+                )
+                if let homepageURL = metadata.homepageURL {
+                    addSuggestion(
+                        CatalogSuggestion(
+                            kind: .homepage,
+                            value: homepageURL.absoluteString,
+                            sourceLabel: matchLabel(
+                                "GitHub · mögliche Herstellerseite",
+                                match: metadata.match
+                            ),
+                            sourceURL: metadata.projectURL
+                        ),
+                        to: index
+                    )
+                }
+                if let description = metadata.description {
+                    addDescriptionSuggestion(
+                        description,
+                        source: matchLabel(
+                            "GitHub",
+                            match: metadata.match
+                        ),
+                        sourceURL: metadata.projectURL,
+                        to: index
+                    )
+                }
+            }
         }
         if let reddit = result.reddit,
            AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
@@ -576,9 +686,7 @@ final class CatalogStore: ObservableObject {
             return metadata
         }
         return await GitHubRepositoryLookup.shared.metadata(
-            forAppNamed: app.name,
-            category: app.category,
-            subcategory: app.subcategory,
+            for: app,
             needsIcon: shouldReplaceIcon(in: app)
         )
     }
@@ -635,6 +743,10 @@ final class CatalogStore: ObservableObject {
         case .icon:
             break
         }
+        rememberConfirmedMatch(
+            suggestion: suggestion,
+            appName: apps[index].name
+        )
         addSource(suggestion.sourceLabel, to: index)
         if suggestion.kind == .description {
             apps[index].reviewSuggestions = apps[index].suggestions.filter {
@@ -684,6 +796,10 @@ final class CatalogStore: ObservableObject {
             return
         }
         apps[index].homepage = url
+        ConfirmedMetadataMatchStore.shared.confirm(
+            appName: apps[index].name,
+            url: url
+        )
         apps[index].websitePromptSuppressed = false
         var customizations = apps[index].customizations
         customizations.links = true
@@ -946,6 +1062,7 @@ final class CatalogStore: ObservableObject {
         _ description: String,
         source: String,
         sourceURL: URL?,
+        sourceIdentifier: String? = nil,
         to index: Int
     ) {
         let language = DescriptionLanguageProcessor.detectedLanguage(
@@ -958,6 +1075,7 @@ final class CatalogStore: ObservableObject {
                 value: description,
                 sourceLabel: source,
                 sourceURL: sourceURL,
+                sourceIdentifier: sourceIdentifier,
                 detectedLanguage: language,
                 needsTranslation:
                     !DescriptionLanguageProcessor.matches(
@@ -968,6 +1086,36 @@ final class CatalogStore: ObservableObject {
             to: index
         )
         queueNextTranslation()
+    }
+
+    private func rememberConfirmedMatch(
+        suggestion: CatalogSuggestion,
+        appName: String
+    ) {
+        if let sourceURL = suggestion.sourceURL {
+            ConfirmedMetadataMatchStore.shared.confirm(
+                appName: appName,
+                url: sourceURL
+            )
+        }
+        guard let identifier = suggestion.sourceIdentifier,
+              identifier.hasPrefix("apple:"),
+              let trackID = Int(identifier.dropFirst("apple:".count))
+        else {
+            return
+        }
+        ConfirmedMetadataMatchStore.shared.confirm(
+            appName: appName,
+            appleTrackID: trackID
+        )
+    }
+
+    private func matchLabel(
+        _ source: String,
+        match: MetadataMatchScore
+    ) -> String {
+        let percent = Int((match.value * 100).rounded())
+        return "\(source) · \(percent) % Übereinstimmung"
     }
 
     private func recordDescription(

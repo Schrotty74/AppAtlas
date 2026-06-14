@@ -6,20 +6,44 @@ enum AppContextMatcher {
         subcategory: String,
         candidateText: String
     ) -> Bool {
+        compatibilityScore(
+            category: category,
+            subcategory: subcategory,
+            candidateText: candidateText
+        ) >= 0.5
+    }
+
+    static func compatibilityScore(
+        category: String,
+        subcategory: String,
+        candidateText: String
+    ) -> Double {
         let context = normalized("\(category) \(subcategory)")
         let candidate = normalized(candidateText)
         guard !candidate.isEmpty else {
-            return true
+            return 0.6
         }
 
-        for rule in rules where rule.contextTerms.contains(where: context.contains) {
-            if rule.conflictingTerms.contains(where: candidate.contains)
-                && !rule.supportingTerms.contains(where: candidate.contains)
-            {
-                return false
+        let matchingRules = rules.filter {
+            $0.contextTerms.contains(where: context.contains)
+        }
+        guard !matchingRules.isEmpty else {
+            return 0.7
+        }
+        var best = 0.6
+        for rule in matchingRules {
+            let supports = rule.supportingTerms.filter(candidate.contains).count
+            let conflicts = rule.conflictingTerms.filter(candidate.contains).count
+            if conflicts > 0 && supports == 0 {
+                return 0
+            }
+            if supports >= 2 {
+                best = max(best, 1)
+            } else if supports == 1 {
+                best = max(best, 0.85)
             }
         }
-        return true
+        return best
     }
 
     static func searchHint(category: String, subcategory: String) -> String {
@@ -85,6 +109,77 @@ enum AppContextMatcher {
             ],
             conflictingTerms: ["game", "photo editor"],
             searchHint: "security privacy"
+        ),
+        Rule(
+            contextTerms: ["benchmark"],
+            supportingTerms: [
+                "benchmark", "performance", "cpu", "gpu", "speed",
+                "measure", "stress test"
+            ],
+            conflictingTerms: [
+                "accounting", "calendar", "photo editor", "messaging"
+            ],
+            searchHint: "benchmark performance"
+        ),
+        Rule(
+            contextTerms: ["screenshot", "screen capture"],
+            supportingTerms: [
+                "screenshot", "screen capture", "annotation", "record screen",
+                "snipping"
+            ],
+            conflictingTerms: [
+                "database", "java library", "audio player", "game"
+            ],
+            searchHint: "screenshot screen capture"
+        ),
+        Rule(
+            contextTerms: ["browser"],
+            supportingTerms: [
+                "browser", "web", "internet", "privacy", "tabs"
+            ],
+            conflictingTerms: [
+                "developer library", "photo editor", "audio plugin"
+            ],
+            searchHint: "web browser"
+        ),
+        Rule(
+            contextTerms: ["kommunikation", "mail", "chat"],
+            supportingTerms: [
+                "email", "mail", "chat", "message", "communication",
+                "telegram", "social"
+            ],
+            conflictingTerms: [
+                "benchmark", "photo editor", "developer library"
+            ],
+            searchHint: "communication messaging"
+        ),
+        Rule(
+            contextTerms: ["gaming", "spiel"],
+            supportingTerms: [
+                "game", "gaming", "emulator", "controller", "steam"
+            ],
+            conflictingTerms: [
+                "office", "database", "photo editor", "mail client"
+            ],
+            searchHint: "game gaming"
+        ),
+        Rule(
+            contextTerms: ["netzwerk", "network", "download"],
+            supportingTerms: [
+                "network", "download", "transfer", "server", "ftp",
+                "cloud", "wifi"
+            ],
+            conflictingTerms: ["photo editor", "game", "audio plugin"],
+            searchHint: "network download"
+        ),
+        Rule(
+            contextTerms: ["system", "hardware"],
+            supportingTerms: [
+                "system", "hardware", "utility", "monitor", "disk",
+                "battery", "display", "maintenance"
+            ],
+            conflictingTerms: ["game", "photo editor", "mail client"],
+            searchHint: "mac system utility"
         )
     ]
 

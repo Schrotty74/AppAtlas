@@ -66,13 +66,13 @@ private struct AppCardView: View {
         .padding(12)
         .frame(minHeight: 174, alignment: .top)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(
-                    isSelected
-                        ? theme.accent.opacity(0.20)
-                        : theme.panel
-                )
+        .appAtlasGlassSurface(
+            in: RoundedRectangle(cornerRadius: 14),
+            fallbackColor: isSelected
+                ? theme.accent.opacity(0.20)
+                : theme.panel,
+            tint: isSelected ? theme.accent.opacity(0.20) : nil,
+            interactive: true
         )
         .overlay {
             RoundedRectangle(cornerRadius: 14)

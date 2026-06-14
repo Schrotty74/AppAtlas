@@ -1,5 +1,19 @@
 # Projekthistorie
 
+## 1.0.0-beta.4 – Metadaten-Vertrauen, Fehlerberichte und Liquid Glass
+
+- Gemeinsame Vertrauensbewertung für Apple, GitHub, Websuche und Reddit.
+- Automatische Übernahme nur bei hoher Sicherheit und klarem Abstand zum
+  zweitbesten Treffer.
+- Bundle-ID, Hersteller, Kategorie, Unterordner und bestätigte Quellen als
+  zusätzliche Identitätssignale.
+- Ausschließlich lokal gespeicherte Lernzuordnungen für bestätigte Domains,
+  GitHub-Repositories und Apple-Store-IDs.
+- Datenschutzfreundlicher Fehlerbericht für E-Mail und Codex.
+- Native Liquid-Glass-Oberflächen unter macOS 26 mit Rückfall auf das bisherige
+  Theme-System.
+- Gehärteter Release-Build gegen eingebettete lokale Toolchain-Pfade.
+
 ## 1.0.0-beta.3 – Scanner-Abgleich und bessere Icon-Auswahl
 
 - Vollständige Scans gleichen neue, geänderte und entfernte lokale Dateien mit

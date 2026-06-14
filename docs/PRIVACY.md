@@ -20,6 +20,11 @@ Prüfbericht ist unter
 Jeder Benutzer startet mit einem leeren Katalog. Der persönliche Katalog liegt
 ausschließlich im lokalen Application-Support-Verzeichnis der macOS-Sandbox.
 Icons und Vorschaubilder werden dort als separate lokale Dateien gespeichert.
+Vom Benutzer bestätigte Metadatenzuordnungen werden ebenfalls ausschließlich
+lokal in den App-Einstellungen gespeichert. Dazu gehören normalisierte
+App-Schlüssel, bestätigte Domains, konkrete GitHub-Repositories und
+Apple-Store-IDs. Sie sind nicht Bestandteil von Katalogexporten oder
+Release-Paketen.
 
 Der ausgewählte Scan-Ordner wird beim Scannen nur gelesen. AppAtlas verändert
 Dateien darin ausschließlich nach einer ausdrücklichen Bestätigung des

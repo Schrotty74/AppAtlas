@@ -85,6 +85,9 @@ struct CatalogScanReconciler: Sendable {
             existingApp.name = scannedApp.name
             existingApp.category = scannedApp.category
             existingApp.subcategory = scannedApp.subcategory
+            if existingApp.developer == nil {
+                existingApp.developer = scannedApp.developer
+            }
         }
         if !existingApp.hasIcon, let iconData = scannedApp.iconData {
             existingApp.iconData = iconData

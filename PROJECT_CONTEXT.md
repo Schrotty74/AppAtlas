@@ -15,7 +15,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.3`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.4`.
 
 ## Datenschutz hat Vorrang
 
@@ -65,7 +65,7 @@ eines lokalen App-Katalogs.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.0.0-beta.3` bleiben als unveröffentlichter
+- Änderungen nach `1.0.0-beta.4` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 
@@ -103,6 +103,13 @@ eines lokalen App-Katalogs.
   installierte Apps geprüft. Onlinebilder müssen mindestens 128 Pixel groß,
   nahezu quadratisch und als Icon oder Logo erkennbar sein; Screenshots,
   Vorschauen, Banner und Dokumentationsbilder werden abgewiesen.
+- Online-Metadatenquellen verwenden eine gemeinsame Vertrauensbewertung aus
+  Name, Kategorie, Unterordner, Hersteller, bestätigter Domain und Bundle-ID.
+  Automatische Übernahmen benötigen mindestens `0,90` sowie `0,12` Abstand
+  zum zweitbesten Treffer. Werte ab `0,75` werden ausschließlich zur Prüfung
+  vorgeschlagen; schwächere Treffer werden verworfen.
+- Bestätigte Domains, GitHub-Repositories und Apple-Store-IDs werden nur lokal
+  in den Benutzereinstellungen gelernt und niemals exportiert.
 - Die Hauptansicht verwendet einen zentralen Zustand für Dialoge, Importe und
   Bestätigungen. Import-/Exportformate liegen in getrennten Diensten.
 - Sidebar-Ordner stammen aus den gespeicherten Quell-Unterordnern; Dateinamen

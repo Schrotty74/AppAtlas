@@ -21,13 +21,10 @@ struct SidebarView: View {
                     } icon: {
                         Image(systemName: "square.grid.2x2")
                     }
+                    .appAtlasSidebarSelection(store.selectedCategory == nil)
                 }
                 .buttonStyle(.plain)
-                .listRowBackground(
-                    store.selectedCategory == nil
-                        ? theme.accent.opacity(0.18)
-                        : Color.clear
-                )
+                .listRowBackground(Color.clear)
 
                 Label {
                     HStack {
@@ -39,15 +36,14 @@ struct SidebarView: View {
                 } icon: {
                     Image(systemName: "checklist")
                 }
+                .appAtlasSidebarSelection(
+                    store.selectedCategory == CatalogStore.needsReviewFilter
+                )
                 .contentShape(Rectangle())
                 .onTapGesture {
                     store.selectedCategory = CatalogStore.needsReviewFilter
                 }
-                .listRowBackground(
-                    store.selectedCategory == CatalogStore.needsReviewFilter
-                        ? theme.accent.opacity(0.18)
-                        : Color.clear
-                )
+                .listRowBackground(Color.clear)
             }
 
             Section("Kategorien") {
@@ -55,15 +51,14 @@ struct SidebarView: View {
                     let folders = store.folderTree(for: category.name)
                     if folders.isEmpty {
                         categoryLabel(category.name, count: category.count)
+                            .appAtlasSidebarSelection(
+                                store.selectedCategory == category.name
+                            )
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 store.selectedCategory = category.name
                             }
-                            .listRowBackground(
-                                store.selectedCategory == category.name
-                                    ? theme.accent.opacity(0.18)
-                                    : Color.clear
-                            )
+                            .listRowBackground(Color.clear)
                     } else {
                         DisclosureGroup(
                             isExpanded: expansionBinding(for: category.name)
@@ -76,6 +71,9 @@ struct SidebarView: View {
                             }
                         } label: {
                             categoryLabel(category.name, count: category.count)
+                                .appAtlasSidebarSelection(
+                                    store.selectedCategory == category.name
+                                )
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     store.selectedCategory = category.name
@@ -87,7 +85,7 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
-        .background(theme.panelSoft)
+        .appAtlasSidebarSurface()
         .foregroundStyle(theme.text)
         .navigationTitle("AppAtlas")
     }
@@ -141,15 +139,14 @@ private struct SidebarFolderNode: View {
     var body: some View {
         if folder.children.isEmpty {
             folderLabel
+                .appAtlasSidebarSelection(
+                    store.selectedCategory == filterValue
+                )
                 .contentShape(Rectangle())
                 .onTapGesture {
                     store.selectedCategory = filterValue
                 }
-                .listRowBackground(
-                    store.selectedCategory == filterValue
-                        ? theme.accent.opacity(0.18)
-                        : Color.clear
-                )
+                .listRowBackground(Color.clear)
         } else {
             DisclosureGroup {
                 ForEach(folder.children) { child in
@@ -157,6 +154,9 @@ private struct SidebarFolderNode: View {
                 }
             } label: {
                 folderLabel
+                    .appAtlasSidebarSelection(
+                        store.selectedCategory == filterValue
+                    )
                     .contentShape(Rectangle())
                     .onTapGesture {
                         store.selectedCategory = filterValue

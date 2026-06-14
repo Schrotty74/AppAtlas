@@ -3,7 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.3`.
+- Aktueller offizieller Beta-Release: `1.0.0-beta.4`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -81,10 +81,19 @@
   Online-Aktualisierung werden zunächst eindeutig passende installierte Apps
   geprüft; Onlinebilder benötigen höhere Auflösung und icon-typische Pfade.
   Screenshots, Vorschauen und Banner werden abgewiesen.
+- Eine gemeinsame Vertrauensbewertung für
+  Apple, GitHub, Websuche und Reddit berücksichtigt Namen, Kategorie,
+  Unterordner, Hersteller, Bundle-ID und bestätigte Quellen. Unsichere oder
+  mehrdeutige Treffer werden nicht automatisch übernommen.
+- Unter macOS 26 verwendet die Oberfläche für Sidebar-Auswahl, Kategorie-
+  Elemente, Theme-Menü und App-Karten automatisch natives Liquid Glass.
+  Ältere Systeme verwenden unverändert die bisherigen Theme-Flächen.
 
 ## Offene Aufgaben
 
-- Rückmeldungen aus der aktuellen offiziellen Beta sammeln und priorisieren.
+- Rückmeldungen aus Beta 4 sammeln und priorisieren.
+- Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
+  praktisch prüfen.
 
 ## Verbindliche Regeln
 

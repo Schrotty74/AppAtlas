@@ -9,7 +9,7 @@ struct FastOnlineResult: Sendable {
 
 struct SlowOnlineResult: Sendable {
     let appID: AppEntry.ID
-    let homepage: URL?
+    let homepage: OfficialWebsiteLookup.Result?
     let github: GitHubRepositoryLookup.Metadata?
     let reddit: RedditDescriptionLookup.Result?
 }
@@ -20,9 +20,7 @@ enum OnlineEnrichmentLookup {
             for app in apps {
                 group.addTask {
                     async let apple = AppleArtworkLookup.shared.metadata(
-                        for: app.name,
-                        category: app.category,
-                        subcategory: app.subcategory
+                        for: app
                     )
                     async let website: WebMetadataLookup.Metadata? = {
                         guard let homepage = app.homepage,
@@ -65,14 +63,12 @@ enum OnlineEnrichmentLookup {
         await withTaskGroup(of: SlowOnlineResult.self) { group in
             for app in apps {
                 group.addTask {
-                    async let homepage: URL? = {
+                    async let homepage: OfficialWebsiteLookup.Result? = {
                         guard app.homepage == nil else {
                             return nil
                         }
                         return await OfficialWebsiteLookup.shared.homepage(
-                            for: app.name,
-                            category: app.category,
-                            subcategory: app.subcategory
+                            for: app
                         )
                     }()
                     async let github = githubMetadata(for: app)
@@ -83,7 +79,7 @@ enum OnlineEnrichmentLookup {
                             return nil
                         }
                         return await RedditDescriptionLookup.shared.description(
-                            for: app.name
+                            for: app
                         )
                     }()
                     return await SlowOnlineResult(
@@ -115,9 +111,7 @@ enum OnlineEnrichmentLookup {
             return metadata
         }
         return await GitHubRepositoryLookup.shared.metadata(
-            forAppNamed: app.name,
-            category: app.category,
-            subcategory: app.subcategory,
+            for: app,
             needsIcon: needsIcon
         )
     }

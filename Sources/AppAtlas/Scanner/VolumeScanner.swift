@@ -91,6 +91,12 @@ struct VolumeScanner: Sendable {
                 .dropFirst()
                 .dropLast()
                 .joined(separator: "/")
+            let localMetadata = fileExtension == "app"
+                ? LocalAppMetadataExtractor().metadata(for: url)
+                : LocalAppMetadata(
+                    bundleIdentifier: nil,
+                    developer: nil
+                )
 
             files.append(
                 LocalAppFile(
@@ -106,7 +112,9 @@ struct VolumeScanner: Sendable {
                     ),
                     iconData: fileExtension == "app"
                         ? LocalAppIconExtractor().iconData(for: url)
-                        : nil
+                        : nil,
+                    bundleIdentifier: localMetadata.bundleIdentifier,
+                    bundleDeveloper: localMetadata.developer
                 )
             )
         }

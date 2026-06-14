@@ -100,7 +100,17 @@ if [[ -n "$private_file" ]]; then
     exit 1
 fi
 
-strip -S "$app_bundle/Contents/MacOS/AppAtlas"
+app_binary="$app_bundle/Contents/MacOS/AppAtlas"
+private_rpaths=("${(@f)$(
+    otool -l "$app_binary" \
+        | awk '/^[[:space:]]+path \/(Users|Volumes)\// { print $2 }'
+)}")
+for private_rpath in "${private_rpaths[@]}"; do
+    [[ -n "$private_rpath" ]] || continue
+    install_name_tool -delete_rpath "$private_rpath" "$app_binary"
+done
+
+strip -S "$app_binary"
 build_resource_path="$binary_directory/AppAtlas_AppAtlas.bundle"
 BUILD_RESOURCE_PATH="$build_resource_path" perl -0pi -e '
     $replacement = "AppAtlas_AppAtlas.bundle";
@@ -108,10 +118,9 @@ BUILD_RESOURCE_PATH="$build_resource_path" perl -0pi -e '
         length($ENV{"BUILD_RESOURCE_PATH"}) - length($replacement)
     );
     s/\Q$ENV{"BUILD_RESOURCE_PATH"}\E/$replacement/g;
-' "$app_bundle/Contents/MacOS/AppAtlas"
+' "$app_binary"
 local_path_pattern="/""Users/[^/]+|/""Volumes/[^/]+"
-if strings "$app_bundle/Contents/MacOS/AppAtlas" \
-    | grep -E "$local_path_pattern" >/dev/null; then
+if rg -a "$local_path_pattern" "$app_binary" >/dev/null; then
     echo "Build abgebrochen: lokaler Pfad im App-Binary gefunden." >&2
     exit 1
 fi

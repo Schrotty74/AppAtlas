@@ -29,6 +29,7 @@ struct AppCatalogBuilder: Sendable {
 
         return metadata.enrich(AppEntry(
             name: name,
+            developer: sortedFiles.compactMap(\.bundleDeveloper).first,
             summary: metadata.summary(
                 name: name,
                 category: category,
