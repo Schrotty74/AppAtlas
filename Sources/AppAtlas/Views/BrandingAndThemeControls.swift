@@ -98,7 +98,7 @@ struct ThemeMenu: View {
             return builtIn.title
         }
         if let custom = customThemes.first(where: { $0.id == selectedThemeID }) {
-            return custom.title()
+            return custom.menuTitle()
         }
         return AppAtlasTheme.system.title
     }
@@ -117,13 +117,12 @@ struct ThemeMenu: View {
             }
 
             if !customThemes.isEmpty {
-                Divider()
                 ForEach(customThemes) { option in
                     Button {
                         selectedThemeID = option.id
                     } label: {
                         optionLabel(
-                            option.title(),
+                            option.menuTitle(),
                             isSelected: option.id == selectedThemeID
                         )
                     }

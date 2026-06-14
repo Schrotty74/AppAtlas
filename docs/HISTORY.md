@@ -1,5 +1,16 @@
 # Projekthistorie
 
+## 1.0.0 – Erste stabile Version
+
+- Alle Funktionen und Stabilitätskorrekturen der fünf öffentlichen Betas.
+- Zuverlässiger Import kompatibler UroBilanz-Themes mit Reduktion auf die für
+  AppAtlas relevanten Darstellungswerte.
+- Einheitliche Theme-Darstellung in der Kompaktansicht.
+- Importierte Theme-Kopien erscheinen ohne technischen Kopiezusatz in der
+  gemeinsamen Theme-Liste.
+- Signiertes DMG als regulärer GitHub-Release.
+- Erweitertes Datenschutzaudit von Quellcode, Git-Historie und Release-Paket.
+
 ## 1.0.0-beta.5 – Theme- und Cache-Stabilität
 
 - Zuverlässige vollständige Hell-/Dunkel-Umschaltung des System-Themes.

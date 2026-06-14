@@ -94,6 +94,7 @@ struct FocusLibraryLayout: View {
 
 struct CompactLibraryLayout: View {
     @EnvironmentObject private var store: CatalogStore
+    @Environment(\.appAtlasTheme) private var theme
 
     var body: some View {
         NavigationSplitView {
@@ -103,7 +104,10 @@ struct CompactLibraryLayout: View {
             List(store.filteredApps, selection: $store.selectedAppID) { app in
                 CompactAppRow(app: app)
                     .tag(app.id)
+                    .listRowBackground(theme.panel)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
             .navigationTitle(store.selectedCollectionTitle)
             .navigationSplitViewColumnWidth(min: 360, ideal: 450)
         } detail: {

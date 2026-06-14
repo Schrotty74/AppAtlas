@@ -12,8 +12,10 @@ Ein erweitertes Audit kontrolliert auch Dateinamen in der erreichbaren
 Git-Historie. Dieses umfangreiche Audit wird bei jeder finalen Version
 durchgeführt, nicht bei Betas. Jeder neue Final-Bericht ergänzt die bestehende
 chronologische Audit-Historie; frühere Berichte bleiben erhalten. Der bisherige
-Prüfbericht ist unter
-[Datenschutzaudit vom 13. Juni 2026](PRIVACY_AUDIT_2026-06-13.md) dokumentiert.
+Die chronologische Audit-Historie enthält:
+
+- [Datenschutzaudit für AppAtlas 1.0.0 vom 14. Juni 2026](PRIVACY_AUDIT_2026-06-14.md)
+- [Datenschutzaudit vom 13. Juni 2026](PRIVACY_AUDIT_2026-06-13.md)
 
 ## Lokale Daten
 

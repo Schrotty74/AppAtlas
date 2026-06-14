@@ -238,6 +238,17 @@ struct AppAtlasThemeDefinition: Codable, Identifiable, Equatable {
         name.de ?? name.en ?? id
     }
 
+    func menuTitle() -> String {
+        let title = title()
+        guard id.hasSuffix("-custom") else {
+            return title
+        }
+        for suffix in [" Kopie", " Copy"] where title.hasSuffix(suffix) {
+            return String(title.dropLast(suffix.count))
+        }
+        return title
+    }
+
     var style: ThemeStyle {
         makeStyle()
     }

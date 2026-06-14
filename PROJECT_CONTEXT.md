@@ -15,7 +15,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Beta-Release: `1.0.0-beta.5`.
+- Aktueller offizieller Release: `1.0.0`.
 
 ## Datenschutz hat Vorrang
 
@@ -65,7 +65,7 @@ eines lokalen App-Katalogs.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.0.0-beta.5` bleiben als unveröffentlichter
+- Änderungen nach `1.0.0` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 

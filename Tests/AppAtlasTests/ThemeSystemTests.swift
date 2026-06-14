@@ -84,6 +84,35 @@ struct ThemeSystemTests {
     }
 
     @Test
+    func hidesExportCopySuffixOnlyInThemeMenu() throws {
+        let data = Data(
+            """
+            {
+              "format": "urobilanz-theme",
+              "version": 1,
+              "id": "cream-sage-custom",
+              "name": {
+                "de": "Creme Salbei Kopie",
+                "en": "Cream Sage Copy"
+              },
+              "mode": "light",
+              "colors": {
+                "text": "#34281F",
+                "background": "#F8F0E2",
+                "panel": "#FDF4E6",
+                "accent": "#78AD75"
+              }
+            }
+            """.utf8
+        )
+
+        let theme = try ThemeDocumentDecoder.decode(data)
+
+        #expect(theme.title() == "Creme Salbei Kopie")
+        #expect(theme.menuTitle() == "Creme Salbei")
+    }
+
+    @Test
     func systemThemeResolvesExplicitLightAndDarkAppearances() {
         let light = AppAtlasTheme.system.style(for: .light)
         let dark = AppAtlasTheme.system.style(for: .dark)

@@ -5,6 +5,7 @@
 dist/
 Backup/*.zip
 Backup/*.sha256
+Backup/*.dmg
 Private/
 *.csv
 *.tsv

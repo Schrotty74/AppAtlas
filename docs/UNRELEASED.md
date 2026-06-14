@@ -1,4 +1,4 @@
-# Unveröffentlichte Änderungen seit AppAtlas 1.0.0-beta.5
+# Unveröffentlichte Änderungen seit AppAtlas 1.0.0
 
 Derzeit keine.
 

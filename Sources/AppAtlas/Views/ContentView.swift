@@ -62,7 +62,7 @@ struct ContentView: View {
                 selectedLayout: $selectedLayout,
                 selectedThemeID: $selectedThemeID,
                 customThemes: customThemes,
-                importTheme: { presentation.importer = .theme },
+                importTheme: showThemeImporter,
                 exportTheme: exportSelectedTheme,
                 deleteTheme: prepareDeleteSelectedTheme,
                 showScanner: { presentation.sheet = .scanner },
@@ -101,7 +101,6 @@ struct ContentView: View {
         .modifier(
             ContentFileImportersModifier(
                 presentation: presentation,
-                importTheme: importCustomTheme,
                 importCatalog: prepareCatalogImport,
                 importLicenses: importLicenseData
             )
@@ -130,6 +129,20 @@ struct ContentView: View {
             selectedThemeID = theme.id
         } catch {
             showError("Theme importieren", error)
+        }
+    }
+
+    private func showThemeImporter() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else {
+                return
+            }
+            importCustomTheme(.success(url))
         }
     }
 

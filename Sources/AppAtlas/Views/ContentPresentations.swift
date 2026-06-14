@@ -64,17 +64,11 @@ struct ContentSheetsModifier: ViewModifier {
 struct ContentFileImportersModifier: ViewModifier {
     @ObservedObject var presentation: ContentPresentationState
 
-    let importTheme: (Result<URL, Error>) -> Void
     let importCatalog: (Result<URL, Error>) -> Void
     let importLicenses: (Result<URL, Error>) -> Void
 
     func body(content: Content) -> some View {
         content
-            .fileImporter(
-                isPresented: importerBinding(for: .theme),
-                allowedContentTypes: [.json],
-                onCompletion: importTheme
-            )
             .fileImporter(
                 isPresented: importerBinding(for: .catalog),
                 allowedContentTypes: [.json],
