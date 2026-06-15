@@ -18,7 +18,7 @@ enum CatalogTransferDocument {
     static func encoded(
         apps: [AppEntry],
         protection: CatalogExportProtection,
-        licenseStore: LicenseKeychainStore = .shared
+        licenseStore: any LicenseStorage = LicenseKeychainStore.shared
     ) throws -> Data {
         switch protection {
         case .withoutLicenses:
@@ -89,7 +89,7 @@ enum CatalogTransferDocument {
 
     private static func exportedLicenses(
         for apps: [AppEntry],
-        licenseStore: LicenseKeychainStore
+        licenseStore: any LicenseStorage
     ) -> [LicenseItem] {
         apps.compactMap { app in
             licenseStore.load(for: app.id).map {

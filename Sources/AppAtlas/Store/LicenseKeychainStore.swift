@@ -7,7 +7,21 @@ extension Notification.Name {
     )
 }
 
-struct LicenseKeychainStore: Sendable {
+protocol LicenseStorage: Sendable {
+    func load(for appID: UUID) -> AppLicenseRecord?
+    func save(_ record: AppLicenseRecord, for appID: UUID) throws
+    func delete(for appID: UUID)
+}
+
+extension LicenseStorage {
+    func save(_ records: [UUID: AppLicenseRecord]) throws {
+        for (appID, record) in records {
+            try save(record, for: appID)
+        }
+    }
+}
+
+struct LicenseKeychainStore: LicenseStorage, Sendable {
     static let shared = LicenseKeychainStore()
     private let service = "at.schrotty.appatlas.licenses"
 
@@ -69,12 +83,6 @@ struct LicenseKeychainStore: Sendable {
             kSecAttrAccount as String: appID.uuidString
         ]
         SecItemDelete(query as CFDictionary)
-    }
-
-    func save(_ records: [UUID: AppLicenseRecord]) throws {
-        for (appID, record) in records {
-            try save(record, for: appID)
-        }
     }
 
     enum KeychainError: LocalizedError {

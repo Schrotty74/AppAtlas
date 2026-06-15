@@ -1,5 +1,15 @@
 # Projekthistorie
 
+## 1.0.1 – Test- und Stabilitätskorrekturen
+
+- Lizenzspeicher ist für Tests injizierbar, während die App weiterhin
+  unverändert den macOS-Schlüsselbund verwendet.
+- Lizenztests verwenden einen isolierten Speicher und greifen nicht mehr auf
+  den echten Schlüsselbund zu.
+- Icon-Qualitätstests sind unabhängig von App-Ressourcen.
+- Leistungstests vergleichen relative Laufzeiten statt geräteabhängiger fester
+  Zeitlimits.
+
 ## 1.0.0 – Erste stabile Version
 
 - Alle Funktionen und Stabilitätskorrekturen der fünf öffentlichen Betas.

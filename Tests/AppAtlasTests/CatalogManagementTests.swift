@@ -114,6 +114,7 @@ struct CatalogManagementTests {
 
     @Test
     func licenseImportCanCreatePrivateManualCatalogEntries() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let privateValue = UUID().uuidString
         let missing = ImportedLicense(
             softwareName: "Store Only Utility",
@@ -121,15 +122,12 @@ struct CatalogManagementTests {
         )
         let plan = LicenseDataImporter().plan(licenses: [missing], apps: [])
 
-        let outcome = LicenseImportService().apply(
+        let outcome = LicenseImportService(
+            licenseStorage: licenseStorage
+        ).apply(
             plan,
             createMissingEntries: true
         )
-        defer {
-            for app in outcome.createdApps {
-                LicenseKeychainStore.shared.delete(for: app.id)
-            }
-        }
 
         let app = try #require(outcome.createdApps.first)
         #expect(app.name == "Store Only Utility")
@@ -137,7 +135,7 @@ struct CatalogManagementTests {
         #expect(app.files.isEmpty)
         #expect(outcome.saveResult.savedCount == 1)
         #expect(
-            LicenseKeychainStore.shared.load(for: app.id)?.serialNumber
+            licenseStorage.load(for: app.id)?.serialNumber
                 == privateValue
         )
     }
@@ -231,7 +229,7 @@ struct CatalogManagementTests {
                 userCustomizations: UserCustomizations()
             )
         ])
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: persistence,
             targetLanguageProvider: { "de" }
         )
@@ -282,7 +280,7 @@ struct CatalogManagementTests {
                 sourceStatus: .manual
             )
         ])
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: persistence,
             targetLanguageProvider: { "en" }
         )
@@ -398,7 +396,8 @@ struct CatalogManagementTests {
     }
 
     @Test
-    func storesPrivateLicenseRecordInKeychain() throws {
+    func storesPrivateLicenseRecord() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let appID = UUID()
         let record = AppLicenseRecord(
             serialNumber: ["TEST", "NOT", "REAL"].joined(separator: "-"),
@@ -406,13 +405,9 @@ struct CatalogManagementTests {
             licenseType: "Test",
             notes: "Wird nach dem Test gelöscht."
         )
-        defer {
-            LicenseKeychainStore.shared.delete(for: appID)
-        }
+        try licenseStorage.save(record, for: appID)
 
-        try LicenseKeychainStore.shared.save(record, for: appID)
-
-        #expect(LicenseKeychainStore.shared.load(for: appID) == record)
+        #expect(licenseStorage.load(for: appID) == record)
     }
 
     @Test
@@ -434,6 +429,7 @@ struct CatalogManagementTests {
 
     @Test
     func encryptedCatalogTransferProtectsAndRestoresLicenseData() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let app = AppEntry(
             name: "Transfer Test",
             category: "Test",
@@ -442,16 +438,14 @@ struct CatalogManagementTests {
         )
         let secret = ["PRIVATE", "TEST", "VALUE"].joined(separator: "-")
         let license = AppLicenseRecord(serialNumber: secret)
-        defer {
-            LicenseKeychainStore.shared.delete(for: app.id)
-        }
-        try LicenseKeychainStore.shared.save(license, for: app.id)
+        try licenseStorage.save(license, for: app.id)
 
         let data = try CatalogTransferDocument.encoded(
             apps: [app],
             protection: .licensesEncrypted(
                 password: "a-long-test-password"
-            )
+            ),
+            licenseStore: licenseStorage
         )
         let text = try #require(String(data: data, encoding: .utf8))
         let decoded = try CatalogTransferDocument.decode(
@@ -467,11 +461,13 @@ struct CatalogManagementTests {
 
     @Test
     func rejectsWrongCatalogTransferPassword() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let data = try CatalogTransferDocument.encoded(
             apps: [],
             protection: .licensesEncrypted(
                 password: "correct-test-password"
-            )
+            ),
+            licenseStore: licenseStorage
         )
 
         #expect(throws: CatalogTransferError.self) {
@@ -484,6 +480,7 @@ struct CatalogManagementTests {
 
     @Test
     func plaintextCatalogTransferIncludesChosenLicenseData() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let app = AppEntry(
             name: "Plain Transfer Test",
             category: "Test",
@@ -492,14 +489,12 @@ struct CatalogManagementTests {
         )
         let secret = ["VISIBLE", "TEST", "VALUE"].joined(separator: "-")
         let license = AppLicenseRecord(serialNumber: secret)
-        defer {
-            LicenseKeychainStore.shared.delete(for: app.id)
-        }
-        try LicenseKeychainStore.shared.save(license, for: app.id)
+        try licenseStorage.save(license, for: app.id)
 
         let data = try CatalogTransferDocument.encoded(
             apps: [app],
-            protection: .licensesPlaintext
+            protection: .licensesPlaintext,
+            licenseStore: licenseStorage
         )
         let decoded = try CatalogTransferDocument.decode(data)
         let text = try #require(String(data: data, encoding: .utf8))
@@ -538,7 +533,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
+        let store = makeCatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
         let app = AppEntry(
             name: "Löschtest",
             category: "Test",
@@ -556,10 +551,14 @@ struct CatalogManagementTests {
 
     @Test @MainActor
     func deletesEntireCatalogAndPrivateLicenses() throws {
+        let licenseStorage = InMemoryLicenseStorage()
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL),
+            licenseStorage: licenseStorage
+        )
         let first = AppEntry(
             name: "First Test App",
             category: "Test",
@@ -575,17 +574,15 @@ struct CatalogManagementTests {
         let firstTestValue = "TEST-FIRST"
         let secondTestValue = "TEST-SECOND"
         defer {
-            LicenseKeychainStore.shared.delete(for: first.id)
-            LicenseKeychainStore.shared.delete(for: second.id)
             try? FileManager.default.removeItem(
                 at: fileURL.deletingLastPathComponent()
             )
         }
-        try LicenseKeychainStore.shared.save(
+        try licenseStorage.save(
             AppLicenseRecord(serialNumber: firstTestValue),
             for: first.id
         )
-        try LicenseKeychainStore.shared.save(
+        try licenseStorage.save(
             AppLicenseRecord(serialNumber: secondTestValue),
             for: second.id
         )
@@ -597,8 +594,8 @@ struct CatalogManagementTests {
         #expect(store.apps.isEmpty)
         #expect(store.selectedAppID == nil)
         #expect(try CatalogPersistence(fileURL: fileURL).load()?.isEmpty == true)
-        #expect(LicenseKeychainStore.shared.load(for: first.id) == nil)
-        #expect(LicenseKeychainStore.shared.load(for: second.id) == nil)
+        #expect(licenseStorage.load(for: first.id) == nil)
+        #expect(licenseStorage.load(for: second.id) == nil)
     }
 
     @Test @MainActor
@@ -606,7 +603,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
+        let store = makeCatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
         let manual = AppEntry(
             name: "Icon Protection Test",
             category: "Grafik",
@@ -656,7 +653,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
+        let store = makeCatalogStore(persistence: CatalogPersistence(fileURL: fileURL))
         var app = AppMetadataEnricher().enrich(
             AppEntry(
                 name: "Example Browser",
@@ -683,7 +680,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let icon = try #require(Data(base64Encoded:
@@ -780,7 +777,7 @@ struct CatalogManagementTests {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let fileURL = directory.appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let icon = try #require(Data(base64Encoded:
@@ -847,13 +844,9 @@ struct CatalogManagementTests {
 
     @Test
     func onlineIconChecksRequireQualityAndIconLikeURLs() throws {
-        let iconURL = try #require(
-            AppResources.bundle.url(
-                forResource: "AppIcon",
-                withExtension: "png"
-            )
-        )
-        let iconData = try Data(contentsOf: iconURL)
+        let iconData = try #require(Data(base64Encoded: """
+        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
+        """))
 
         #expect(IconQualityInspector.isLikelyOnlineAppIcon(iconData))
         #expect(
@@ -1111,7 +1104,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let suggestion = CatalogSuggestion(
@@ -1148,7 +1141,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let suggestion = CatalogSuggestion(
@@ -1182,7 +1175,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let app = AppEntry(
@@ -1218,7 +1211,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1253,7 +1246,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1308,7 +1301,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1366,7 +1359,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1413,7 +1406,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1473,7 +1466,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         store.add(
@@ -1542,7 +1535,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let path = "Entwicklung/Package-Manager/Homebrew/Tool.dmg"
@@ -1597,7 +1590,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let initialRevision = store.catalogRevision
@@ -1627,7 +1620,7 @@ struct CatalogManagementTests {
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
         let persistence = CatalogPersistence(fileURL: fileURL)
-        let store = CatalogStore(persistence: persistence)
+        let store = makeCatalogStore(persistence: persistence)
         let app = AppEntry(
             name: "No Website Prompt",
             category: "System",
@@ -1642,7 +1635,7 @@ struct CatalogManagementTests {
         #expect(store.websitePromptExclusions.map(\.id) == [app.id])
         #expect(store.apps.first?.suppressesWebsitePrompt == true)
 
-        let reloaded = CatalogStore(persistence: persistence)
+        let reloaded = makeCatalogStore(persistence: persistence)
         await reloaded.loadBundledCatalog()
         #expect(reloaded.websitePromptExclusions.map(\.id) == [app.id])
         #expect(reloaded.pendingWebsitePrompt == nil)
@@ -1660,7 +1653,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let app = AppEntry(
@@ -1717,7 +1710,7 @@ struct CatalogManagementTests {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
-        let store = CatalogStore(
+        let store = makeCatalogStore(
             persistence: CatalogPersistence(fileURL: fileURL)
         )
         let firstPath = "Benchmark/Benchmark2024_macOS.dmg"
@@ -2268,5 +2261,20 @@ struct CatalogManagementTests {
         )
 
         #expect(recommendations.first?.appName == "Movie Studio")
+    }
+
+    @MainActor
+    private func makeCatalogStore(
+        persistence: CatalogPersistence = CatalogPersistence(),
+        licenseStorage: any LicenseStorage = InMemoryLicenseStorage(),
+        targetLanguageProvider: @escaping @Sendable () -> String = {
+            AppLanguageChoice.current.resolvedLanguage()
+        }
+    ) -> CatalogStore {
+        CatalogStore(
+            persistence: persistence,
+            licenseStorage: licenseStorage,
+            targetLanguageProvider: targetLanguageProvider
+        )
     }
 }

@@ -7,7 +7,11 @@ struct LicenseImportApplyResult: Sendable {
 
 struct LicenseImportService: Sendable {
     private let importer = LicenseDataImporter()
-    private let keychain = LicenseKeychainStore.shared
+    private let licenseStorage: any LicenseStorage
+
+    init(licenseStorage: any LicenseStorage = LicenseKeychainStore.shared) {
+        self.licenseStorage = licenseStorage
+    }
 
     func prepare(from url: URL, apps: [AppEntry]) throws -> LicenseImportPlan {
         let licenses = try importer.decode(
@@ -27,9 +31,9 @@ struct LicenseImportService: Sendable {
 
         for match in plan.matches {
             do {
-                let existing = keychain.load(for: match.appID)
+                let existing = licenseStorage.load(for: match.appID)
                     ?? AppLicenseRecord()
-                try keychain.save(
+                try licenseStorage.save(
                     existing.mergingMissingValues(from: match.record),
                     for: match.appID
                 )
@@ -52,7 +56,7 @@ struct LicenseImportService: Sendable {
                     sourceStatus: .manual
                 )
                 do {
-                    try keychain.save(unmatched.record, for: app.id)
+                    try licenseStorage.save(unmatched.record, for: app.id)
                     createdApps.append(app)
                     savedCount += 1
                 } catch {

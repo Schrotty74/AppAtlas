@@ -16,6 +16,7 @@ final class CatalogStore: ObservableObject {
 
     private let persistence: CatalogPersistence
     private let targetLanguageProvider: @Sendable () -> String
+    private let licenseStorage: any LicenseStorage
     private var promptedWebsiteAppIDs: Set<AppEntry.ID> = []
     static let needsReviewFilter = "__needs_review__"
     static let subcategoryFilterPrefix = "__subcategory__:"
@@ -31,11 +32,13 @@ final class CatalogStore: ObservableObject {
 
     init(
         persistence: CatalogPersistence = CatalogPersistence(),
+        licenseStorage: any LicenseStorage = LicenseKeychainStore.shared,
         targetLanguageProvider: @escaping @Sendable () -> String = {
             AppLanguageChoice.current.resolvedLanguage()
         }
     ) {
         self.persistence = persistence
+        self.licenseStorage = licenseStorage
         self.targetLanguageProvider = targetLanguageProvider
     }
 
@@ -917,7 +920,7 @@ final class CatalogStore: ObservableObject {
     func delete(_ app: AppEntry) {
         apps.removeAll { $0.id == app.id }
         IconStore.shared.delete(fileName: app.iconFileName)
-        LicenseKeychainStore.shared.delete(for: app.id)
+        licenseStorage.delete(for: app.id)
         if selectedAppID == app.id {
             selectedAppID = nil
         }
@@ -927,7 +930,7 @@ final class CatalogStore: ObservableObject {
     func deleteAll() {
         for app in apps {
             IconStore.shared.delete(fileName: app.iconFileName)
-            LicenseKeychainStore.shared.delete(for: app.id)
+            licenseStorage.delete(for: app.id)
         }
         apps.removeAll()
         selectedAppID = nil
@@ -945,7 +948,7 @@ final class CatalogStore: ObservableObject {
         )
         for removedApp in result.removedApps {
             IconStore.shared.delete(fileName: removedApp.iconFileName)
-            LicenseKeychainStore.shared.delete(for: removedApp.id)
+            licenseStorage.delete(for: removedApp.id)
         }
         apps = result.apps
         apps = migrateIcons(in: apps)
@@ -961,7 +964,7 @@ final class CatalogStore: ObservableObject {
             .filter(CatalogEntryFilter().shouldInclude)
             .sorted(by: Self.sortApps)
         let includedIDs = Set(includedApps.map(\.id))
-        try LicenseKeychainStore.shared.save(
+        try licenseStorage.save(
             licenses.filter { includedIDs.contains($0.key) }
         )
         apps = migrateIcons(in: includedApps)

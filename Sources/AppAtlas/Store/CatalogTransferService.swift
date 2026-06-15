@@ -6,6 +6,12 @@ enum PreparedCatalogImport: Sendable {
 }
 
 struct CatalogTransferService: Sendable {
+    private let licenseStorage: any LicenseStorage
+
+    init(licenseStorage: any LicenseStorage = LicenseKeychainStore.shared) {
+        self.licenseStorage = licenseStorage
+    }
+
     func prepareImport(from url: URL) throws -> PreparedCatalogImport {
         let data = try SecurityScopedFileAccess.readData(from: url)
         if CatalogTransferDocument.requiresPassword(data) {
@@ -26,7 +32,8 @@ struct CatalogTransferService: Sendable {
     ) throws -> Data {
         try CatalogTransferDocument.encoded(
             apps: apps,
-            protection: protection
+            protection: protection,
+            licenseStore: licenseStorage
         )
     }
 }
