@@ -24,6 +24,7 @@ enum ContentSheet: Identifiable {
     case assistant
     case scanner
     case errorReport
+    case statistics
     case websiteExclusions
     case catalogExporter
     case catalogPassword
@@ -41,6 +42,8 @@ enum ContentSheet: Identifiable {
             "scanner"
         case .errorReport:
             "error-report"
+        case .statistics:
+            "statistics"
         case .websiteExclusions:
             "website-exclusions"
         case .catalogExporter:

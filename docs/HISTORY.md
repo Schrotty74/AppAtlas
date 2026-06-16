@@ -1,5 +1,19 @@
 # Projekthistorie
 
+## 1.1.0 – Backup-Erinnerung, Statistik und Tags
+
+- Konfigurierbare Backup-Erinnerung für Katalogexporte mit Intervallen von
+  7, 30 oder 90 Tagen sowie einer Nie-Option.
+- Katalogstatistik mit Gesamtzahl, Kategorien, lokaler Dateigröße, fehlenden
+  Beschreibungen, Icons, Homepages und Lizenzdaten-Hinweisen.
+- Eigene Tags pro App, inklusive Editor-Feld, Sidebar-Filter und Suche.
+- Katalog-JSON bleibt abwärtskompatibel: ältere Kataloge ohne Tags werden
+  weiterhin geladen.
+- Statistik liest keine privaten Lizenzwerte aus dem macOS-Schlüsselbund und
+  löst dadurch keine Schlüsselbund-Passwortabfrage aus.
+- Der App-Editor verwendet eine feste, scrollbar nutzbare Dialoggröße, damit
+  macOS das Hauptfenster beim Öffnen nicht verschiebt.
+
 ## 1.0.1 – Test- und Stabilitätskorrekturen
 
 - Lizenzspeicher ist für Tests injizierbar, während die App weiterhin

@@ -1919,6 +1919,107 @@ struct CatalogManagementTests {
         #expect(app.matchesSearch("capture"))
     }
 
+    @Test @MainActor
+    func tagsAreSearchableAndFilterable() {
+        let store = makeCatalogStore()
+        let screenshotApp = AppEntry(
+            name: "Bildschirm Werkzeug",
+            summary: "Screenshots aufnehmen",
+            category: "Grafik",
+            subcategory: "Screenshot",
+            tags: ["Screenshot", "Favorit"],
+            files: []
+        )
+        let otherApp = AppEntry(
+            name: "Video Werkzeug",
+            summary: "Videos bearbeiten",
+            category: "Multimedia",
+            subcategory: "Video",
+            tags: ["Video"],
+            files: []
+        )
+
+        store.add([screenshotApp, otherApp])
+        store.selectedCategory = CatalogStore.tagFilter("Screenshot")
+
+        #expect(screenshotApp.matchesSearch("favorit"))
+        #expect(store.tags.map(\.name).contains("Screenshot"))
+        #expect(store.filteredApps.map(\.id) == [screenshotApp.id])
+        #expect(store.selectedCollectionTitle == "#Screenshot")
+    }
+
+    @Test
+    func legacyCatalogEntriesDecodeWithoutTags() throws {
+        let app = AppEntry(
+            name: "Legacy App",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        var object = try #require(
+            JSONSerialization.jsonObject(
+                with: JSONEncoder().encode(app)
+            ) as? [String: Any]
+        )
+        object.removeValue(forKey: "tags")
+        let data = try JSONSerialization.data(withJSONObject: object)
+        let decoded = try JSONDecoder().decode(AppEntry.self, from: data)
+
+        #expect(decoded.tags.isEmpty)
+    }
+
+    @Test @MainActor
+    func catalogStatisticsSummarizeLocalCatalogAndLicenses() throws {
+        let licenseStorage = InMemoryLicenseStorage()
+        let store = makeCatalogStore(licenseStorage: licenseStorage)
+        let licensed = AppEntry(
+            name: "Lizenzierte App",
+            summary: "Hat eine Beschreibung",
+            details: "",
+            category: "Office",
+            subcategory: "",
+            homepage: URL(string: "https://example.invalid"),
+            iconFileName: "icon.png",
+            files: [
+                LocalAppFile(
+                    fileName: "Licensed.dmg",
+                    fileType: "DMG",
+                    sourceCategory: "Office",
+                    sourceSubcategory: "",
+                    relativePath: "Office/Licensed.dmg",
+                    sizeInBytes: 1_500_000,
+                    modifiedAt: nil,
+                    detectedVersion: nil
+                )
+            ]
+        )
+        let incomplete = AppEntry(
+            name: "Unvollständige App",
+            category: "Office",
+            subcategory: "",
+            files: [],
+            sourceStatus: .manual
+        )
+        try licenseStorage.save(
+            AppLicenseRecord(
+                serialNumber: ["TEST", "LICENSE"].joined(separator: "-")
+            ),
+            for: licensed.id
+        )
+
+        try store.replaceCatalog(with: [licensed, incomplete])
+        let statistics = store.statistics
+
+        #expect(statistics.totalApps == 2)
+        #expect(statistics.appsPerCategory.first?.category == "Office")
+        #expect(statistics.appsPerCategory.first?.count == 2)
+        #expect(statistics.totalSizeInBytes == 1_500_000)
+        #expect(statistics.appsWithoutDescription == 1)
+        #expect(statistics.appsWithoutIcon == 1)
+        #expect(statistics.appsWithoutHomepage == 1)
+        #expect(statistics.appsWithLicenseData == 1)
+    }
+
     @Test
     func searchToleratesSmallTyposInAppNamesOnly() {
         let catalogTool = AppEntry(

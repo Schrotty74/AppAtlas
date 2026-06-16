@@ -36,4 +36,8 @@ struct CatalogTransferService: Sendable {
             licenseStore: licenseStorage
         )
     }
+
+    func recordSuccessfulExport() {
+        BackupReminderService.recordExport()
+    }
 }

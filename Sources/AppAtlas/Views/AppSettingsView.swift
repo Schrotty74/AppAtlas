@@ -54,6 +54,10 @@ struct AppSettingsView: View {
     private var performanceData = Data()
     @AppStorage(OnlineUpdateSettings.extendedSearchKey)
     private var extendedSearch = false
+    @AppStorage(BackupReminderService.intervalKey)
+    private var backupReminderInterval = BackupReminderService
+        .defaultInterval
+        .rawValue
     @AppStorage(ScannerSettings.excludedDirectoriesKey)
     private var excludedDirectoriesRaw = ""
     @AppStorage(ScannerSettings.excludedFileExtensionsKey)
@@ -108,6 +112,36 @@ struct AppSettingsView: View {
                 }
                 Text(
                     "Automatisch verwendet Deutsch in Deutschland, Österreich, der Schweiz und Liechtenstein. In allen anderen Regionen wird Englisch verwendet."
+                )
+                .foregroundStyle(.secondary)
+            }
+
+            Section("Backup-Erinnerung") {
+                Picker(
+                    "Katalogexport erinnern",
+                    selection: $backupReminderInterval
+                ) {
+                    ForEach(BackupReminderInterval.allCases) { interval in
+                        Text(interval.title).tag(interval.rawValue)
+                    }
+                }
+
+                if let lastExportDate = BackupReminderService.lastExportDate {
+                    LabeledContent(
+                        "Letzter Export",
+                        value: lastExportDate.formatted(
+                            date: .abbreviated,
+                            time: .omitted
+                        )
+                    )
+                } else {
+                    Text("Bisher wurde kein Katalogexport gespeichert.")
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(
+                    "Die Erinnerung bleibt lokal auf diesem Mac und soll dich "
+                        + "regelmäßig an einen eigenen Katalogexport erinnern."
                 )
                 .foregroundStyle(.secondary)
             }

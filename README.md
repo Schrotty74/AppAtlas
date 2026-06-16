@@ -9,9 +9,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern, verwaltet Icons,
 Beschreibungen, Links und Lizenzinformationen und startet für jeden Benutzer
 mit einem leeren lokalen Katalog.
 
-> Aktueller Release: **AppAtlas 1.0.1**
+> Aktueller Release: **AppAtlas 1.1.0**
 
-[AppAtlas 1.0.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.0.1/AppAtlas-1.0.1-macos.dmg)
+[AppAtlas 1.1.0 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.0/AppAtlas-1.1.0-macos.dmg)
 
 ## Transparenz
 
@@ -28,6 +28,7 @@ wurde ebenfalls mit Codex erstellt.
 - neue, geänderte und entfernte Dateien bei erneuten Scans mit dem Katalog
   abgleichen
 - Apps manuell hinzufügen, bearbeiten und löschen
+- Apps mit eigenen Tags markieren und über die Sidebar oder Suche filtern
 - lokale App-Dateien nach ausdrücklicher Bestätigung in den Papierkorb legen
 - Beschreibungen, Links und hochwertige Icons verwalten
 - fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen
@@ -45,6 +46,8 @@ wurde ebenfalls mit Codex erstellt.
   kompatibler Darstellung auf älteren macOS-Versionen
 - Katalog als JSON exportieren und importieren, wahlweise ohne Lizenzdaten,
   unverschlüsselt oder passwortgeschützt mit AES-256-GCM
+- konfigurierbare Backup-Erinnerung für regelmäßige Katalogexporte
+- Katalogstatistik mit Kategorien, Speicherbedarf und fehlenden Metadaten
 - Lizenzdaten aus JSON- und CSV-Dateien importieren
 - private Lizenzdaten im macOS-Schlüsselbund speichern
 - einzelne Apps oder den gesamten Katalog löschen
@@ -107,7 +110,7 @@ Onlinequellen werden ausschließlich nach einem bewussten Klick auf
 Details: [docs/PRIVACY.md](docs/PRIVACY.md)
 
 Öffentlicher Prüfbericht:
-[Datenschutzaudit für AppAtlas 1.0.1](docs/PRIVACY_AUDIT_2026-06-15.md)
+[Datenschutzaudit für AppAtlas 1.1.0](docs/PRIVACY_AUDIT_2026-06-16.md)
 
 ## Fehler melden
 

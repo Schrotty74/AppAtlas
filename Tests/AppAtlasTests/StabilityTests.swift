@@ -114,6 +114,46 @@ struct StabilityTests {
     }
 
     @Test
+    func backupReminderUsesConfiguredIntervalAndExportDate() {
+        let defaults = UserDefaults.standard
+        defer {
+            defaults.removeObject(forKey: BackupReminderService.intervalKey)
+            defaults.removeObject(forKey: BackupReminderService.lastExportDateKey)
+        }
+
+        defaults.removeObject(forKey: BackupReminderService.intervalKey)
+        defaults.removeObject(forKey: BackupReminderService.lastExportDateKey)
+        #expect(BackupReminderService.currentInterval == .thirtyDays)
+        #expect(BackupReminderService.isReminderDue())
+
+        defaults.set(
+            BackupReminderInterval.thirtyDays.rawValue,
+            forKey: BackupReminderService.intervalKey
+        )
+        defaults.removeObject(forKey: BackupReminderService.lastExportDateKey)
+        #expect(BackupReminderService.isReminderDue())
+
+        let now = Date()
+        BackupReminderService.recordExport(date: now)
+        #expect(!BackupReminderService.isReminderDue(now: now))
+        #expect(
+            BackupReminderService.isReminderDue(
+                now: now.addingTimeInterval(31 * 24 * 60 * 60)
+            )
+        )
+
+        defaults.set(
+            BackupReminderInterval.never.rawValue,
+            forKey: BackupReminderService.intervalKey
+        )
+        #expect(
+            !BackupReminderService.isReminderDue(
+                now: now.addingTimeInterval(365 * 24 * 60 * 60)
+            )
+        )
+    }
+
+    @Test
     func catalogPersistenceRecoversPreviousValidVersion() throws {
         let directory = temporaryDirectory()
         let fileURL = directory.appendingPathComponent("catalog.json")

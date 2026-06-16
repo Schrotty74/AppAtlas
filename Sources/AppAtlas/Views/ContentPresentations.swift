@@ -42,6 +42,9 @@ struct ContentSheetsModifier: ViewModifier {
                 .environmentObject(store)
         case .errorReport:
             ErrorReportView()
+        case .statistics:
+            CatalogStatisticsView()
+                .environmentObject(store)
         case .websiteExclusions:
             WebsitePromptExclusionsView()
                 .environmentObject(store)

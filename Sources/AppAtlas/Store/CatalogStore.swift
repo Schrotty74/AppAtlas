@@ -20,6 +20,7 @@ final class CatalogStore: ObservableObject {
     private var promptedWebsiteAppIDs: Set<AppEntry.ID> = []
     static let needsReviewFilter = "__needs_review__"
     static let subcategoryFilterPrefix = "__subcategory__:"
+    static let tagFilterPrefix = "__tag__:"
 
     struct FolderNode: Identifiable, Hashable {
         let name: String
@@ -85,6 +86,9 @@ final class CatalogStore: ObservableObject {
         if let selection = Self.decodeSubcategoryFilter(selectedCategory) {
             return selection.subcategory
         }
+        if let tag = Self.decodeTagFilter(selectedCategory) {
+            return "#\(tag)"
+        }
         return selectedCategory
     }
 
@@ -103,6 +107,10 @@ final class CatalogStore: ObservableObject {
         "\(subcategoryFilterPrefix)\(category)\u{1F}\(subcategory)"
     }
 
+    static func tagFilter(_ tag: String) -> String {
+        "\(tagFilterPrefix)\(tag)"
+    }
+
     private static func decodeSubcategoryFilter(
         _ value: String
     ) -> (category: String, subcategory: String)? {
@@ -119,6 +127,15 @@ final class CatalogStore: ObservableObject {
         return (components[0], components[1])
     }
 
+    static func decodeTagFilter(_ value: String) -> String? {
+        guard value.hasPrefix(tagFilterPrefix) else {
+            return nil
+        }
+        let tag = String(value.dropFirst(tagFilterPrefix.count))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return tag.isEmpty ? nil : tag
+    }
+
     private func matchesSelectedCategory(_ app: AppEntry) -> Bool {
         guard let selectedCategory else {
             return true
@@ -130,7 +147,55 @@ final class CatalogStore: ObservableObject {
                         || $0.hasPrefix(selection.subcategory + "/")
                 }
         }
+        if let tag = Self.decodeTagFilter(selectedCategory) {
+            let normalizedTag = tag.normalizedForCatalogSearch
+            return app.tags.contains {
+                $0.normalizedForCatalogSearch == normalizedTag
+            }
+        }
         return app.category == selectedCategory
+    }
+
+    var tags: [(name: String, count: Int)] {
+        Dictionary(
+            grouping: apps.flatMap(\.tags),
+            by: { $0.normalizedForCatalogSearch }
+        )
+        .compactMap { _, values in
+            values.first.map { ($0, values.count) }
+        }
+        .sorted {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+        }
+    }
+
+    var statistics: CatalogStatistics {
+        CatalogStatistics(
+            totalApps: apps.count,
+            appsPerCategory: Dictionary(grouping: apps, by: \.category)
+                .map { ($0.key, $0.value.count) }
+                .sorted {
+                    if $0.1 == $1.1 {
+                        return $0.0.localizedStandardCompare($1.0)
+                            == .orderedAscending
+                    }
+                    return $0.1 > $1.1
+                },
+            totalSizeInBytes: apps.reduce(0) {
+                $0 + $1.totalSizeInBytes
+            },
+            appsWithoutDescription: apps.filter {
+                $0.summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    && $0.details.trimmingCharacters(
+                        in: .whitespacesAndNewlines
+                    ).isEmpty
+            }.count,
+            appsWithoutIcon: apps.filter { !$0.hasIcon }.count,
+            appsWithoutHomepage: apps.filter { $0.homepage == nil }.count,
+            appsWithLicenseData: apps.filter {
+                licenseStorage.hasRecord(for: $0.id)
+            }.count
+        )
     }
 
     private func folderPaths(for app: AppEntry) -> Set<String> {

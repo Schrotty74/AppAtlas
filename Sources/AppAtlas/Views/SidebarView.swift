@@ -82,6 +82,24 @@ struct SidebarView: View {
                     }
                 }
             }
+
+            if !store.tags.isEmpty {
+                Section("Tags") {
+                    ForEach(store.tags, id: \.name) { tag in
+                        tagLabel(tag.name, count: tag.count)
+                            .appAtlasSidebarSelection(
+                                store.selectedCategory
+                                    == CatalogStore.tagFilter(tag.name)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                store.selectedCategory = CatalogStore
+                                    .tagFilter(tag.name)
+                            }
+                            .listRowBackground(Color.clear)
+                    }
+                }
+            }
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
@@ -100,6 +118,19 @@ struct SidebarView: View {
             }
         } icon: {
             Image(systemName: iconName(for: category))
+        }
+    }
+
+    private func tagLabel(_ tag: String, count: Int) -> some View {
+        Label {
+            HStack {
+                Text(tag)
+                Spacer()
+                Text(count, format: .number)
+                    .foregroundStyle(theme.mutedText)
+            }
+        } icon: {
+            Image(systemName: "tag")
         }
     }
 

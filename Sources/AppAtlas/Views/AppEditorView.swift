@@ -17,6 +17,7 @@ struct AppEditorView: View {
     @State private var category: String
     @State private var subcategory: String
     @State private var keywords: String
+    @State private var tags: String
     @State private var homepage: String
     @State private var downloadURL: String
     @State private var githubURL: String
@@ -43,6 +44,7 @@ struct AppEditorView: View {
         _category = State(initialValue: existingApp?.category ?? "Sonstiges")
         _subcategory = State(initialValue: existingApp?.subcategory ?? "")
         _keywords = State(initialValue: existingApp?.keywords.joined(separator: ", ") ?? "")
+        _tags = State(initialValue: existingApp?.tags.joined(separator: ", ") ?? "")
         _homepage = State(initialValue: existingApp?.homepage?.absoluteString ?? "")
         _downloadURL = State(initialValue: existingApp?.downloadURL?.absoluteString ?? "")
         _githubURL = State(initialValue: existingApp?.githubURL?.absoluteString ?? "")
@@ -92,6 +94,7 @@ struct AppEditorView: View {
                     TextField("Kategorie", text: $category)
                     TextField("Unterkategorie", text: $subcategory)
                     TextField("Stichwörter, durch Kommas getrennt", text: $keywords)
+                    TextField("Tags, durch Kommas getrennt", text: $tags)
                     Picker("Prüfstatus", selection: $reviewStatus) {
                         ForEach(ReviewStatus.allCases, id: \.self) { status in
                             Text(status.rawValue).tag(status)
@@ -180,7 +183,7 @@ struct AppEditorView: View {
                 }
             }
         }
-        .frame(minWidth: 560, minHeight: 620)
+        .frame(width: 560, height: 560)
         .fileImporter(
             isPresented: $showIconImporter,
             allowedContentTypes: [
@@ -227,6 +230,10 @@ struct AppEditorView: View {
             category: category.trimmingCharacters(in: .whitespacesAndNewlines),
             subcategory: subcategory.trimmingCharacters(in: .whitespacesAndNewlines),
             keywords: keywords
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty },
+            tags: tags
                 .split(separator: ",")
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty },

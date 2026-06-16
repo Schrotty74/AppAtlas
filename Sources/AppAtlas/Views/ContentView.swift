@@ -11,6 +11,7 @@ struct ContentView: View {
     private var languageChoice = AppLanguageChoice.automatic.rawValue
     @StateObject private var presentation = ContentPresentationState()
     @StateObject private var systemAppearance = SystemAppearanceObserver()
+    @State private var backupReminderDismissed = false
 
     private var customThemes: [AppAtlasThemeDefinition] {
         AppAtlasThemeDefinition.decodeList(customThemesRaw)
@@ -69,6 +70,7 @@ struct ContentView: View {
                 showAssistant: { presentation.sheet = .assistant },
                 showAddApp: { presentation.sheet = .addApp },
                 showErrorReport: { presentation.sheet = .errorReport },
+                showStatistics: { presentation.sheet = .statistics },
                 showWebsitePromptExclusions: {
                     presentation.sheet = .websiteExclusions
                 },
@@ -89,6 +91,9 @@ struct ContentView: View {
                 },
                 deleteAllApps: { presentation.alert = .deleteAll }
             )
+        }
+        .safeAreaInset(edge: .top) {
+            backupReminderBanner
         }
         .modifier(
             ContentSheetsModifier(
@@ -115,6 +120,35 @@ struct ContentView: View {
 
     private var layout: AppLayout {
         AppLayout(rawValue: selectedLayout) ?? .classic
+    }
+
+    @ViewBuilder
+    private var backupReminderBanner: some View {
+        if !backupReminderDismissed,
+           !store.apps.isEmpty,
+           BackupReminderService.isReminderDue()
+        {
+            HStack(spacing: 12) {
+                Image(systemName: "externaldrive.badge.timemachine")
+                Text("Zeit für ein Katalog-Backup.")
+                    .font(.headline)
+                Text(
+                    "Exportiere deinen Katalog, damit deine lokalen Daten "
+                        + "gesichert sind."
+                )
+                .foregroundStyle(.secondary)
+                Spacer()
+                Button("Jetzt exportieren") {
+                    presentation.sheet = .catalogExporter
+                }
+                Button("Später") {
+                    backupReminderDismissed = true
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.thinMaterial)
+        }
     }
 
     private func importCustomTheme(_ result: Result<URL, Error>) {
@@ -212,6 +246,8 @@ struct ContentView: View {
                 }
                 do {
                     try SecurityScopedFileAccess.write(data, to: url)
+                    CatalogTransferService().recordSuccessfulExport()
+                    backupReminderDismissed = false
                 } catch {
                     showError("Katalog exportieren", error)
                 }

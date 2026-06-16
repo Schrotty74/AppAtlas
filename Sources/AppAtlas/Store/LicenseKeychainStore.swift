@@ -9,15 +9,51 @@ extension Notification.Name {
 
 protocol LicenseStorage: Sendable {
     func load(for appID: UUID) -> AppLicenseRecord?
+    func hasRecord(for appID: UUID) -> Bool
     func save(_ record: AppLicenseRecord, for appID: UUID) throws
     func delete(for appID: UUID)
 }
 
 extension LicenseStorage {
+    func hasRecord(for appID: UUID) -> Bool {
+        load(for: appID)?.isEmpty == false
+    }
+
     func save(_ records: [UUID: AppLicenseRecord]) throws {
         for (appID, record) in records {
             try save(record, for: appID)
         }
+    }
+}
+
+private enum LicenseRecordIndex {
+    private static let key = "licenseRecordAppIDs"
+
+    static func contains(_ appID: UUID) -> Bool {
+        appIDs().contains(appID.uuidString)
+    }
+
+    static func add(_ appID: UUID) {
+        var ids = appIDs()
+        ids.insert(appID.uuidString)
+        save(ids)
+    }
+
+    static func remove(_ appID: UUID) {
+        var ids = appIDs()
+        ids.remove(appID.uuidString)
+        save(ids)
+    }
+
+    private static func appIDs() -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    }
+
+    private static func save(_ ids: Set<String>) {
+        UserDefaults.standard.set(
+            ids.sorted(),
+            forKey: key
+        )
     }
 }
 
@@ -43,6 +79,10 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
             return nil
         }
         return try? JSONDecoder().decode(AppLicenseRecord.self, from: data)
+    }
+
+    func hasRecord(for appID: UUID) -> Bool {
+        LicenseRecordIndex.contains(appID)
     }
 
     func save(_ record: AppLicenseRecord, for appID: UUID) throws {
@@ -74,6 +114,7 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
         } else if status != errSecSuccess {
             throw KeychainError.status(status)
         }
+        LicenseRecordIndex.add(appID)
     }
 
     func delete(for appID: UUID) {
@@ -83,6 +124,7 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
             kSecAttrAccount as String: appID.uuidString
         ]
         SecItemDelete(query as CFDictionary)
+        LicenseRecordIndex.remove(appID)
     }
 
     enum KeychainError: LocalizedError {
