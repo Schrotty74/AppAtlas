@@ -53,13 +53,30 @@ Katalogexporte.
 
 ## Screenshots
 
-Aktuell sind keine finalen App-Screenshots im Repository abgelegt. Die
-vorhandenen Designvorschläge sind hier verfügbar:
+Die folgenden Screenshots zeigen ausschließlich Demo-Daten.
 
-- [Klassisch Hell](Designvorschlaege/01-Klassisch-Hell.png)
-- [Fokus Dunkel](Designvorschlaege/02-Fokus-Dunkel.png)
-- [Dashboard Hell](Designvorschlaege/03-Dashboard-Hell.png)
-- [Regale Dunkel](Designvorschlaege/04-Regale-Dunkel.png)
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-classic-demo.jpg" alt="AppAtlas klassische Ansicht mit Demo-Daten" width="100%">
+      <br><sub>Klassische Ansicht</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-focus-demo.jpg" alt="AppAtlas Fokusansicht mit Demo-Daten" width="100%">
+      <br><sub>Fokusansicht</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-compact-demo.jpg" alt="AppAtlas Kompaktansicht mit Demo-Daten" width="100%">
+      <br><sub>Kompaktansicht</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas Dashboard-Ansicht mit Demo-Daten" width="100%">
+      <br><sub>Dashboard-Ansicht</sub>
+    </td>
+  </tr>
+</table>
 
 ## Voraussetzungen
 

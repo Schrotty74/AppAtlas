@@ -49,13 +49,30 @@ descriptions, links, tags, license information, and local catalog exports.
 
 ## Screenshots
 
-No final app screenshots are currently stored in the repository. The existing
-design drafts are available here:
+The screenshots below use demo data only.
 
-- [Classic Light](Designvorschlaege/01-Klassisch-Hell.png)
-- [Focus Dark](Designvorschlaege/02-Fokus-Dunkel.png)
-- [Dashboard Light](Designvorschlaege/03-Dashboard-Hell.png)
-- [Shelf Dark](Designvorschlaege/04-Regale-Dunkel.png)
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-classic-demo.jpg" alt="AppAtlas classic view with demo data" width="100%">
+      <br><sub>Classic view</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-focus-demo.jpg" alt="AppAtlas focus view with demo data" width="100%">
+      <br><sub>Focus view</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-compact-demo.jpg" alt="AppAtlas compact view with demo data" width="100%">
+      <br><sub>Compact view</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas dashboard view with demo data" width="100%">
+      <br><sub>Dashboard view</sub>
+    </td>
+  </tr>
+</table>
 
 ## Requirements
 
