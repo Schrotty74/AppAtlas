@@ -1,5 +1,18 @@
 # Projekthistorie
 
+## 1.1.1 – Schlüsselbund-Export und Development-Build
+
+- Katalogexporte mit Lizenzdaten lesen nur noch bekannte Lizenzdatensätze aus
+  dem macOS-Schlüsselbund, statt jede App im Katalog gegen den Schlüsselbund zu
+  prüfen.
+- Der zusätzliche Schlüsselbund-Authentifizierungskontext wurde entfernt, um
+  unnötige macOS-Passwortdialoge beim Export zu vermeiden.
+- Die Exportdatei wird erst nach Auswahl des Speicherorts erzeugt, damit keine
+  App-Sheets und Schlüsselbunddialoge ineinanderlaufen.
+- Der Katalogimport verwendet wieder zuverlässig den nativen macOS-Dateidialog.
+- Lokale Development-Builds laufen ohne Datenschutz-Audit; Datenschutzprüfungen
+  bleiben für Commit, Push, Release und Backup aktiv.
+
 ## 1.1.0 – Backup-Erinnerung, Statistik und Tags
 
 - Konfigurierbare Backup-Erinnerung für Katalogexporte mit Intervallen von

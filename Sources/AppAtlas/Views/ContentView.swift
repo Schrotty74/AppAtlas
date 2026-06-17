@@ -77,7 +77,7 @@ struct ContentView: View {
                 showCatalogExporter: {
                     presentation.sheet = .catalogExporter
                 },
-                showCatalogImporter: { presentation.importer = .catalog },
+                showCatalogImporter: showCatalogImporter,
                 showLicenseImporter: { presentation.importer = .licenses },
                 editSelectedApp: {
                     if let app = store.selectedApp {
@@ -180,6 +180,20 @@ struct ContentView: View {
         }
     }
 
+    private func showCatalogImporter() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else {
+                return
+            }
+            prepareCatalogImport(.success(url))
+        }
+    }
+
     private func prepareCatalogImport(_ result: Result<URL, Error>) {
         do {
             let url = try result.get()
@@ -230,30 +244,26 @@ struct ContentView: View {
     }
 
     private func exportCatalog(_ protection: CatalogExportProtection) {
-        do {
-            let data = try CatalogTransferService().exportData(
-                apps: store.exportApps(),
-                protection: protection
-            )
-            let panel = NSSavePanel()
-            panel.nameFieldStringValue = "AppAtlas-Katalog.json"
-            panel.allowedContentTypes = [.json]
-            panel.canCreateDirectories = true
-            panel.isExtensionHidden = false
-            panel.begin { response in
-                guard response == .OK, let url = panel.url else {
-                    return
-                }
-                do {
-                    try SecurityScopedFileAccess.write(data, to: url)
-                    CatalogTransferService().recordSuccessfulExport()
-                    backupReminderDismissed = false
-                } catch {
-                    showError("Katalog exportieren", error)
-                }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "AppAtlas-Katalog.json"
+        panel.allowedContentTypes = [.json]
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else {
+                return
             }
-        } catch {
-            showError("Katalog exportieren", error)
+            do {
+                let data = try CatalogTransferService().exportData(
+                    apps: store.exportApps(),
+                    protection: protection
+                )
+                try SecurityScopedFileAccess.write(data, to: url)
+                CatalogTransferService().recordSuccessfulExport()
+                backupReminderDismissed = false
+            } catch {
+                showError("Katalog exportieren", error)
+            }
         }
     }
 

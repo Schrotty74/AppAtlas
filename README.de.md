@@ -11,9 +11,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern und verwaltet
 Icons, Beschreibungen, Links, Tags, Lizenzinformationen und lokale
 Katalogexporte.
 
-> Aktueller Release: **AppAtlas 1.1.0**
+> Aktueller Release: **AppAtlas 1.1.1**
 
-[AppAtlas 1.1.0 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.0/AppAtlas-1.1.0-macos.dmg)
+[AppAtlas 1.1.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
 
 ## Funktionen
 
@@ -70,7 +70,7 @@ vorhandenen Designvorschläge sind hier verfügbar:
 ## Build und Installation
 
 Aktuellen Release herunterladen:
-[AppAtlas 1.1.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.0/AppAtlas-1.1.0-macos.dmg)
+[AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
 
 Beim ersten Öffnen zeigt macOS möglicherweise eine Warnung, da AppAtlas nicht
 mit einem kostenpflichtigen Apple Developer Account notarisiert ist.
@@ -121,7 +121,7 @@ Export- und Datenbankdateien.
 - [Beispieltheme Winterfest](docs/themes/example-winter-frost.json)
 - [Projektstruktur](docs/PROJECT_STRUCTURE.md)
 - [Details zum Datenschutz](docs/PRIVACY.md)
-- [Datenschutzaudit für AppAtlas 1.1.0](docs/PRIVACY_AUDIT_2026-06-16.md)
+- [Datenschutzaudit für AppAtlas 1.1.1](docs/PRIVACY_AUDIT_2026-06-17.md)
 
 ## Transparenz
 

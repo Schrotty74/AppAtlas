@@ -1,4 +1,4 @@
-# Unveröffentlichte Änderungen seit AppAtlas 1.1.0
+# Unveröffentlichte Änderungen seit AppAtlas 1.1.1
 
 Derzeit keine.
 

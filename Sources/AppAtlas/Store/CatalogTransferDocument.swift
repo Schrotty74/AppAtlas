@@ -28,7 +28,7 @@ enum CatalogTransferDocument {
                 PlaintextDocument(
                     payload: Payload(
                         apps: apps,
-                        licenses: exportedLicenses(
+                        licenses: try exportedLicenses(
                             for: apps,
                             licenseStore: licenseStore
                         )
@@ -42,7 +42,7 @@ enum CatalogTransferDocument {
             let payloadData = try encoder.encode(
                 Payload(
                     apps: apps,
-                    licenses: exportedLicenses(
+                    licenses: try exportedLicenses(
                         for: apps,
                         licenseStore: licenseStore
                     )
@@ -90,9 +90,12 @@ enum CatalogTransferDocument {
     private static func exportedLicenses(
         for apps: [AppEntry],
         licenseStore: any LicenseStorage
-    ) -> [LicenseItem] {
-        apps.compactMap { app in
-            licenseStore.load(for: app.id).map {
+    ) throws -> [LicenseItem] {
+        try apps.compactMap { app in
+            guard licenseStore.hasRecord(for: app.id) else {
+                return nil
+            }
+            return try licenseStore.loadForExport(for: app.id).map {
                 LicenseItem(appID: app.id, record: $0)
             }
         }

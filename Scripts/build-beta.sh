@@ -18,12 +18,16 @@ app_bundle="$release_directory/AppAtlas.app"
 zip_file="$root_directory/Backup/AppAtlas-$version-macos.zip"
 checksum_file="$zip_file.sha256"
 
+export SWIFTPM_HOME="$root_directory/.build-cache/swiftpm"
+export CLANG_MODULE_CACHE_PATH="$root_directory/.build-cache/clang"
+
 "$root_directory/Scripts/privacy-check.sh"
 mkdir -p "$root_directory/Backup"
 
 swift build \
     --package-path "$root_directory" \
     --scratch-path "$scratch_directory" \
+    --disable-sandbox \
     --configuration release \
     -Xswiftc -F \
     -Xswiftc /Library/Developer/CommandLineTools/Library/Developer/Frameworks \
@@ -51,6 +55,7 @@ touch "$resource_accessor"
 swift build \
     --package-path "$root_directory" \
     --scratch-path "$scratch_directory" \
+    --disable-sandbox \
     --configuration release \
     -Xswiftc -F \
     -Xswiftc /Library/Developer/CommandLineTools/Library/Developer/Frameworks \
@@ -65,6 +70,7 @@ binary_directory="$(
     swift build \
         --package-path "$root_directory" \
         --scratch-path "$scratch_directory" \
+        --disable-sandbox \
         --configuration release \
         --show-bin-path
 )"

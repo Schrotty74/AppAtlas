@@ -504,6 +504,35 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func catalogTransferReadsOnlyKnownLicenseRecords() throws {
+        let licenseStorage = CountingLicenseStorage()
+        let licensedApp = AppEntry(
+            name: "Licensed Transfer Test",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        let unlicensedApp = AppEntry(
+            name: "Unlicensed Transfer Test",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        let license = AppLicenseRecord(licenseType: "Test")
+        try licenseStorage.save(license, for: licensedApp.id)
+
+        let data = try CatalogTransferDocument.encoded(
+            apps: [licensedApp, unlicensedApp],
+            protection: .licensesPlaintext,
+            licenseStore: licenseStorage
+        )
+        let decoded = try CatalogTransferDocument.decode(data)
+
+        #expect(decoded.licenses == [licensedApp.id: license])
+        #expect(licenseStorage.exportReads == [licensedApp.id])
+    }
+
+    @Test
     func quarantinesOversizedCatalogInsteadOfLoadingIt() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

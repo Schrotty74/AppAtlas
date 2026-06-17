@@ -9,8 +9,6 @@ app_bundle="$output_directory/AppAtlas.app"
 version="1.0.0-development"
 build_number="1"
 
-"$root_directory/Scripts/privacy-check.sh"
-
 swift build \
     --package-path "$root_directory" \
     --scratch-path "$scratch_directory" \
@@ -70,10 +68,20 @@ sed \
     > "$app_bundle/Contents/Info.plist"
 
 plutil -lint "$app_bundle/Contents/Info.plist"
+sign_identity="${APPATLAS_SIGN_IDENTITY:-}"
+if [[ -z "$sign_identity" ]]; then
+    sign_identity=$(
+        security find-identity -v -p codesigning 2>/dev/null \
+            | awk -F '"' '/Apple Development:/ { print $2; exit }'
+    )
+fi
+if [[ -z "$sign_identity" ]]; then
+    sign_identity="-"
+fi
 codesign \
     --force \
     --deep \
-    --sign - \
+    --sign "$sign_identity" \
     --entitlements "$root_directory/Packaging/AppAtlas.entitlements" \
     "$app_bundle"
 codesign --verify --deep --strict "$app_bundle"

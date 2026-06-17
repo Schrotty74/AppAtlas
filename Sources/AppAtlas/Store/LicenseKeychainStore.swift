@@ -9,12 +9,17 @@ extension Notification.Name {
 
 protocol LicenseStorage: Sendable {
     func load(for appID: UUID) -> AppLicenseRecord?
+    func loadForExport(for appID: UUID) throws -> AppLicenseRecord?
     func hasRecord(for appID: UUID) -> Bool
     func save(_ record: AppLicenseRecord, for appID: UUID) throws
     func delete(for appID: UUID)
 }
 
 extension LicenseStorage {
+    func loadForExport(for appID: UUID) throws -> AppLicenseRecord? {
+        load(for: appID)
+    }
+
     func hasRecord(for appID: UUID) -> Bool {
         load(for: appID)?.isEmpty == false
     }
@@ -62,6 +67,16 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
     private let service = "at.schrotty.appatlas.licenses"
 
     func load(for appID: UUID) -> AppLicenseRecord? {
+        try? loadItem(for: appID)
+    }
+
+    func loadForExport(for appID: UUID) throws -> AppLicenseRecord? {
+        try loadItem(for: appID)
+    }
+
+    private func loadItem(
+        for appID: UUID
+    ) throws -> AppLicenseRecord? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -70,15 +85,20 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         var result: CFTypeRef?
-        guard SecItemCopyMatching(
+        let status = SecItemCopyMatching(
             query as CFDictionary,
             &result
-        ) == errSecSuccess,
-        let data = result as? Data
-        else {
+        )
+        if status == errSecItemNotFound {
             return nil
         }
-        return try? JSONDecoder().decode(AppLicenseRecord.self, from: data)
+        guard status == errSecSuccess else {
+            throw KeychainError.status(status)
+        }
+        guard let data = result as? Data else {
+            return nil
+        }
+        return try JSONDecoder().decode(AppLicenseRecord.self, from: data)
     }
 
     func hasRecord(for appID: UUID) -> Bool {
@@ -133,6 +153,16 @@ struct LicenseKeychainStore: LicenseStorage, Sendable {
         var errorDescription: String? {
             switch self {
             case .status(let status):
+                if status == errSecInteractionNotAllowed
+                    || status == errSecAuthFailed
+                    || status == errSecUserCanceled
+                {
+                    return "AppAtlas konnte die Lizenzdaten nicht aus dem "
+                        + "macOS-Schlüsselbund lesen. Öffne den "
+                        + "Schlüsselbund und erlaube AppAtlas den Zugriff "
+                        + "auf „AppAtlas-Lizenz“, oder exportiere den "
+                        + "Katalog ohne Lizenzdaten."
+                }
                 return SecCopyErrorMessageString(status, nil) as String?
                     ?? "Schlüsselbundfehler \(status)"
             }

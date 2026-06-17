@@ -10,9 +10,9 @@ AppAtlas is a native, privacy-focused SwiftUI app for macOS. It organizes
 personal app collections from user-selected folders and manages icons,
 descriptions, links, tags, license information, and local catalog exports.
 
-> Current release: **AppAtlas 1.1.0**
+> Current release: **AppAtlas 1.1.1**
 
-[Download AppAtlas 1.1.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.0/AppAtlas-1.1.0-macos.dmg)
+[Download AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
 
 ## Key Features
 
@@ -66,7 +66,7 @@ design drafts are available here:
 ## Build and Install
 
 Download the current release:
-[AppAtlas 1.1.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.0/AppAtlas-1.1.0-macos.dmg)
+[AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
 
 When opening AppAtlas for the first time, macOS may display a warning because
 the app is not notarized with a paid Apple Developer account.
@@ -115,7 +115,7 @@ typical catalog, export and database files from being added.
 - [Example theme Winter Frost](docs/themes/example-winter-frost.json)
 - [Project structure](docs/PROJECT_STRUCTURE.md)
 - [Privacy details](docs/PRIVACY.md)
-- [Privacy audit for AppAtlas 1.1.0](docs/PRIVACY_AUDIT_2026-06-16.md)
+- [Privacy audit for AppAtlas 1.1.1](docs/PRIVACY_AUDIT_2026-06-17.md)
 
 ## Transparency
 
