@@ -1,0 +1,536 @@
+{
+  "apps" : [
+    {
+      "category" : "Grafik",
+      "details" : "PixelForge ist ein Demo-Bildeditor für Screenshots und Mockups. Die App zeigt, wie AppAtlas Beschreibungen, Tags, Kategorien und Links in einer Screenshot-freundlichen Beispielsammlung darstellt.\n\nTypische Funktionen:\n• Bilder zuschneiden und exportieren\n• Markierungen und Pfeile hinzufügen\n• Vorlagen für App-Screenshots verwalten",
+      "developer" : "Demo Tools Studio",
+      "downloadURL" : "https://example.com/pixelforge/download",
+      "files" : [
+        {
+          "detectedVersion" : "1.4.0",
+          "fileName" : "PixelForge.dmg",
+          "relativePath" : "Grafik/PixelForge.dmg",
+          "sizeInBytes" : 48234496,
+          "id" : "dddddddd-dddd-4000-8000-000000000000",
+          "fileType" : "DMG",
+          "sourceCategory" : "Grafik",
+          "sourceSubcategory" : "Screenshot",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/pixelforge",
+      "iconOrigin" : "manual",
+      "id" : "11111111-1111-4111-8111-111111111111",
+      "keywords" : [
+        "Bildbearbeitung",
+        "Screenshot",
+        "Mockup"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "PixelForge",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Screenshot",
+      "summary" : "Demo-Bildeditor für Screenshots und Mockups",
+      "tags" : [
+        "Screenshot",
+        "Design"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Office",
+      "details" : "NoteDesk ist eine Demo-App für Notizen, Ideen und kleine Projektlisten. Sie eignet sich im Demo-Katalog, um Textsuche, Tags und Office-Kategorien ohne private Daten zu zeigen.\n\nTypische Funktionen:\n• Notizen strukturieren\n• Aufgabenlisten erstellen\n• Inhalte als Markdown exportieren",
+      "developer" : "Example Productivity",
+      "downloadURL" : "https://example.com/notedesk/download",
+      "files" : [
+        {
+          "detectedVersion" : "3.1.2",
+          "fileName" : "NoteDesk.zip",
+          "relativePath" : "Office/NoteDesk.zip",
+          "sizeInBytes" : 29573120,
+          "id" : "dddddddd-dddd-4001-8000-000000000010",
+          "fileType" : "ZIP",
+          "sourceCategory" : "Office",
+          "sourceSubcategory" : "Notizen",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/notedesk",
+      "iconOrigin" : "manual",
+      "id" : "22222222-2222-4222-8222-222222222222",
+      "keywords" : [
+        "Notizen",
+        "Markdown",
+        "Produktivität"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "NoteDesk",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Notizen",
+      "summary" : "Demo-Notizapp für Ideen und Projektlisten",
+      "tags" : [
+        "Produktivität",
+        "Notizen"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "System",
+      "details" : "ClipVault ist eine Demo-App für Zwischenablage-Verlauf und Textbausteine. Sie zeigt in AppAtlas, wie Hilfsprogramme mit kurzer Beschreibung, Detailtext und lokalen Beispieldateien aussehen.\n\nTypische Funktionen:\n• Zwischenablage-Verlauf durchsuchen\n• Textbausteine organisieren\n• sensible Einträge automatisch ausblenden",
+      "developer" : "Local Utility Lab",
+      "downloadURL" : "https://example.com/clipvault/download",
+      "files" : [
+        {
+          "detectedVersion" : "2.0.0",
+          "fileName" : "ClipVault.pkg",
+          "relativePath" : "System/Utilities/ClipVault.pkg",
+          "sizeInBytes" : 18743296,
+          "id" : "dddddddd-dddd-4002-8000-000000000020",
+          "fileType" : "PKG",
+          "sourceCategory" : "System",
+          "sourceSubcategory" : "Utilities",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/clipvault",
+      "iconOrigin" : "manual",
+      "id" : "33333333-3333-4333-8333-333333333333",
+      "keywords" : [
+        "Zwischenablage",
+        "Textbausteine",
+        "Workflow"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "ClipVault",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Utilities",
+      "summary" : "Demo-Clipboard-Manager für Textbausteine",
+      "tags" : [
+        "System",
+        "Workflow"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Multimedia",
+      "details" : "MediaKit ist eine Demo-App für einfache Medienkonvertierung. Der Eintrag zeigt Video- und Audiowerkzeuge, ohne reale installierte Apps oder persönliche Dateipfade zu verwenden.\n\nTypische Funktionen:\n• Videos in kleinere Formate umwandeln\n• Audiodateien extrahieren\n• Stapelverarbeitung vorbereiten",
+      "developer" : "Demo Media Works",
+      "downloadURL" : "https://example.com/mediakit/download",
+      "files" : [
+        {
+          "detectedVersion" : "5.0.1",
+          "fileName" : "MediaKit.dmg",
+          "relativePath" : "Multimedia/Video/MediaKit.dmg",
+          "sizeInBytes" : 96468992,
+          "id" : "dddddddd-dddd-4003-8000-000000000030",
+          "fileType" : "DMG",
+          "sourceCategory" : "Multimedia",
+          "sourceSubcategory" : "Video",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/mediakit",
+      "iconOrigin" : "manual",
+      "id" : "44444444-4444-4444-8444-444444444444",
+      "keywords" : [
+        "Video",
+        "Audio",
+        "Konvertierung"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "MediaKit",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Video",
+      "summary" : "Demo-Konverter für Video und Audio",
+      "tags" : [
+        "Video",
+        "Audio"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Entwicklung",
+      "details" : "CodeShelf ist eine Demo-App für Code-Snippets und kleine Entwicklernotizen. Sie eignet sich, um die Kategorie Entwicklung, Tags und GitHub-Links im AppAtlas-Layout zu zeigen.\n\nTypische Funktionen:\n• Snippets nach Sprache gruppieren\n• kurze technische Notizen speichern\n• Projektlinks sammeln",
+      "developer" : "Example Dev Tools",
+      "downloadURL" : "https://example.com/codeshelf/download",
+      "files" : [
+        {
+          "detectedVersion" : "0.9.8",
+          "fileName" : "CodeShelf.zip",
+          "relativePath" : "Entwicklung/CodeShelf.zip",
+          "sizeInBytes" : 24117248,
+          "id" : "dddddddd-dddd-4004-8000-000000000040",
+          "fileType" : "ZIP",
+          "sourceCategory" : "Entwicklung",
+          "sourceSubcategory" : "Tools",
+          "modifiedAt" : null
+        }
+      ],
+      "githubURL" : "https://github.com/example/codeshelf",
+      "homepage" : "https://example.com/codeshelf",
+      "iconOrigin" : "manual",
+      "id" : "55555555-5555-4555-8555-555555555555",
+      "keywords" : [
+        "Code",
+        "Snippets",
+        "Entwicklung"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "CodeShelf",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Tools",
+      "summary" : "Demo-Snippet-Verwaltung für Entwickler",
+      "tags" : [
+        "Entwicklung",
+        "Snippets"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Sicherheit",
+      "details" : "SecurePass Demo ist ein neutraler Beispiel-Eintrag für Passwort- und Sicherheitswerkzeuge. Der Demo-Katalog enthält ausdrücklich keine echten Zugangsdaten oder Lizenzinformationen.\n\nTypische Funktionen:\n• Sicherheitsnotizen verwalten\n• Wiederverwendete Passwörter erkennen\n• lokale Daten geschützt organisieren",
+      "developer" : "Privacy Demo Group",
+      "downloadURL" : "https://example.com/securepass/download",
+      "files" : [
+        {
+          "detectedVersion" : "1.2.3",
+          "fileName" : "SecurePass Demo.dmg",
+          "relativePath" : "Sicherheit/SecurePass Demo.dmg",
+          "sizeInBytes" : 35651584,
+          "id" : "dddddddd-dddd-4005-8000-000000000050",
+          "fileType" : "DMG",
+          "sourceCategory" : "Sicherheit",
+          "sourceSubcategory" : "Passwörter",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/securepass",
+      "iconOrigin" : "manual",
+      "id" : "66666666-6666-4666-8666-666666666666",
+      "keywords" : [
+        "Sicherheit",
+        "Passwort",
+        "Privatsphäre"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "SecurePass Demo",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Passwörter",
+      "summary" : "Neutraler Demo-Eintrag für Sicherheitswerkzeuge",
+      "tags" : [
+        "Sicherheit",
+        "Privat"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Backup",
+      "details" : "ArchiveBox Demo ist ein Beispiel für lokale Backup- und Archivierungswerkzeuge. Der Eintrag eignet sich, um Speichergrößen, Kategorien und Backup-Erinnerungen in Screenshots zu zeigen.\n\nTypische Funktionen:\n• Archive erstellen\n• alte Projektstände sichern\n• lokale Exportdateien organisieren",
+      "developer" : "Example Backup Tools",
+      "downloadURL" : "https://example.com/archivebox-demo/download",
+      "files" : [
+        {
+          "detectedVersion" : "4.2.0",
+          "fileName" : "ArchiveBox Demo.pkg",
+          "relativePath" : "Backup/ArchiveBox Demo.pkg",
+          "sizeInBytes" : 52428800,
+          "id" : "dddddddd-dddd-4006-8000-000000000060",
+          "fileType" : "PKG",
+          "sourceCategory" : "Backup",
+          "sourceSubcategory" : "Archivierung",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/archivebox-demo",
+      "iconOrigin" : "manual",
+      "id" : "77777777-7777-4777-8777-777777777777",
+      "keywords" : [
+        "Backup",
+        "Archiv",
+        "Export"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "ArchiveBox Demo",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Archivierung",
+      "summary" : "Demo-App für lokale Backups und Archive",
+      "tags" : [
+        "Backup",
+        "Archiv"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Kommunikation",
+      "details" : "ChatBridge ist ein Demo-Messenger für Beispiel-Screenshots. Er zeigt, wie AppAtlas Kommunikations-Apps mit Homepage, Download-Link, Beschreibung und Tags darstellt.\n\nTypische Funktionen:\n• Nachrichtenkanäle bündeln\n• Benachrichtigungen verwalten\n• Arbeitsbereiche trennen",
+      "developer" : "Demo Communication Labs",
+      "downloadURL" : "https://example.com/chatbridge/download",
+      "files" : [
+        {
+          "detectedVersion" : "2.7.5",
+          "fileName" : "ChatBridge.dmg",
+          "relativePath" : "Kommunikation/Messenger/ChatBridge.dmg",
+          "sizeInBytes" : 68157440,
+          "id" : "dddddddd-dddd-4007-8000-000000000070",
+          "fileType" : "DMG",
+          "sourceCategory" : "Kommunikation",
+          "sourceSubcategory" : "Messenger",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/chatbridge",
+      "iconOrigin" : "manual",
+      "id" : "88888888-8888-4888-8888-888888888888",
+      "keywords" : [
+        "Messenger",
+        "Chat",
+        "Kommunikation"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "ChatBridge",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Messenger",
+      "summary" : "Demo-Messenger für Teamkommunikation",
+      "tags" : [
+        "Kommunikation",
+        "Team"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Hardware",
+      "details" : "BatteryScope ist ein Demo-Werkzeug für Akku- und Geräteübersicht. Der Eintrag zeigt Hardware-Kategorien und technische Kurzbeschreibungen ohne reale Gerätedaten.\n\nTypische Funktionen:\n• Akkuwerte anzeigen\n• Geräteinformationen zusammenfassen\n• Warnhinweise lokal darstellen",
+      "developer" : "Example Hardware Utilities",
+      "downloadURL" : "https://example.com/batteryscope/download",
+      "files" : [
+        {
+          "detectedVersion" : "1.0.5",
+          "fileName" : "BatteryScope.zip",
+          "relativePath" : "Hardware/BatteryScope.zip",
+          "sizeInBytes" : 14680064,
+          "id" : "dddddddd-dddd-4008-8000-000000000080",
+          "fileType" : "ZIP",
+          "sourceCategory" : "Hardware",
+          "sourceSubcategory" : "Monitoring",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/batteryscope",
+      "iconOrigin" : "manual",
+      "id" : "99999999-9999-4999-8999-999999999999",
+      "keywords" : [
+        "Akku",
+        "Hardware",
+        "Monitoring"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "BatteryScope",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Monitoring",
+      "summary" : "Demo-Werkzeug für Akku- und Geräteübersicht",
+      "tags" : [
+        "Hardware",
+        "Monitoring"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Gaming",
+      "details" : "GameShelf Demo ist ein Beispiel-Eintrag für Spielebibliotheken und Emulator-Verwaltung. Er dient nur als neutrale Demo für Layouts, Kategorien und App-Details.\n\nTypische Funktionen:\n• Spielelisten organisieren\n• Controller-Profile markieren\n• Sammlungen nach Plattformen gruppieren",
+      "developer" : "Demo Game Utilities",
+      "downloadURL" : "https://example.com/gameshelf/download",
+      "files" : [
+        {
+          "detectedVersion" : "6.0.0",
+          "fileName" : "GameShelf Demo.dmg",
+          "relativePath" : "Gaming/GameShelf Demo.dmg",
+          "sizeInBytes" : 73400320,
+          "id" : "dddddddd-dddd-4009-8000-000000000090",
+          "fileType" : "DMG",
+          "sourceCategory" : "Gaming",
+          "sourceSubcategory" : "Bibliothek",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/gameshelf",
+      "iconOrigin" : "manual",
+      "id" : "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "keywords" : [
+        "Gaming",
+        "Bibliothek",
+        "Controller"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "GameShelf Demo",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Bibliothek",
+      "summary" : "Demo-App für Spielebibliotheken",
+      "tags" : [
+        "Gaming",
+        "Sammlung"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Browser",
+      "details" : "WebScout ist ein Demo-Browser für Recherchen und Web-Notizen. Der Eintrag ist bewusst neutral und nutzt ausschließlich Beispiel-Links.\n\nTypische Funktionen:\n• Recherche-Sitzungen speichern\n• Webseiten als Notiz markieren\n• Arbeits- und Privatprofile trennen",
+      "developer" : "Example Browser Studio",
+      "downloadURL" : "https://example.com/webscout/download",
+      "files" : [
+        {
+          "detectedVersion" : "1.8.4",
+          "fileName" : "WebScout.dmg",
+          "relativePath" : "Browser/WebScout.dmg",
+          "sizeInBytes" : 89128960,
+          "id" : "dddddddd-dddd-4010-8000-000000000100",
+          "fileType" : "DMG",
+          "sourceCategory" : "Browser",
+          "sourceSubcategory" : "Recherche",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/webscout",
+      "iconOrigin" : "manual",
+      "id" : "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "keywords" : [
+        "Browser",
+        "Recherche",
+        "Web"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "WebScout",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Recherche",
+      "summary" : "Demo-Browser für Recherche und Web-Notizen",
+      "tags" : [
+        "Browser",
+        "Recherche"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    },
+    {
+      "category" : "Sonstiges",
+      "details" : "TinyTool ist ein kleiner Demo-Eintrag für sonstige Hilfsprogramme. Er sorgt dafür, dass auch kleine Utility-Karten und Listenansichten im Screenshot sichtbar sind.\n\nTypische Funktionen:\n• einfache Kurzbefehle ausführen\n• kleine Aufgaben starten\n• Favoriten markieren",
+      "developer" : "Small Demo Apps",
+      "downloadURL" : "https://example.com/tinytool/download",
+      "files" : [
+        {
+          "detectedVersion" : "0.3.0",
+          "fileName" : "TinyTool.zip",
+          "relativePath" : "Sonstiges/TinyTool.zip",
+          "sizeInBytes" : 7340032,
+          "id" : "dddddddd-dddd-4011-8000-000000000110",
+          "fileType" : "ZIP",
+          "sourceCategory" : "Sonstiges",
+          "sourceSubcategory" : "Tools",
+          "modifiedAt" : null
+        }
+      ],
+      "homepage" : "https://example.com/tinytool",
+      "iconOrigin" : "manual",
+      "id" : "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      "keywords" : [
+        "Utility",
+        "Kurzbefehle",
+        "Demo"
+      ],
+      "metadataSources" : [
+        "Demo-Katalog"
+      ],
+      "name" : "TinyTool",
+      "reviewStatus" : "Bestätigt",
+      "sourceStatus" : "Manuell angelegt",
+      "subcategory" : "Tools",
+      "summary" : "Kleiner Demo-Eintrag für sonstige Tools",
+      "tags" : [
+        "Utility",
+        "Demo"
+      ],
+      "userCustomizations" : {
+        "description" : true,
+        "icon" : true,
+        "links" : true
+      }
+    }
+  ],
+  "exportedAt" : "2026-06-17T00:00:00Z",
+  "format" : "appatlas-catalog",
+  "version" : 1
+}

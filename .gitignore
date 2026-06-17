@@ -18,6 +18,7 @@ Private/
 catalog.json
 catalog-*.json
 *-catalog.json
+!docs/demo/demo-catalog.json
 katalog.json
 katalog-*.json
 *-katalog.json
