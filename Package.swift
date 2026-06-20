@@ -20,7 +20,8 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Security"),
                 .linkedFramework("NaturalLanguage"),
-                .linkedFramework("Translation")
+                .linkedFramework("Translation"),
+                .linkedFramework("WebKit")
             ]
         ),
         .testTarget(

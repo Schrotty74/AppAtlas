@@ -7,7 +7,8 @@ struct AppCatalogBuilder: Sendable {
             AppNameNormalizer.catalogIdentityKey(
                 name: $0.fileName,
                 category: $0.sourceCategory,
-                subcategory: $0.sourceSubcategory
+                subcategory: $0.sourceSubcategory,
+                preservesAttachedYear: true
             )
         }
 
@@ -21,7 +22,9 @@ struct AppCatalogBuilder: Sendable {
             $0.relativePath.localizedStandardCompare($1.relativePath) == .orderedAscending
         }
         let representative = sortedFiles[0]
-        let name = AppNameNormalizer.displayName(for: representative.fileName)
+        let name = AppNameNormalizer.localCatalogDisplayName(
+            for: representative.fileName
+        )
         let category = representative.sourceCategory
         let subcategory = representative.sourceSubcategory
         let fileTypes = Array(Set(sortedFiles.map(\.fileType))).sorted()

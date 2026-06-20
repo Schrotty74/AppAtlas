@@ -25,17 +25,24 @@ struct ContentView: View {
         )
 
         Group {
-            switch layout {
-            case .classic:
-                ClassicLibraryLayout()
-            case .focus:
-                FocusLibraryLayout()
-            case .compact:
-                CompactLibraryLayout()
-            case .dashboard:
-                DashboardLibraryLayout()
-            case .shelves:
-                ShelvesLibraryLayout()
+            if store.apps.isEmpty {
+                EmptyCatalogStartView(
+                    showScanner: { presentation.sheet = .scanner },
+                    showCatalogImporter: showCatalogImporter
+                )
+            } else {
+                switch layout {
+                case .classic:
+                    ClassicLibraryLayout()
+                case .focus:
+                    FocusLibraryLayout()
+                case .compact:
+                    CompactLibraryLayout()
+                case .dashboard:
+                    DashboardLibraryLayout()
+                case .shelves:
+                    ShelvesLibraryLayout()
+                }
             }
         }
         .id(
@@ -373,5 +380,61 @@ struct ContentView: View {
             title: title,
             message: error.localizedDescription
         )
+    }
+}
+
+private struct EmptyCatalogStartView: View {
+    @Environment(\.appAtlasTheme) private var theme
+    let showScanner: () -> Void
+    let showCatalogImporter: () -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            AppAtlasMark(size: 82)
+
+            Text("AppAtlas ist bereit")
+                .font(.largeTitle.bold())
+
+            Text(
+                "Wähle einen lokalen Ordner zum Einlesen oder importiere einen vorhandenen AppAtlas-Katalog."
+            )
+            .font(.title3)
+            .foregroundStyle(theme.mutedText)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: 560)
+
+            HStack(spacing: 12) {
+                Button(action: showScanner) {
+                    Label("Ordner scannen", systemImage: "folder.badge.plus")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button(action: showCatalogImporter) {
+                    Label("Katalog importieren", systemImage: "square.and.arrow.down")
+                }
+                .buttonStyle(.bordered)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label(
+                    "Der lokale Scan verändert den ausgewählten Ordner nicht.",
+                    systemImage: "checkmark.shield"
+                )
+                Label(
+                    "Online-Daten werden nur manuell über „Online-Daten aktualisieren“ geladen.",
+                    systemImage: "network"
+                )
+                Label(
+                    "Die erweiterte Online-Suche kann bei großen Sammlungen lange dauern.",
+                    systemImage: "clock"
+                )
+            }
+            .font(.callout)
+            .foregroundStyle(theme.mutedText)
+            .padding(.top, 6)
+        }
+        .padding(34)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppAtlasBackground())
     }
 }

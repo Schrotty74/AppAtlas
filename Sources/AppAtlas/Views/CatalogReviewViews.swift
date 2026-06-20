@@ -133,6 +133,68 @@ struct WebsitePromptView: View {
     }
 }
 
+struct WebsiteReviewSummaryView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: CatalogStore
+    let summary: WebsiteReviewSummary
+    @State private var editingApp: AppEntry?
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("\(summary.foundCount) Apps wurden gescannt.")
+                    .font(.headline)
+                Text(
+                    "\(summary.unresolvedCount) Apps konnten nicht eindeutig mit einer Website verknüpft werden. Sie liegen jetzt in der Nachbearbeitungsliste."
+                )
+                .foregroundStyle(.secondary)
+
+                List(store.appsNeedingWebsiteReview) { app in
+                    HStack(spacing: 12) {
+                        AppIconView(app: app, size: 38, cornerRadius: 9)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(app.name)
+                                .fontWeight(.medium)
+                            Text("\(app.category) · \(app.subcategory)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button("URL ergänzen") {
+                            editingApp = app
+                        }
+                        Button("Nicht mehr fragen") {
+                            store.suppressWebsitePrompt(for: app.id)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .navigationTitle("Websites ergänzen")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Schließen") {
+                        store.websiteReviewSummary = nil
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .frame(minWidth: 720, minHeight: 520)
+        .sheet(item: $editingApp) { app in
+            AppEditorView(existingApp: app) { updatedApp in
+                store.update(updatedApp)
+                if updatedApp.homepage != nil {
+                    store.confirmWebsite(
+                        updatedApp.homepage!.absoluteString,
+                        for: updatedApp.id
+                    )
+                }
+            }
+        }
+    }
+}
+
 struct WebsitePromptExclusionsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: CatalogStore
@@ -142,16 +204,17 @@ struct WebsitePromptExclusionsView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if store.websitePromptExclusions.isEmpty {
+                if store.websitePromptExclusions.isEmpty
+                    && store.appsNeedingWebsiteReview.isEmpty {
                     ContentUnavailableView(
-                        "Keine ausgeschlossenen Apps",
+                        "Keine offenen Websites",
                         systemImage: "checkmark.circle",
                         description: Text(
-                            "Für alle Apps darf AppAtlas bei Bedarf nach einer Website fragen."
+                            "Aktuell sind keine Apps für eine Website-Nachbearbeitung vorgemerkt."
                         )
                     )
                 } else {
-                    List(store.websitePromptExclusions) { app in
+                    List(store.appsNeedingWebsiteReview + store.websitePromptExclusions) { app in
                         HStack(spacing: 12) {
                             AppIconView(app: app, size: 38, cornerRadius: 9)
                             VStack(alignment: .leading, spacing: 2) {
@@ -165,14 +228,20 @@ struct WebsitePromptExclusionsView: View {
                             Button("Bearbeiten") {
                                 editingApp = app
                             }
-                            Button("Wieder fragen") {
-                                store.allowWebsitePrompt(for: app.id)
+                            if app.suppressesWebsitePrompt {
+                                Button("Wieder fragen") {
+                                    store.allowWebsitePrompt(for: app.id)
+                                }
+                            } else {
+                                Button("Nicht mehr fragen") {
+                                    store.suppressWebsitePrompt(for: app.id)
+                                }
                             }
                         }
                     }
                 }
             }
-            .navigationTitle("Website-Ausschlussliste")
+            .navigationTitle("Websites ergänzen")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Schließen") {

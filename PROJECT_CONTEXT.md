@@ -105,8 +105,8 @@ eines lokalen App-Katalogs.
   Vorschauen, Banner und Dokumentationsbilder werden abgewiesen.
 - Online-Metadatenquellen verwenden eine gemeinsame Vertrauensbewertung aus
   Name, Kategorie, Unterordner, Hersteller, bestätigter Domain und Bundle-ID.
-  Automatische Übernahmen benötigen mindestens `0,90` sowie `0,12` Abstand
-  zum zweitbesten Treffer. Werte ab `0,75` werden ausschließlich zur Prüfung
+  Automatische Übernahmen benötigen mindestens `0,80` sowie `0,08` Abstand
+  zum zweitbesten Treffer. Werte ab `0,65` werden ausschließlich zur Prüfung
   vorgeschlagen; schwächere Treffer werden verworfen.
 - Bestätigte Domains, GitHub-Repositories und Apple-Store-IDs werden nur lokal
   in den Benutzereinstellungen gelernt und niemals exportiert.
@@ -124,3 +124,31 @@ eines lokalen App-Katalogs.
 - Themes verwenden das Format `appatlas-theme`.
 - AppAtlas steht unter GPLv3.
 - Backups werden nur auf ausdrückliche Anweisung erstellt.
+
+## Zusätzliche Zusammenarbeit
+
+- Der Nutzer kann nicht coden und kennt sich mit technischen
+  Fehlermeldungen, Logs und Build-Ausgaben nicht aus.
+- Harte Auslöse-Regel: Eine Frage des Nutzers ist nur als Frage zu
+  beantworten. Bei Fragen darf Codex keine Dateien ändern, keine Tests
+  ausführen, keinen Build starten und keine App öffnen.
+- Codeänderungen, Tests, Builds oder App-Starts sind nur erlaubt, wenn der
+  Nutzer eindeutig einen Arbeitsbefehl gibt, z. B. `fix das`, `setz das um`,
+  `teste das`, `mach dev build` oder `baue das`.
+- Bei gemischten oder unklaren Nachrichten muss Codex zuerst fragen, ob nur
+  erklärt oder tatsächlich umgesetzt werden soll.
+- Bei Problemen soll Codex die technische Analyse und Umsetzung selbst
+  übernehmen, soweit Zugriff darauf besteht.
+- Wenn Informationen vom Nutzer nötig sind, soll Codex in einfachen Worten
+  fragen und genau erklären, wo geklickt oder was kopiert werden soll.
+- Möglichst fokussiert arbeiten und die kleinste sinnvolle Änderung umsetzen.
+  Keine unnötigen Umbauten, Designänderungen oder neuen Funktionen.
+- Wenn der Chat oder Kontext zu schwer oder alt wird, soll Codex darauf
+  hinweisen, dass ein neuer Chat sinnvoll wäre, und dafür eine kurze
+  Übergabe-Zusammenfassung geben.
+- Wenn mehrere Lösungen möglich sind, soll Codex die einfache und robuste
+  Variante wählen. Wenn etwas riskant wird oder größere Änderungen nötig
+  wären, soll Codex vorher kurz Bescheid sagen.
+- Soweit sinnvoll möglich testen, ob die Änderung funktioniert.
+- Am Ende kurz in normaler Sprache erklären, was geändert wurde und ob noch
+  etwas offen ist.

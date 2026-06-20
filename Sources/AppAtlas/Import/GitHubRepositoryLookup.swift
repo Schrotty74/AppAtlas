@@ -143,30 +143,19 @@ actor GitHubRepositoryLookup {
             string: info.htmlURL + "/releases/latest"
         )!
 
-        var iconData: Data?
-        if needsIcon {
-            let treeURL = apiRoot
-                .appendingPathComponent("git/trees")
-                .appendingPathComponent(info.defaultBranch)
-                .appending(queryItems: [
-                    URLQueryItem(name: "recursive", value: "1")
-                ])
-            if let treeData = await data(from: treeURL),
-               let tree = try? JSONDecoder().decode(TreeResponse.self, from: treeData),
-               let path = bestIconPath(in: tree.tree)
-            {
-                let rawURL = URL(
-                    string: "https://raw.githubusercontent.com/\(repository.owner)/\(repository.name)/\(info.defaultBranch)/\(path)"
-                )!
-                iconData = await OnlineIconLoader.shared.iconData(from: rawURL)
-            }
-        }
+        let homepageURL = officialHomepage(from: info.homepage)
+        let iconData = needsIcon
+            ? await repositoryIconData(
+                projectURL: projectURL,
+                homepageURL: homepageURL
+            )
+            : nil
 
         return Metadata(
             description: info.description,
             iconData: iconData,
             projectURL: projectURL,
-            homepageURL: officialHomepage(from: info.homepage),
+            homepageURL: homepageURL,
             downloadURL: releasesURL,
             match: MetadataMatchScore(
                 value: 1,
@@ -187,23 +176,6 @@ actor GitHubRepositoryLookup {
             return nil
         }
         return (components[0], components[1])
-    }
-
-    private func bestIconPath(in entries: [TreeEntry]) -> String? {
-        entries
-            .filter {
-                $0.type == "blob"
-                    && ["png", "ico", "icns"].contains(
-                        URL(fileURLWithPath: $0.path)
-                            .pathExtension
-                            .lowercased()
-                    )
-            }
-            .map { ($0.path, iconScore($0.path)) }
-            .filter { $0.1 >= 60 }
-            .sorted { $0.1 > $1.1 }
-            .first?
-            .0
     }
 
     private func bestMatch(
@@ -243,32 +215,6 @@ actor GitHubRepositoryLookup {
         return (selection.candidate, selection.match)
     }
 
-    private func iconScore(_ path: String) -> Int {
-        let value = path.lowercased()
-        var score = 0
-        if value.contains("appicon") { score += 120 }
-        if value.contains("icon512@2x") { score += 115 }
-        if value.contains("icon512") { score += 110 }
-        if value.contains("icon256@2x") { score += 100 }
-        if value.contains("icon256") { score += 95 }
-        if value.contains("icon_round") { score += 90 }
-        if value.contains("/art/") || value.contains("/resources/") {
-            score += 20
-        }
-        if value.contains(".appiconset/") { score += 80 }
-        if value.contains("/assets/") { score += 15 }
-        if value.contains("logo") { score += 15 }
-        if value.contains("screenshot")
-            || value.contains("thumbnail")
-            || value.contains("preview")
-            || value.contains("banner")
-            || value.contains("/docs/")
-        {
-            score -= 100
-        }
-        return score
-    }
-
     private func officialHomepage(from value: String?) -> URL? {
         guard let value,
               let url = URL(string: value),
@@ -289,7 +235,7 @@ actor GitHubRepositoryLookup {
         needsIcon: Bool
     ) async -> Metadata? {
         var request = URLRequest(url: projectURL)
-        request.timeoutInterval = 20
+        request.timeoutInterval = 10
         request.setValue("AppAtlas/0.1", forHTTPHeaderField: "User-Agent")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -300,6 +246,10 @@ actor GitHubRepositoryLookup {
                 return nil
             }
             let description = Self.metaDescription(in: html)
+            let homepageURL = Self.externalHomepage(
+                in: html,
+                repositoryName: repositoryName
+            )
             guard AppContextMatcher.isPlausible(
                 category: category,
                 subcategory: subcategory,
@@ -310,13 +260,13 @@ actor GitHubRepositoryLookup {
             return Metadata(
                 description: description,
                 iconData: needsIcon
-                    ? await conventionalIconData(for: projectURL)
+                    ? await repositoryIconData(
+                        projectURL: projectURL,
+                        homepageURL: homepageURL
+                    )
                     : nil,
                 projectURL: projectURL,
-                homepageURL: Self.externalHomepage(
-                    in: html,
-                    repositoryName: repositoryName
-                ),
+                homepageURL: homepageURL,
                 downloadURL: projectURL.appendingPathComponent(
                     "releases/latest"
                 ),
@@ -331,41 +281,26 @@ actor GitHubRepositoryLookup {
         }
     }
 
-    private func conventionalIconData(for projectURL: URL) async -> Data? {
-        guard let repository = repositoryPath(from: projectURL) else {
-            return nil
+    private func repositoryIconData(
+        projectURL: URL,
+        homepageURL: URL?
+    ) async -> Data? {
+        if let metadata = await WebMetadataLookup.shared.metadata(
+            for: projectURL,
+            needsIcon: true
+        ),
+           let iconData = metadata.iconData {
+            return iconData
         }
-        let paths = [
-            "build/appicon.png",
-            "AppIcon.png",
-            "appicon.png",
-            "icon512.png",
-            "icon.png",
-            "assets/icon.png"
-        ]
-        let urls = ["main", "master"].flatMap { branch in
-            paths.compactMap { path in
-                URL(
-                    string: "https://raw.githubusercontent.com/"
-                        + "\(repository.owner)/\(repository.name)/"
-                        + "\(branch)/\(path)"
-                )
-            }
+        if let homepageURL,
+           let metadata = await WebMetadataLookup.shared.metadata(
+                for: homepageURL,
+                needsIcon: true
+           ),
+           let iconData = metadata.iconData {
+            return iconData
         }
-        return await withTaskGroup(of: Data?.self) { group in
-            for url in urls {
-                group.addTask {
-                    await OnlineIconLoader.shared.iconData(from: url)
-                }
-            }
-            for await data in group {
-                if let data {
-                    group.cancelAll()
-                    return data
-                }
-            }
-            return nil
-        }
+        return nil
     }
 
     nonisolated static func externalHomepage(
@@ -426,7 +361,7 @@ actor GitHubRepositoryLookup {
 
     private func data(from url: URL) async -> Data? {
         var request = URLRequest(url: url)
-        request.timeoutInterval = 20
+        request.timeoutInterval = 10
         request.setValue("AppAtlas/0.1", forHTTPHeaderField: "User-Agent")
         request.setValue(
             "application/vnd.github+json",
@@ -466,15 +401,6 @@ actor GitHubRepositoryLookup {
             case language
             case topics
         }
-    }
-
-    private struct TreeResponse: Decodable {
-        let tree: [TreeEntry]
-    }
-
-    private struct TreeEntry: Decodable {
-        let path: String
-        let type: String
     }
 
     private struct SearchResponse: Decodable {

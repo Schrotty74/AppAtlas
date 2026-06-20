@@ -64,6 +64,7 @@ BUILD_RESOURCE_PATH="$build_resource_path" perl -0pi -e '
 sed \
     -e "s/__VERSION__/$version/g" \
     -e "s/__BUILD_NUMBER__/$build_number/g" \
+    -e "s/at.schrotty.appatlas/at.schrotty.appatlas.dev/g" \
     "$root_directory/Packaging/Info.plist" \
     > "$app_bundle/Contents/Info.plist"
 

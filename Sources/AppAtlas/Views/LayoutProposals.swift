@@ -332,17 +332,25 @@ private struct LibraryPosterCard: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .bottomLeading) {
                 RoundedRectangle(cornerRadius: 18)
-                    .fill(
+                    .fill(posterGradient)
+                    .frame(height: height)
+                    .overlay(alignment: .trailing) {
+                        Image(systemName: posterSymbol)
+                            .font(.system(size: height * 0.78, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.09))
+                            .offset(x: 18)
+                    }
+                    .overlay {
                         LinearGradient(
                             colors: [
-                                theme.accent.opacity(0.38),
-                                theme.accent.opacity(0.14)
+                                .clear,
+                                .black.opacity(0.20)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
-                    )
-                    .frame(height: height)
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                    }
 
                 AppIconView(app: app, size: 62, cornerRadius: 15)
                     .padding(14)
@@ -384,6 +392,53 @@ private struct LibraryPosterCard: View {
             store.selectedAppID = app.id
             openDetails()
         }
+    }
+
+    private var posterGradient: LinearGradient {
+        let palette = posterPalette
+        return LinearGradient(
+            colors: palette,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var posterPalette: [Color] {
+        let text = "\(app.category) \(app.subcategory)".lowercased()
+        if text.contains("grafik") || text.contains("foto") {
+            return [.pink.opacity(0.55), .purple.opacity(0.38), .blue.opacity(0.22)]
+        }
+        if text.contains("entwicklung") {
+            return [.green.opacity(0.45), .blue.opacity(0.34), .cyan.opacity(0.22)]
+        }
+        if text.contains("multimedia") || text.contains("video") {
+            return [.red.opacity(0.46), .orange.opacity(0.34), .purple.opacity(0.24)]
+        }
+        if text.contains("sicherheit") {
+            return [.teal.opacity(0.45), .green.opacity(0.30), .black.opacity(0.18)]
+        }
+        if text.contains("gaming") {
+            return [.purple.opacity(0.50), .indigo.opacity(0.34), .blue.opacity(0.20)]
+        }
+        if text.contains("system") || text.contains("hardware") {
+            return [.blue.opacity(0.44), .cyan.opacity(0.28), .gray.opacity(0.20)]
+        }
+        return [
+            theme.accent.opacity(0.44),
+            theme.accent.opacity(0.24),
+            theme.panelSoft.opacity(0.75)
+        ]
+    }
+
+    private var posterSymbol: String {
+        let text = "\(app.category) \(app.subcategory)".lowercased()
+        if text.contains("entwicklung") { return "chevron.left.forwardslash.chevron.right" }
+        if text.contains("multimedia") || text.contains("video") { return "play.rectangle.fill" }
+        if text.contains("grafik") || text.contains("foto") { return "photo.fill" }
+        if text.contains("sicherheit") { return "lock.shield.fill" }
+        if text.contains("gaming") { return "gamecontroller.fill" }
+        if text.contains("system") || text.contains("hardware") { return "gearshape.2.fill" }
+        return "square.grid.2x2.fill"
     }
 }
 

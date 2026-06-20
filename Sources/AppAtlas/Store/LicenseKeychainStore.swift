@@ -64,7 +64,7 @@ private enum LicenseRecordIndex {
 
 struct LicenseKeychainStore: LicenseStorage, Sendable {
     static let shared = LicenseKeychainStore()
-    private let service = "at.schrotty.appatlas.licenses"
+    private let service = "\(Bundle.main.bundleIdentifier ?? "at.schrotty.appatlas").licenses"
 
     func load(for appID: UUID) -> AppLicenseRecord? {
         try? loadItem(for: appID)

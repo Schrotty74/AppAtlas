@@ -7,6 +7,53 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         var domains: Set<String> = []
         var githubRepositories: Set<String> = []
         var appleTrackIDs: Set<Int> = []
+        var urls: Set<String> = []
+        var rejectedURLs: Set<String> = []
+        var rejectedAppleTrackIDs: Set<Int> = []
+
+        init(
+            domains: Set<String> = [],
+            githubRepositories: Set<String> = [],
+            appleTrackIDs: Set<Int> = [],
+            urls: Set<String> = [],
+            rejectedURLs: Set<String> = [],
+            rejectedAppleTrackIDs: Set<Int> = []
+        ) {
+            self.domains = domains
+            self.githubRepositories = githubRepositories
+            self.appleTrackIDs = appleTrackIDs
+            self.urls = urls
+            self.rejectedURLs = rejectedURLs
+            self.rejectedAppleTrackIDs = rejectedAppleTrackIDs
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            domains = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .domains
+            ) ?? []
+            githubRepositories = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .githubRepositories
+            ) ?? []
+            appleTrackIDs = try container.decodeIfPresent(
+                Set<Int>.self,
+                forKey: .appleTrackIDs
+            ) ?? []
+            urls = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .urls
+            ) ?? []
+            rejectedURLs = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .rejectedURLs
+            ) ?? []
+            rejectedAppleTrackIDs = try container.decodeIfPresent(
+                Set<Int>.self,
+                forKey: .rejectedAppleTrackIDs
+            ) ?? []
+        }
     }
 
     private let defaults: UserDefaults
@@ -23,6 +70,8 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         }
         update(appName: appName) { record in
             record.domains.insert(host)
+            record.urls.insert(url.absoluteString)
+            record.rejectedURLs.remove(Self.normalizedURLString(url))
             if host == "github.com" {
                 let components = url.pathComponents.filter { $0 != "/" }
                 if components.count >= 2 {
@@ -38,6 +87,19 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
     func confirm(appName: String, appleTrackID: Int) {
         update(appName: appName) {
             $0.appleTrackIDs.insert(appleTrackID)
+            $0.rejectedAppleTrackIDs.remove(appleTrackID)
+        }
+    }
+
+    func reject(appName: String, url: URL) {
+        update(appName: appName) {
+            $0.rejectedURLs.insert(Self.normalizedURLString(url))
+        }
+    }
+
+    func reject(appName: String, appleTrackID: Int) {
+        update(appName: appName) {
+            $0.rejectedAppleTrackIDs.insert(appleTrackID)
         }
     }
 
@@ -45,6 +107,9 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         guard let host = Self.normalizedHost(candidateURL),
               let record = records()[Self.key(appName)]
         else {
+            return 0
+        }
+        if record.rejectedURLs.contains(Self.normalizedURLString(candidateURL)) {
             return 0
         }
         if host == "github.com" {
@@ -64,6 +129,32 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
     func isConfirmed(appName: String, appleTrackID: Int) -> Bool {
         records()[Self.key(appName)]?.appleTrackIDs.contains(appleTrackID)
             == true
+    }
+
+    func isRejected(appName: String, url: URL) -> Bool {
+        records()[Self.key(appName)]?.rejectedURLs.contains(
+            Self.normalizedURLString(url)
+        ) == true
+    }
+
+    func isRejected(appName: String, appleTrackID: Int) -> Bool {
+        records()[Self.key(appName)]?.rejectedAppleTrackIDs
+            .contains(appleTrackID) == true
+    }
+
+    func confirmedURLs(for appName: String) -> [URL] {
+        guard let record = records()[Self.key(appName)] else {
+            return []
+        }
+        return record.urls
+            .compactMap(URL.init(string:))
+            .filter {
+                !record.rejectedURLs.contains(Self.normalizedURLString($0))
+            }
+            .sorted {
+                $0.absoluteString.localizedStandardCompare($1.absoluteString)
+                    == .orderedAscending
+            }
     }
 
     private func update(
@@ -118,5 +209,22 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         }
         return "\(components[0].lowercased())/"
             + components[1].lowercased()
+    }
+
+    private static func normalizedURLString(_ url: URL) -> String {
+        guard var components = URLComponents(
+            url: url,
+            resolvingAgainstBaseURL: false
+        ) else {
+            return url.absoluteString.lowercased()
+        }
+        components.scheme = components.scheme?.lowercased()
+        components.host = components.host?.lowercased()
+        components.fragment = nil
+        if components.path.count > 1, components.path.hasSuffix("/") {
+            components.path.removeLast()
+        }
+        return components.url?.absoluteString.lowercased()
+            ?? url.absoluteString.lowercased()
     }
 }

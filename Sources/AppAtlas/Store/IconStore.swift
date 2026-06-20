@@ -10,10 +10,7 @@ final class IconStore: @unchecked Sendable {
     private let cache = NSCache<NSString, NSData>()
 
     init(rootURL: URL? = nil) {
-        let baseURL = rootURL ?? FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0].appendingPathComponent("AppAtlas", isDirectory: true)
+        let baseURL = rootURL ?? AppLocalDataDirectory.url
         self.rootURL = baseURL
         self.originalsURL = baseURL
             .appendingPathComponent("Icons", isDirectory: true)

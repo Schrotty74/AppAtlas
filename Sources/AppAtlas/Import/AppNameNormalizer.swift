@@ -2,10 +2,24 @@ import Foundation
 
 enum AppNameNormalizer {
     static func displayName(for fileName: String) -> String {
-        let stem = (fileName as NSString).deletingPathExtension
-        let stripped = stripVersionAndPackagingTerms(from: stem)
-        return stripped
+        displayName(for: fileName, preservingAttachedYear: false)
+    }
+
+    static func localCatalogDisplayName(for fileName: String) -> String {
+        displayName(for: fileName, preservingAttachedYear: true)
+    }
+
+    private static func displayName(
+        for fileName: String,
+        preservingAttachedYear: Bool
+    ) -> String {
+        let stem = stripKnownFileExtensions(from: fileName)
             .replacingOccurrences(of: "_", with: " ")
+        let stripped = stripVersionAndPackagingTerms(
+            from: stem,
+            preservingAttachedYear: preservingAttachedYear
+        )
+        return stripped
             .replacingOccurrences(of: "-", with: " ")
             .split(whereSeparator: \.isWhitespace)
             .map(String.init)
@@ -18,13 +32,22 @@ enum AppNameNormalizer {
             .filter { $0.isLetter || $0.isNumber }
     }
 
+    static func localCatalogGroupingKey(for fileName: String) -> String {
+        localCatalogDisplayName(for: fileName)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
     static func catalogIdentityKey(
         name: String,
         category: String,
-        subcategory: String
+        subcategory: String,
+        preservesAttachedYear: Bool = false
     ) -> String {
         [
-            groupingKey(for: name),
+            preservesAttachedYear
+                ? localCatalogGroupingKey(for: name)
+                : groupingKey(for: name),
             category.normalizedForCatalogSearch,
             subcategory.normalizedForCatalogSearch
         ]
@@ -53,14 +76,27 @@ enum AppNameNormalizer {
         return nil
     }
 
-    private static func stripVersionAndPackagingTerms(from value: String) -> String {
-        let patterns = [
+    private static func stripVersionAndPackagingTerms(
+        from value: String,
+        preservingAttachedYear: Bool = false
+    ) -> String {
+        var patterns = [
+            #"(?i)^\s*\d{1,3}[\s._-]+(?=[a-z])"#,
+            #"(?i)\s*\([^)]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^)]*\)\s*$"#,
+            #"(?i)\s*\[[^]]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^]]*\]\s*$"#,
+            #"(?i)(^|[\s._-]+)latest(?=$|[\s._-]+)"#,
             #"(?i)[\s_-]+v?\d+\.\d+(?:\.\d+){0,2}.*$"#,
             #"(?i)[\s_-]+\d{4}(?:[\s_-].*)?$"#,
-            #"(?i)[\s_-]+(?:macos|mac|osx|darwin|installer|universal|arm64|x64|apple[\s_-]*silicon).*$"#
+            #"(?i)[\s._-]+\d{6,}.*$"#,
+            #"(?i)(?<=[a-z])\d+(?:[\s._-]+[a-z]*\d+[a-z0-9]*)+$"#,
+            #"(?i)[\s._-]+[a-z]*\d+[a-z0-9]*(?:[\s._-]+[a-z]*\d+[a-z0-9]*)*$"#,
+            #"(?i)[\s._-]+(?:aio|setup|installer|install|release|macos|mac|osx|darwin|universal|arm64|x64|apple[\s._-]*silicon).*$"#
         ]
+        if !preservingAttachedYear {
+            patterns.append(#"(?i)(?<=[a-z])(?:19|20)\d{2}$"#)
+        }
 
-        return patterns.reduce(value) { result, pattern in
+        let stripped = patterns.reduce(value) { result, pattern in
             guard let regex = try? NSRegularExpression(pattern: pattern) else {
                 return result
             }
@@ -70,5 +106,38 @@ enum AppNameNormalizer {
                 withTemplate: ""
             )
         }
+        return stripTrailingAppSuffix(from: stripped)
+    }
+
+    private static func stripTrailingAppSuffix(from value: String) -> String {
+        guard let regex = try? NSRegularExpression(
+            pattern: #"(?i)[\s._-]+app\s*$"#
+        ) else {
+            return value
+        }
+        let stripped = regex.stringByReplacingMatches(
+            in: value,
+            range: NSRange(value.startIndex..., in: value),
+            withTemplate: ""
+        )
+        let meaningfulCharacters = stripped.filter {
+            $0.isLetter || $0.isNumber
+        }
+        return meaningfulCharacters.count >= 3 ? stripped : value
+    }
+
+    private static func stripKnownFileExtensions(from value: String) -> String {
+        var result = value
+        let extensions = ["app", "dmg", "zip", "pkg", "iso", "apk", "exe"]
+        while !((result as NSString).pathExtension.isEmpty) {
+            let fileExtension = (result as NSString)
+                .pathExtension
+                .lowercased()
+            guard extensions.contains(fileExtension) else {
+                break
+            }
+            result = (result as NSString).deletingPathExtension
+        }
+        return result
     }
 }

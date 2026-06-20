@@ -73,7 +73,9 @@ actor AppleArtworkLookup {
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 8
+            let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200
             else {
@@ -86,6 +88,10 @@ actor AppleArtworkLookup {
                     appName: app.name,
                     appleTrackID: $0.trackId
                 )
+                    && !ConfirmedMetadataMatchStore.shared.isRejected(
+                        appName: app.name,
+                        appleTrackID: $0.trackId
+                    )
             }) {
                 let metadata = makeMetadata(
                     from: confirmed,
@@ -98,9 +104,20 @@ actor AppleArtworkLookup {
                 cache[key] = metadata
                 return metadata
             }
+            let candidates = result.results.filter {
+                !MetadataMatchScorer.hasConflictingProductQualifier(
+                    appName: app.name,
+                    candidateName: $0.trackName
+                )
+                    && !ConfirmedMetadataMatchStore.shared.isRejected(
+                        appName: app.name,
+                        appleTrackID: $0.trackId
+                    )
+            }
+            let normalizedAppName = AppNameMatcher.normalized(app.name)
             let ranked = MetadataMatchScorer.ranked(
                 app: app,
-                candidates: result.results
+                candidates: candidates
             ) { result in
                 MetadataMatchCandidate(
                     name: result.trackName,
@@ -114,6 +131,27 @@ actor AppleArtworkLookup {
                     bundleIdentifier: result.bundleId,
                     sourceReliability: 0.95
                 )
+            }
+            .map { candidate, score in
+                let normalizedTrackName = AppNameMatcher.normalized(
+                    candidate.trackName
+                )
+                let boostedScore = normalizedTrackName.contains(normalizedAppName)
+                    ? score + 0.15
+                    : score
+                return (candidate: candidate, score: boostedScore)
+            }
+            .sorted {
+                if $0.score == $1.score {
+                    return AppNameMatcher.similarity(
+                        app.name,
+                        $0.candidate.trackName
+                    ) > AppNameMatcher.similarity(
+                        app.name,
+                        $1.candidate.trackName
+                    )
+                }
+                return $0.score > $1.score
             }
             guard let selection = MetadataMatchScorer.result(
                 app: app,
@@ -163,7 +201,8 @@ actor AppleArtworkLookup {
             description: result.description.map {
                 String($0.prefix(500))
             },
-            homepage: result.sellerUrl.flatMap(URL.init(string:)),
+            homepage: result.sellerUrl.flatMap(URL.init(string:))
+                ?? fallbackHomepage(from: result.trackViewUrl),
             downloadURL: URL(string: result.trackViewUrl),
             artworkURL: URL(
                 string: result.artworkUrl512 ?? result.artworkUrl100
@@ -173,6 +212,15 @@ actor AppleArtworkLookup {
             trackID: result.trackId,
             match: match
         )
+    }
+
+    private func fallbackHomepage(from trackViewUrl: String) -> URL? {
+        guard var components = URLComponents(string: trackViewUrl) else {
+            return nil
+        }
+        components.queryItems = nil
+        components.fragment = nil
+        return components.url
     }
 
     private struct SearchResult: Decodable {

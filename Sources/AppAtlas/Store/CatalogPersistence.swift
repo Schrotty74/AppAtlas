@@ -16,12 +16,7 @@ struct CatalogPersistence: Sendable {
             return
         }
 
-        let applicationSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        self.fileURL = applicationSupport
-            .appendingPathComponent("AppAtlas", isDirectory: true)
+        self.fileURL = AppLocalDataDirectory.url
             .appendingPathComponent("catalog.json")
     }
 

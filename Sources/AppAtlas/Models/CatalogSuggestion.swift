@@ -69,3 +69,9 @@ struct PendingWebsitePrompt: Identifiable, Sendable {
     let appID: AppEntry.ID
     let appName: String
 }
+
+struct WebsiteReviewSummary: Identifiable, Sendable {
+    let id = UUID()
+    let foundCount: Int
+    let unresolvedCount: Int
+}

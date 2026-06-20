@@ -23,6 +23,7 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
     var metadataSources: [String]?
     var iconOrigin: IconOrigin?
     var websitePromptSuppressed: Bool?
+    var onlineLookupStatus: OnlineLookupStatus?
 
     init(
         id: UUID = UUID(),
@@ -46,7 +47,8 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
         userCustomizations: UserCustomizations? = nil,
         metadataSources: [String]? = nil,
         iconOrigin: IconOrigin? = nil,
-        websitePromptSuppressed: Bool? = nil
+        websitePromptSuppressed: Bool? = nil,
+        onlineLookupStatus: OnlineLookupStatus? = nil
     ) {
         self.id = id
         self.name = name
@@ -70,6 +72,7 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
         self.metadataSources = metadataSources
         self.iconOrigin = iconOrigin
         self.websitePromptSuppressed = websitePromptSuppressed
+        self.onlineLookupStatus = onlineLookupStatus
     }
 
     var versions: [String] {
@@ -169,6 +172,7 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
         case metadataSources
         case iconOrigin
         case websitePromptSuppressed
+        case onlineLookupStatus
     }
 
     init(from decoder: Decoder) throws {
@@ -221,6 +225,10 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
             Bool.self,
             forKey: .websitePromptSuppressed
         )
+        onlineLookupStatus = try container.decodeIfPresent(
+            OnlineLookupStatus.self,
+            forKey: .onlineLookupStatus
+        )
     }
 
     private static func normalizedTags(_ values: [String]) -> [String] {
@@ -262,6 +270,14 @@ enum IconOrigin: String, Hashable, Codable, Sendable {
     case github
     case website
     case manual
+}
+
+enum OnlineLookupStatus: String, Hashable, Codable, Sendable {
+    case open
+    case running
+    case found
+    case needsReview
+    case failed
 }
 
 enum ReviewStatus: String, CaseIterable, Hashable, Codable, Sendable {

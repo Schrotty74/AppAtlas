@@ -1,5 +1,19 @@
 # Projekthistorie
 
+## 1.2.0-beta.1 – Metadaten, Icons und getrennte Beta-Daten
+
+- Development-, Beta- und Release-Builds verwenden getrennte lokale
+  Application-Support-Ordner; Beta-Builds haben eine eigene Bundle-ID.
+- Scanner-Ausschlüsse greifen zuverlässiger und entfernen ausgeschlossene
+  Einträge auch aus dem bestehenden Katalog.
+- Online-Erkennung und Icon-Auswahl wurden mit Homebrew-Cask-Daten,
+  robusterer App-Normalisierung, Apple-Bundle-ID-Abgleich und SVG-Unterstützung
+  verbessert.
+- Einzelne Apps können gezielt mit der vollständigen Metadaten-Pipeline
+  aktualisiert werden.
+- Abgelehnte Quellen werden dauerhaft lokal gemerkt und nicht erneut
+  vorgeschlagen.
+
 ## 1.1.1 – Schlüsselbund-Export und Development-Build
 
 - Katalogexporte mit Lizenzdaten lesen nur noch bekannte Lizenzdatensätze aus

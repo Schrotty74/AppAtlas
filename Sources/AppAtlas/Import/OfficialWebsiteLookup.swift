@@ -48,7 +48,7 @@ actor OfficialWebsiteLookup {
         }
 
         var request = URLRequest(url: url)
-        request.timeoutInterval = 15
+        request.timeoutInterval = 8
         request.setValue("AppAtlas/0.1", forHTTPHeaderField: "User-Agent")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)

@@ -22,9 +22,9 @@ struct MetadataMatchCandidate: Sendable {
 }
 
 enum MetadataMatchScorer {
-    static let automaticThreshold = 0.90
-    static let reviewThreshold = 0.75
-    static let minimumAutomaticMargin = 0.12
+    static let automaticThreshold = 0.80
+    static let reviewThreshold = 0.65
+    static let minimumAutomaticMargin = 0.08
 
     static func ranked<C>(
         app: AppEntry,
@@ -71,6 +71,13 @@ enum MetadataMatchScorer {
         app: AppEntry,
         candidate: MetadataMatchCandidate
     ) -> Double {
+        guard !hasConflictingProductQualifier(
+            appName: app.name,
+            candidateName: candidate.name
+        ) else {
+            return 0
+        }
+
         var weightedScore = 0.0
         var totalWeight = 0.0
 
@@ -148,7 +155,28 @@ enum MetadataMatchScorer {
         guard totalWeight > 0 else {
             return 0
         }
-        return weightedScore / totalWeight
+        var finalScore = weightedScore / totalWeight
+        if bundleIdentifierMatches(app: app, candidate: candidate) {
+            finalScore += 0.20
+        }
+        return min(finalScore, 1)
+    }
+
+    private static func bundleIdentifierMatches(
+        app: AppEntry,
+        candidate: MetadataMatchCandidate
+    ) -> Bool {
+        guard let candidateBundleIdentifier = candidate
+            .bundleIdentifier?
+            .nonEmpty?
+            .lowercased()
+        else {
+            return false
+        }
+        return app.files
+            .compactMap(\.bundleIdentifier)
+            .map { $0.lowercased() }
+            .contains(candidateBundleIdentifier)
     }
 
     private static func add(
@@ -177,6 +205,95 @@ enum MetadataMatchScorer {
         return left == right
             || left.hasSuffix(".\(right)")
             || right.hasSuffix(".\(left)")
+    }
+
+    static func hasConflictingProductQualifier(
+        appName: String,
+        candidateName: String
+    ) -> Bool {
+        let appTokens = Set(productTokens(appName))
+        let candidateTokens = Set(productTokens(candidateName))
+        guard !appTokens.isEmpty, !candidateTokens.isEmpty else {
+            return false
+        }
+
+        let conflictingQualifiers = Set([
+            "elements",
+            "express",
+            "reader",
+            "classic",
+            "lightroom",
+            "premiere",
+            "illustrator",
+            "indesign",
+            "acrobat",
+            "after",
+            "effects"
+        ])
+        let extraQualifiers = candidateTokens
+            .subtracting(appTokens)
+            .intersection(conflictingQualifiers)
+        return !extraQualifiers.isEmpty
+    }
+
+    static func hasConflictingProductQualifier(
+        appName: String,
+        candidateURL: URL?
+    ) -> Bool {
+        guard let candidateURL else {
+            return false
+        }
+        let candidateText = [
+            candidateURL.host ?? "",
+            candidateURL.path
+                .replacingOccurrences(of: "-", with: " ")
+                .replacingOccurrences(of: "_", with: " ")
+        ]
+        .joined(separator: " ")
+        return hasConflictingProductQualifier(
+            appName: appName,
+            candidateName: candidateText
+        )
+    }
+
+    private static func productTokens(_ value: String) -> [String] {
+        AppNameNormalizer.displayName(for: value)
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            .lowercased()
+            .replacingOccurrences(
+                of: #"[^a-z0-9]+"#,
+                with: " ",
+                options: .regularExpression
+            )
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+            .filter {
+                ![
+                    "app",
+                    "apps",
+                    "apple",
+                    "com",
+                    "de",
+                    "html",
+                    "mac",
+                    "macos",
+                    "ios",
+                    "pro",
+                    "lite",
+                    "plus",
+                    "hd",
+                    "air",
+                    "product",
+                    "products",
+                    "whats",
+                    "new"
+                ]
+                    .contains($0)
+                    && Int($0) == nil
+            }
     }
 }
 

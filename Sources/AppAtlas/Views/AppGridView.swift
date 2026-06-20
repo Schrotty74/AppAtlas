@@ -5,7 +5,7 @@ struct AppGridView: View {
     @Environment(\.appAtlasTheme) private var theme
 
     private let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 190), spacing: 16)
+        GridItem(.adaptive(minimum: 122, maximum: 158), spacing: 14)
     ]
 
     var body: some View {
@@ -14,7 +14,7 @@ struct AppGridView: View {
                 ContentUnavailableView.search(text: store.searchText)
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(store.filteredApps) { app in
                             AppCardView(
                                 app: app,
@@ -25,7 +25,7 @@ struct AppGridView: View {
                             }
                         }
                     }
-                    .padding()
+                    .padding(14)
                 }
             }
         }
@@ -38,13 +38,14 @@ struct AppGridView: View {
 }
 
 private struct AppCardView: View {
+    @EnvironmentObject private var store: CatalogStore
     @Environment(\.appAtlasTheme) private var theme
     let app: AppEntry
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 10) {
-            AppIconView(app: app, size: 88, cornerRadius: 19)
+        VStack(spacing: 8) {
+            AppIconView(app: app, size: 72, cornerRadius: 16)
 
             VStack(spacing: 4) {
                 Text(app.name)
@@ -57,8 +58,8 @@ private struct AppCardView: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(12)
-        .frame(minHeight: 174, alignment: .top)
+        .padding(10)
+        .frame(minHeight: 150, alignment: .top)
         .frame(maxWidth: .infinity)
         .appAtlasGlassSurface(
             in: RoundedRectangle(cornerRadius: 14),
@@ -79,7 +80,26 @@ private struct AppCardView: View {
             CatalogDeleteButton(app: app)
                 .padding(8)
         }
+        .overlay(alignment: .bottomTrailing) {
+            if store.isRefreshingApp(app.id) {
+                ProgressView()
+                    .controlSize(.small)
+                    .padding(8)
+                    .background(.thinMaterial, in: Circle())
+                    .padding(8)
+            }
+        }
         .foregroundStyle(theme.text)
         .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                Task {
+                    await store.refreshApp(app)
+                }
+            } label: {
+                Label("Diese App aktualisieren", systemImage: "arrow.clockwise")
+            }
+            .disabled(store.isRefreshingApp(app.id))
+        }
     }
 }

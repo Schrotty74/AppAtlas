@@ -25,7 +25,7 @@ actor RedditDescriptionLookup {
         }
 
         var request = URLRequest(url: url)
-        request.timeoutInterval = 12
+        request.timeoutInterval = 8
         request.setValue(
             "AppAtlas/0.1 (manual private catalog update)",
             forHTTPHeaderField: "User-Agent"

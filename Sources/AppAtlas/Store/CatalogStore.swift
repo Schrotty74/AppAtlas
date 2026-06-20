@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 @MainActor
@@ -6,10 +7,13 @@ final class CatalogStore: ObservableObject {
     @Published private(set) var importError: String?
     @Published private(set) var persistenceError: String?
     @Published private(set) var isEnriching = false
+    @Published private(set) var isEnrichmentPaused = false
+    @Published private(set) var refreshingAppIDs: Set<AppEntry.ID> = []
     @Published private(set) var enrichmentProgress = ""
     @Published private(set) var pendingTranslation: PendingTranslation?
     @Published private(set) var catalogRevision = 0
     @Published var pendingWebsitePrompt: PendingWebsitePrompt?
+    @Published var websiteReviewSummary: WebsiteReviewSummary?
     @Published var searchText = ""
     @Published var selectedCategory: String?
     @Published var selectedAppID: AppEntry.ID?
@@ -17,6 +21,8 @@ final class CatalogStore: ObservableObject {
     private let persistence: CatalogPersistence
     private let targetLanguageProvider: @Sendable () -> String
     private let licenseStorage: any LicenseStorage
+    private let homebrewCaskMetadataCache: HomebrewCaskMetadataCache
+    private var enrichmentTask: Task<Void, Never>?
     private var promptedWebsiteAppIDs: Set<AppEntry.ID> = []
     static let needsReviewFilter = "__needs_review__"
     static let subcategoryFilterPrefix = "__subcategory__:"
@@ -34,12 +40,14 @@ final class CatalogStore: ObservableObject {
     init(
         persistence: CatalogPersistence = CatalogPersistence(),
         licenseStorage: any LicenseStorage = LicenseKeychainStore.shared,
+        homebrewCaskMetadataCache: HomebrewCaskMetadataCache = .shared,
         targetLanguageProvider: @escaping @Sendable () -> String = {
             AppLanguageChoice.current.resolvedLanguage()
         }
     ) {
         self.persistence = persistence
         self.licenseStorage = licenseStorage
+        self.homebrewCaskMetadataCache = homebrewCaskMetadataCache
         self.targetLanguageProvider = targetLanguageProvider
     }
 
@@ -72,8 +80,21 @@ final class CatalogStore: ObservableObject {
     }
 
     var websitePromptExclusions: [AppEntry] {
-        apps.filter(\.suppressesWebsitePrompt)
+        apps.filter {
+            $0.suppressesWebsitePrompt
+                && !hasLocalFileInExcludedScanArea($0)
+        }
             .sorted(by: Self.sortApps)
+    }
+
+    var appsNeedingWebsiteReview: [AppEntry] {
+        apps.filter { app in
+            app.homepage == nil
+                && !app.suppressesWebsitePrompt
+                && !hasLocalFileInExcludedScanArea(app)
+                && needsWebsiteReview(app)
+        }
+        .sorted(by: Self.sortApps)
     }
 
     var selectedCollectionTitle: String {
@@ -263,8 +284,9 @@ final class CatalogStore: ObservableObject {
                 )
                 apps = migrateIcons(in: enrichedApps)
                     .sorted(by: Self.sortApps)
+                let removedExcludedApps = removeExcludedScanAreaApps()
                 importError = nil
-                if apps != savedApps {
+                if apps != savedApps || removedExcludedApps {
                     persist()
                 }
                 return
@@ -429,35 +451,37 @@ final class CatalogStore: ObservableObject {
         }
         guard metadata.match.decision == .automatic else {
             let identifier = "apple:\(metadata.trackID)"
-            if let homepage = metadata.homepage {
-                addSuggestion(
-                    CatalogSuggestion(
-                        kind: .homepage,
-                        value: homepage.absoluteString,
-                        sourceLabel: matchLabel(
-                            "Apple",
-                            match: metadata.match
+            if !apps[index].customizations.links {
+                if let homepage = metadata.homepage {
+                    addSuggestion(
+                        CatalogSuggestion(
+                            kind: .homepage,
+                            value: homepage.absoluteString,
+                            sourceLabel: matchLabel(
+                                "Apple",
+                                match: metadata.match
+                            ),
+                            sourceURL: homepage,
+                            sourceIdentifier: identifier
                         ),
-                        sourceURL: homepage,
-                        sourceIdentifier: identifier
-                    ),
-                    to: index
-                )
-            }
-            if let downloadURL = metadata.downloadURL {
-                addSuggestion(
-                    CatalogSuggestion(
-                        kind: .download,
-                        value: downloadURL.absoluteString,
-                        sourceLabel: matchLabel(
-                            "Apple",
-                            match: metadata.match
+                        to: index
+                    )
+                }
+                if let downloadURL = metadata.downloadURL {
+                    addSuggestion(
+                        CatalogSuggestion(
+                            kind: .download,
+                            value: downloadURL.absoluteString,
+                            sourceLabel: matchLabel(
+                                "Apple",
+                                match: metadata.match
+                            ),
+                            sourceURL: downloadURL,
+                            sourceIdentifier: identifier
                         ),
-                        sourceURL: downloadURL,
-                        sourceIdentifier: identifier
-                    ),
-                    to: index
-                )
+                        to: index
+                    )
+                }
             }
             if let description = metadata.description,
                AppMetadataEnricher.needsDescriptionExpansion(
@@ -479,7 +503,8 @@ final class CatalogStore: ObservableObject {
             apps[index].developer = metadata.developer
         }
         if !apps[index].customizations.links {
-            if let homepage = metadata.homepage {
+            if apps[index].homepage == nil,
+               let homepage = metadata.homepage {
                 apps[index].homepage = homepage
             }
             if let downloadURL = metadata.downloadURL {
@@ -488,7 +513,8 @@ final class CatalogStore: ObservableObject {
         }
         if !apps[index].hasIcon,
            !apps[index].customizations.icon,
-           let iconData
+           let iconData,
+           isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
         {
             apps[index].iconData = iconData
             apps[index].iconOrigin = .iTunes
@@ -509,23 +535,123 @@ final class CatalogStore: ObservableObject {
     }
 
     func enrichCatalog() async {
-        guard !isEnriching else {
+        guard enrichmentTask == nil else {
             return
         }
+        isEnriching = true
+        isEnrichmentPaused = false
+        enrichmentProgress = "0 / 0"
+        websiteReviewSummary = nil
+        enrichmentTask = Task { [weak self] in
+            await self?.runOnlineEnrichment()
+        }
+    }
+
+    func isRefreshingApp(_ appID: AppEntry.ID) -> Bool {
+        refreshingAppIDs.contains(appID)
+    }
+
+    func refreshApp(_ app: AppEntry) async {
+        await refreshApp(id: app.id)
+    }
+
+    func refreshApp(id appID: AppEntry.ID) async {
+        guard !refreshingAppIDs.contains(appID),
+              apps.contains(where: { $0.id == appID })
+        else {
+            return
+        }
+        refreshingAppIDs.insert(appID)
+        defer {
+            refreshingAppIDs.remove(appID)
+        }
+
+        prepareForOnlineRefresh(appID)
+        try? await homebrewCaskMetadataCache.refresh()
+        applyLocalFastScanMetadata(to: appID)
+        persist()
+
+        guard let app = apps.first(where: { $0.id == appID }) else {
+            return
+        }
+        markOnlineLookupStatus(.running, for: appID)
+        let fastResult = await OnlineEnrichmentLookup.fastResult(for: app)
+        let fastChanged = applyFastResult(fastResult)
+        updateOnlineLookupStatus(
+            for: appID,
+            changed: fastChanged,
+            recordMiss: !OnlineUpdateSettings.extendedSearchEnabled
+        )
+        persist()
+
+        if OnlineUpdateSettings.extendedSearchEnabled,
+           let refreshedApp = apps.first(where: { $0.id == appID }),
+           !hasCompleteOnlineMetadata(refreshedApp)
+        {
+            markOnlineLookupStatus(.running, for: appID)
+            let slowResult = await OnlineEnrichmentLookup.slowResult(
+                for: refreshedApp
+            )
+            let slowChanged = applySlowResult(slowResult)
+            updateOnlineLookupStatus(
+                for: appID,
+                changed: slowChanged,
+                recordMiss: true
+            )
+            persist()
+        }
+
+        if let index = apps.firstIndex(where: { $0.id == appID }),
+           needsReview(apps[index])
+        {
+            apps[index].reviewStatus = .needsReview
+        }
+        queueNextTranslation()
+        updateWebsiteReviewSummaryAfterChange()
+        persist()
+    }
+
+    func pauseEnrichment() {
+        isEnrichmentPaused = true
+    }
+
+    func resumeEnrichment() {
+        isEnrichmentPaused = false
+    }
+
+    func cancelEnrichment() {
+        enrichmentTask?.cancel()
+        enrichmentTask = nil
+        isEnriching = false
+        isEnrichmentPaused = false
+        enrichmentProgress = ""
+        for index in apps.indices
+            where apps[index].onlineLookupStatus == .running
+        {
+            apps[index].onlineLookupStatus = .open
+        }
+        persist()
+    }
+
+    private func runOnlineEnrichment() async {
         isEnriching = true
         let measurement = ProcessUsageMeasurement()
         var measuredAppCount = 0
         let concurrency = OnlineUpdateSettings.currentConcurrency
+        let usesExtendedSearch = OnlineUpdateSettings.extendedSearchEnabled
         defer {
             measurement.result(
                 concurrency: concurrency,
                 appCount: measuredAppCount
             ).save()
             isEnriching = false
+            isEnrichmentPaused = false
             enrichmentProgress = ""
+            enrichmentTask = nil
         }
 
         for index in apps.indices {
+            pruneInvalidSuggestions(at: index)
             repairIncorrectAutomaticIconProtection(at: index)
             if let iconData = iconData(for: apps[index]),
                !IconQualityInspector.isLikelyAppIcon(iconData)
@@ -540,61 +666,209 @@ final class CatalogStore: ObservableObject {
                 apps[index].homepage = nil
             }
         }
-        for index in apps.indices where shouldReplaceIcon(in: apps[index]) {
-            if let iconData = InstalledAppIconCatalog.shared.compactIconData(
-                for: apps[index].name
-            ) {
-                apps[index].iconData = iconData
-                apps[index].iconOrigin = .localBundle
-                apps[index] = migrateIcon(in: apps[index])
-                addSource("Lokal installierte App", to: index)
-            }
-        }
+        removeDuplicateAutomaticOnlineIcons()
+        enrichmentProgress = "Homebrew-Cask-Katalog wird aktualisiert"
+        try? await homebrewCaskMetadataCache.refresh()
+        applyLocalFastScanMetadata()
         persist()
 
         let candidates = apps.filter {
-            !$0.hasIcon
-                || $0.homepage == nil
-                || $0.downloadURL == nil
-                || ($0.githubURL != nil && !$0.customizations.links)
-                || AppMetadataEnricher.needsDescriptionExpansion($0.details)
+            needsOnlineMetadata($0)
+                && (
+                    usesExtendedSearch
+                        || !OnlineEnrichmentAttemptCache.shared.shouldSkip($0)
+                )
         }
         measuredAppCount = candidates.count
-        for start in stride(from: 0, to: candidates.count, by: concurrency) {
-            let end = min(start + concurrency, candidates.count)
-            let batch = Array(candidates[start..<end])
-            enrichmentProgress =
-                "Schnelle Online-Quellen \(start + 1)–\(end) von \(candidates.count)"
-            let results = await OnlineEnrichmentLookup.fastResults(for: batch)
-            for result in results {
-                applyFastResult(result)
-            }
-            persist()
-        }
+        await runFastOnlineEnrichment(
+            candidates,
+            concurrency: concurrency,
+            total: candidates.count,
+            recordMisses: !usesExtendedSearch
+        )
 
-        if OnlineUpdateSettings.extendedSearchEnabled {
+        if usesExtendedSearch {
             let candidateIDs = Set(candidates.map(\.id))
             let remaining = apps.filter {
-                candidateIDs.contains($0.id) && !hasCompleteOnlineMetadata($0)
+                candidateIDs.contains($0.id)
+                    && !hasCompleteOnlineMetadata($0)
             }
-            for start in stride(from: 0, to: remaining.count, by: concurrency) {
-                let end = min(start + concurrency, remaining.count)
-                let batch = Array(remaining[start..<end])
-                enrichmentProgress =
-                    "Erweiterte Online-Quellen \(start + 1)–\(end) von \(remaining.count)"
-                let results = await OnlineEnrichmentLookup.slowResults(for: batch)
-                for result in results {
-                    applySlowResult(result)
-                }
-                persist()
-            }
+            measuredAppCount += remaining.count
+            await runSlowOnlineEnrichment(
+                remaining,
+                concurrency: concurrency,
+                completedOffset: candidates.count,
+                total: candidates.count + remaining.count
+            )
         }
 
         for index in apps.indices where needsReview(apps[index]) {
             apps[index].reviewStatus = .needsReview
         }
         persist()
-        offerWebsitePromptIfNeeded()
+        summarizeWebsiteReview(foundCount: apps.count)
+    }
+
+    private func needsOnlineMetadata(_ app: AppEntry) -> Bool {
+        !app.hasIcon
+            || app.homepage == nil
+            || app.downloadURL == nil
+            || (app.githubURL != nil && !app.customizations.links)
+            || AppMetadataEnricher.needsDescriptionExpansion(app.details)
+    }
+
+    private func runFastOnlineEnrichment(
+        _ candidates: [AppEntry],
+        concurrency: Int,
+        total: Int,
+        recordMisses: Bool
+    ) async {
+        var completed = 0
+        var nextIndex = 0
+        await withTaskGroup(of: FastOnlineResult.self) { group in
+            for _ in 0..<max(1, concurrency) where nextIndex < candidates.count {
+                let app = candidates[nextIndex]
+                nextIndex += 1
+                await MainActor.run {
+                    markOnlineLookupStatus(.running, for: app.id)
+                }
+                group.addTask {
+                    await OnlineEnrichmentLookup.fastResult(for: app)
+                }
+            }
+            while let result = await group.next() {
+                await waitIfEnrichmentPaused()
+                if Task.isCancelled {
+                    group.cancelAll()
+                    break
+                }
+                let changed = applyFastResult(result)
+                completed += 1
+                updateOnlineLookupStatus(
+                    for: result.appID,
+                    changed: changed,
+                    recordMiss: recordMisses
+                )
+                enrichmentProgress = "Schnelle Suche \(completed) / \(total)"
+                persist()
+                if nextIndex < candidates.count {
+                    let app = candidates[nextIndex]
+                    nextIndex += 1
+                    await MainActor.run {
+                        markOnlineLookupStatus(.running, for: app.id)
+                    }
+                    group.addTask {
+                        await OnlineEnrichmentLookup.fastResult(for: app)
+                    }
+                }
+            }
+        }
+    }
+
+    private func runSlowOnlineEnrichment(
+        _ candidates: [AppEntry],
+        concurrency: Int,
+        completedOffset: Int,
+        total: Int
+    ) async {
+        var completed = completedOffset
+        var nextIndex = 0
+        await withTaskGroup(of: SlowOnlineResult.self) { group in
+            for _ in 0..<max(1, concurrency) where nextIndex < candidates.count {
+                let app = candidates[nextIndex]
+                nextIndex += 1
+                await MainActor.run {
+                    markOnlineLookupStatus(.running, for: app.id)
+                }
+                group.addTask {
+                    await OnlineEnrichmentLookup.slowResult(for: app)
+                }
+            }
+            while let result = await group.next() {
+                await waitIfEnrichmentPaused()
+                if Task.isCancelled {
+                    group.cancelAll()
+                    break
+                }
+                let changed = applySlowResult(result)
+                completed += 1
+                updateOnlineLookupStatus(
+                    for: result.appID,
+                    changed: changed,
+                    recordMiss: true
+                )
+                enrichmentProgress = "Erweiterte Suche \(completed) / \(total)"
+                persist()
+                if nextIndex < candidates.count {
+                    let app = candidates[nextIndex]
+                    nextIndex += 1
+                    await MainActor.run {
+                        markOnlineLookupStatus(.running, for: app.id)
+                    }
+                    group.addTask {
+                        await OnlineEnrichmentLookup.slowResult(for: app)
+                    }
+                }
+            }
+        }
+    }
+
+    private func waitIfEnrichmentPaused() async {
+        while isEnrichmentPaused && !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+    }
+
+    private func markOnlineLookupStatus(
+        _ status: OnlineLookupStatus,
+        for appID: AppEntry.ID
+    ) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else {
+            return
+        }
+        apps[index].onlineLookupStatus = status
+    }
+
+    private func updateOnlineLookupStatus(
+        for appID: AppEntry.ID,
+        changed: Bool,
+        recordMiss: Bool
+    ) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else {
+            return
+        }
+        if changed {
+            apps[index].onlineLookupStatus = hasCompleteOnlineMetadata(apps[index])
+                ? .found
+                : .needsReview
+            OnlineEnrichmentAttemptCache.shared.clear(apps[index])
+        } else {
+            apps[index].onlineLookupStatus = .failed
+            if recordMiss {
+                OnlineEnrichmentAttemptCache.shared.recordMiss(apps[index])
+            }
+        }
+    }
+
+    private func prepareForOnlineRefresh(_ appID: AppEntry.ID) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else {
+            return
+        }
+        pruneInvalidSuggestions(at: index)
+        repairIncorrectAutomaticIconProtection(at: index)
+        if let iconData = iconData(for: apps[index]),
+           !IconQualityInspector.isLikelyAppIcon(iconData)
+        {
+            IconStore.shared.delete(fileName: apps[index].iconFileName)
+            apps[index].iconFileName = nil
+            apps[index].iconData = nil
+        }
+        if let homepage = apps[index].homepage,
+           !OfficialWebsiteLookup.isOfficialCandidate(homepage)
+        {
+            apps[index].homepage = nil
+        }
+        removeDuplicateAutomaticOnlineIcons()
     }
 
     private func hasCompleteOnlineMetadata(_ app: AppEntry) -> Bool {
@@ -604,7 +878,121 @@ final class CatalogStore: ObservableObject {
             && !AppMetadataEnricher.needsDescriptionExpansion(app.details)
     }
 
-    private func applyFastResult(_ result: FastOnlineResult) {
+    private func applyLocalFastScanMetadata() {
+        for index in apps.indices {
+            applyLocalFastScanMetadata(at: index)
+        }
+    }
+
+    private func applyLocalFastScanMetadata(to appID: AppEntry.ID) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else {
+            return
+        }
+        applyLocalFastScanMetadata(at: index)
+    }
+
+    private func applyLocalFastScanMetadata(at index: Int) {
+        if shouldReplaceIcon(in: apps[index]),
+           let iconData = InstalledAppIconCatalog.shared.compactIconData(
+            for: apps[index].name
+           )
+        {
+            apps[index].iconData = iconData
+            apps[index].iconOrigin = .localBundle
+            apps[index] = migrateIcon(in: apps[index])
+            addSource("Lokal installierte App", to: index)
+        }
+
+        guard !apps[index].customizations.links else {
+            return
+        }
+        applyConfirmedURLs(to: index)
+        applyKnownLocalMetadata(to: index)
+        applyHomebrewCaskMetadata(to: index)
+    }
+
+    private func applyConfirmedURLs(to index: Int) {
+        for url in ConfirmedMetadataMatchStore.shared.confirmedURLs(
+            for: apps[index].name
+        ) {
+            guard let host = url.host?.lowercased() else {
+                continue
+            }
+            if host == "github.com" || host.hasSuffix(".github.com") {
+                if apps[index].githubURL == nil {
+                    apps[index].githubURL = url
+                    addSource("Bestätigte lokale Zuordnung", to: index)
+                }
+            } else if host == "apps.apple.com" || host.hasSuffix(".apps.apple.com") {
+                if apps[index].downloadURL == nil {
+                    apps[index].downloadURL = url
+                    addSource("Bestätigte lokale Zuordnung", to: index)
+                }
+            } else if apps[index].homepage == nil {
+                apps[index].homepage = url
+                addSource("Bestätigte lokale Zuordnung", to: index)
+            }
+        }
+    }
+
+    private func applyKnownLocalMetadata(to index: Int) {
+        guard let metadata = LocalKnownMetadataLookup.metadata(for: apps[index])
+        else {
+            return
+        }
+        if apps[index].homepage == nil, let homepage = metadata.homepage {
+            apps[index].homepage = homepage
+            addSource("Lokaler Hersteller-Hinweis", to: index)
+        }
+        if apps[index].downloadURL == nil, let downloadURL = metadata.downloadURL {
+            apps[index].downloadURL = downloadURL
+            addSource("Lokaler Hersteller-Hinweis", to: index)
+        }
+        if apps[index].githubURL == nil, let githubURL = metadata.githubURL {
+            apps[index].githubURL = githubURL
+            addSource("Lokaler Hersteller-Hinweis", to: index)
+        }
+    }
+
+    private func applyHomebrewCaskMetadata(to index: Int) {
+        guard let metadata = homebrewCaskMetadataCache.metadata(
+            for: apps[index]
+        ) else {
+            return
+        }
+        if apps[index].homepage == nil, let homepage = metadata.homepage {
+            apps[index].homepage = homepage
+            addSource("Homebrew-Cask-Katalog", to: index)
+        }
+        if apps[index].downloadURL == nil, let downloadURL = metadata.downloadURL {
+            apps[index].downloadURL = downloadURL
+            addSource("Homebrew-Cask-Katalog", to: index)
+        }
+        if apps[index].githubURL == nil, let githubURL = metadata.githubURL {
+            apps[index].githubURL = githubURL
+            addSource("Homebrew-Cask-Katalog", to: index)
+        }
+        if let description = metadata.description,
+           !description.isEmpty,
+           AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
+           !apps[index].customizations.description
+        {
+            apps[index].summary = AppMetadataEnricher.summary(
+                from: description
+            )
+            apps[index].details = AppMetadataEnricher.expandedDescription(
+                sourceText: description,
+                category: apps[index].category,
+                subcategory: apps[index].subcategory,
+                keywords: apps[index].keywords
+            )
+            addSource("Homebrew-Cask-Katalog", to: index)
+        }
+    }
+
+    @discardableResult
+    private func applyFastResult(_ result: FastOnlineResult) -> Bool {
+        let before = apps.first(where: { $0.id == result.appID })
         if let metadata = result.apple {
             applyOnlineMetadata(
                 metadata,
@@ -615,11 +1003,12 @@ final class CatalogStore: ObservableObject {
         guard let index = apps.firstIndex(where: { $0.id == result.appID }),
               let metadata = result.website
         else {
-            return
+            return hasAppChanged(result.appID, comparedTo: before)
         }
         if let iconData = metadata.iconData {
-            applyIconData(iconData, to: result.appID)
-            addSource("Herstellerseite", to: index)
+            if applyIconData(iconData, to: result.appID) {
+                addSource("Herstellerseite", to: index)
+            }
         }
         if let description = metadata.description,
            !description.isEmpty,
@@ -633,15 +1022,20 @@ final class CatalogStore: ObservableObject {
                 for: result.appID
             )
         }
+        return hasAppChanged(result.appID, comparedTo: before)
     }
 
-    private func applySlowResult(_ result: SlowOnlineResult) {
+    @discardableResult
+    private func applySlowResult(_ result: SlowOnlineResult) -> Bool {
+        let before = apps.first(where: { $0.id == result.appID })
         guard let index = apps.firstIndex(where: { $0.id == result.appID }) else {
-            return
+            return false
         }
+        var confirmedHomepageURL: URL?
         if let homepage = result.homepage, apps[index].homepage == nil {
             if homepage.match.decision == .automatic {
                 apps[index].homepage = homepage.url
+                confirmedHomepageURL = homepage.url
                 addSource("Bestätigte Websuche", to: index)
             } else {
                 addSuggestion(
@@ -658,6 +1052,25 @@ final class CatalogStore: ObservableObject {
                 )
             }
         }
+        if let metadata = result.website {
+            if let iconData = metadata.iconData {
+                if applyIconData(iconData, to: result.appID) {
+                    addSource("Herstellerseite", to: index)
+                }
+            }
+            if let description = metadata.description,
+               !description.isEmpty,
+               AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
+               !apps[index].customizations.description
+            {
+                recordDescription(
+                    description,
+                    source: "Herstellerseite",
+                    sourceURL: confirmedHomepageURL ?? apps[index].homepage,
+                    for: result.appID
+                )
+            }
+        }
         if let metadata = result.github {
             if metadata.match.decision == .automatic,
                !apps[index].customizations.links
@@ -668,7 +1081,8 @@ final class CatalogStore: ObservableObject {
             }
             if let iconData = metadata.iconData,
                metadata.match.decision == .automatic,
-               shouldReplaceIcon(in: apps[index])
+               shouldReplaceIcon(in: apps[index]),
+               isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
             {
                 apps[index].iconData = iconData
                 apps[index].iconOrigin = .github
@@ -737,6 +1151,19 @@ final class CatalogStore: ObservableObject {
                 to: index
             )
         }
+        return hasAppChanged(result.appID, comparedTo: before)
+    }
+
+    private func hasAppChanged(
+        _ appID: AppEntry.ID,
+        comparedTo before: AppEntry?
+    ) -> Bool {
+        guard let before,
+              let after = apps.first(where: { $0.id == appID })
+        else {
+            return false
+        }
+        return before != after
     }
 
     private func githubMetadata(
@@ -758,17 +1185,20 @@ final class CatalogStore: ObservableObject {
         )
     }
 
-    func applyIconData(_ iconData: Data, to appID: AppEntry.ID) {
+    @discardableResult
+    func applyIconData(_ iconData: Data, to appID: AppEntry.ID) -> Bool {
         guard iconData.count <= IconImageConverter.maximumStoredBytes,
               let index = apps.firstIndex(where: { $0.id == appID }),
-              shouldReplaceIcon(in: apps[index])
+              shouldReplaceIcon(in: apps[index]),
+              isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
         else {
-            return
+            return false
         }
         apps[index].iconData = iconData
         apps[index].iconOrigin = .website
         apps[index] = migrateIcon(in: apps[index])
         persist()
+        return true
     }
 
     func acceptSuggestion(_ suggestionID: CatalogSuggestion.ID, for appID: AppEntry.ID) {
@@ -838,6 +1268,14 @@ final class CatalogStore: ObservableObject {
         guard let index = apps.firstIndex(where: { $0.id == appID }) else {
             return
         }
+        if let suggestion = apps[index].suggestions.first(
+            where: { $0.id == suggestionID }
+        ) {
+            rememberRejectedMatch(
+                suggestion: suggestion,
+                appName: apps[index].name
+            )
+        }
         removeSuggestion(suggestionID, from: index)
         persist()
     }
@@ -877,6 +1315,7 @@ final class CatalogStore: ObservableObject {
         Task {
             await enrichFromConfirmedWebsite(for: appID)
         }
+        updateWebsiteReviewSummaryAfterChange()
     }
 
     private func enrichFromConfirmedWebsite(for appID: AppEntry.ID) async {
@@ -896,7 +1335,8 @@ final class CatalogStore: ObservableObject {
         if let iconData = metadata.iconData,
            !apps[index].customizations.icon,
            apps[index].iconOrigin != .manual,
-           apps[index].iconOrigin != .localBundle
+           apps[index].iconOrigin != .localBundle,
+           isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
         {
             IconStore.shared.delete(fileName: apps[index].iconFileName)
             apps[index].iconFileName = nil
@@ -923,7 +1363,6 @@ final class CatalogStore: ObservableObject {
     func dismissWebsitePrompt(for appID: AppEntry.ID) {
         promptedWebsiteAppIDs.insert(appID)
         pendingWebsitePrompt = nil
-        offerWebsitePromptIfNeeded()
     }
 
     func suppressWebsitePrompt(for appID: AppEntry.ID) {
@@ -934,7 +1373,7 @@ final class CatalogStore: ObservableObject {
         promptedWebsiteAppIDs.insert(appID)
         pendingWebsitePrompt = nil
         persist()
-        offerWebsitePromptIfNeeded()
+        updateWebsiteReviewSummaryAfterChange()
     }
 
     func allowWebsitePrompt(for appID: AppEntry.ID) {
@@ -944,6 +1383,7 @@ final class CatalogStore: ObservableObject {
         apps[index].websitePromptSuppressed = false
         promptedWebsiteAppIDs.remove(appID)
         persist()
+        updateWebsiteReviewSummaryAfterChange()
     }
 
     func completeTranslation(
@@ -1007,16 +1447,34 @@ final class CatalogStore: ObservableObject {
     }
 
     func mergeScannedApps(_ scannedApps: [AppEntry]) {
+        websiteReviewSummary = nil
+        let includedScannedApps = scannedApps.filter {
+            !hasLocalFileInExcludedScanArea($0)
+        }
+        let existingApps = apps.filter {
+            !hasLocalFileInExcludedScanArea($0)
+        }
         let result = CatalogScanReconciler().reconcile(
-            existingApps: apps,
-            scannedApps: scannedApps
+            existingApps: existingApps,
+            scannedApps: includedScannedApps
         )
+        let excludedRemovedApps = apps.filter {
+            hasLocalFileInExcludedScanArea($0)
+        }
+        for removedApp in excludedRemovedApps {
+            IconStore.shared.delete(fileName: removedApp.iconFileName)
+            licenseStorage.delete(for: removedApp.id)
+        }
         for removedApp in result.removedApps {
             IconStore.shared.delete(fileName: removedApp.iconFileName)
             licenseStorage.delete(for: removedApp.id)
         }
-        apps = result.apps
+        apps = result.apps.filter {
+            !hasLocalFileInExcludedScanArea($0)
+        }
+        _ = removeExcludedScanAreaApps()
         apps = migrateIcons(in: apps)
+        applyLocalFastScanMetadata()
         apps.sort(by: Self.sortApps)
         persist()
     }
@@ -1027,6 +1485,9 @@ final class CatalogStore: ObservableObject {
     ) throws {
         let includedApps = importedApps
             .filter(CatalogEntryFilter().shouldInclude)
+            .filter {
+                !hasLocalFileInExcludedScanArea($0)
+            }
             .sorted(by: Self.sortApps)
         let includedIDs = Set(includedApps.map(\.id))
         try licenseStorage.save(
@@ -1069,11 +1530,218 @@ final class CatalogStore: ObservableObject {
             || AppMetadataEnricher.needsDescriptionExpansion(app.details)
     }
 
+    private func needsWebsiteReview(_ app: AppEntry) -> Bool {
+        if app.suggestions.contains(where: { $0.kind == .homepage }) {
+            return false
+        }
+        if isLowValueInstallerMetadataPrompt(app) {
+            return false
+        }
+        switch app.onlineLookupStatus {
+        case .failed, .needsReview:
+            return true
+        case .open, .running, .found, nil:
+            return false
+        }
+    }
+
+    private func isLowValueInstallerMetadataPrompt(_ app: AppEntry) -> Bool {
+        guard !app.files.isEmpty,
+              app.files.allSatisfy({ $0.fileType != "app" })
+        else {
+            return false
+        }
+        let normalized = ([app.name, app.subcategory] + app.files.map(\.fileName))
+            .joined(separator: " ")
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            .lowercased()
+        return [
+            "activation",
+            "runtime",
+            "icon pack",
+            "plugin",
+            "cleaner tool",
+            "helper",
+            "uninstaller"
+        ].contains { normalized.contains($0) }
+    }
+
     private func shouldReplaceIcon(in app: AppEntry) -> Bool {
         guard !app.customizations.icon, app.iconOrigin != .manual else {
             return false
         }
         return !app.hasIcon || app.iconOrigin == .iTunes
+    }
+
+    private func isAcceptableAutomaticOnlineIcon(
+        _ candidateIconData: Data,
+        for app: AppEntry
+    ) -> Bool {
+        guard IconQualityInspector.isLikelyOnlineAppIcon(candidateIconData) else {
+            return false
+        }
+        let fingerprint = iconFingerprint(for: candidateIconData)
+        let normalizedName = normalizedIconOwnerName(app.name)
+        return !apps.contains { other in
+            guard other.id != app.id,
+                  isAutomaticOnlineIcon(other),
+                  normalizedIconOwnerName(other.name) != normalizedName,
+                  let otherIconData = iconData(for: other)
+            else {
+                return false
+            }
+            return iconFingerprint(for: otherIconData) == fingerprint
+        }
+    }
+
+    private func removeDuplicateAutomaticOnlineIcons() {
+        let grouped = Dictionary(grouping: apps.indices) { index in
+            iconData(for: apps[index]).map(iconFingerprint)
+        }
+        for (fingerprint, indices) in grouped {
+            guard fingerprint != nil else {
+                continue
+            }
+            let onlineIndices = indices.filter {
+                isAutomaticOnlineIcon(apps[$0])
+            }
+            let distinctNames = Set(
+                onlineIndices.map {
+                    normalizedIconOwnerName(apps[$0].name)
+                }
+            )
+            guard onlineIndices.count > 1, distinctNames.count > 1 else {
+                continue
+            }
+            for index in onlineIndices {
+                IconStore.shared.delete(fileName: apps[index].iconFileName)
+                apps[index].iconFileName = nil
+                apps[index].iconData = nil
+                apps[index].iconOrigin = nil
+            }
+        }
+    }
+
+    private func isAutomaticOnlineIcon(_ app: AppEntry) -> Bool {
+        app.iconOrigin == .website
+            || app.iconOrigin == .github
+            || app.iconOrigin == .iTunes
+    }
+
+    private func iconFingerprint(for data: Data) -> String {
+        SHA256.hash(data: data)
+            .map { String(format: "%02x", $0) }
+            .joined()
+    }
+
+    private func normalizedIconOwnerName(_ name: String) -> String {
+        name
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+            .lowercased()
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+    }
+
+    private func pruneInvalidSuggestions(at index: Int) {
+        let appName = apps[index].name
+        let suggestions = apps[index].suggestions.filter { suggestion in
+            guard suggestion.kind == .homepage
+                    || suggestion.kind == .download
+                    || suggestion.kind == .github
+                    || suggestion.kind == .icon
+            else {
+                return true
+            }
+            let valueURL = URL(string: suggestion.value)
+            return !MetadataMatchScorer.hasConflictingProductQualifier(
+                appName: appName,
+                candidateURL: valueURL ?? suggestion.sourceURL
+            )
+        }
+        if suggestions.count != apps[index].suggestions.count {
+            apps[index].reviewSuggestions = suggestions
+        }
+    }
+
+    private func hasLocalFileInExcludedScanArea(_ app: AppEntry) -> Bool {
+        let policy = ScanExclusionPolicy(
+            customExcludedDirectories: ScannerSettings.excludedPathHints
+        )
+        let appPath = [
+            app.category,
+            app.subcategory,
+            app.files.first?.fileName ?? app.name
+        ]
+        .filter { !$0.isEmpty }
+        .joined(separator: "/")
+        let appPathComponents = appPath
+            .split(separator: "/")
+            .map(String.init)
+        if policy.shouldExclude(
+            url: URL(fileURLWithPath: appPath),
+            relativePathComponents: appPathComponents
+        ) {
+            return true
+        }
+
+        return app.files.contains { file in
+            let relativePathComponents = file.relativePath
+                .split(separator: "/")
+                .map(String.init)
+            if policy.shouldExclude(
+                url: URL(fileURLWithPath: file.relativePath),
+                relativePathComponents: relativePathComponents
+            ) {
+                return true
+            }
+
+            let sourcePath = [
+                file.sourceCategory,
+                file.sourceSubcategory,
+                file.fileName
+            ]
+            .filter { !$0.isEmpty }
+            .joined(separator: "/")
+            let sourcePathComponents = sourcePath
+                .split(separator: "/")
+                .map(String.init)
+            return policy.shouldExclude(
+                url: URL(fileURLWithPath: sourcePath),
+                relativePathComponents: sourcePathComponents
+            )
+        }
+    }
+
+    @discardableResult
+    private func removeExcludedScanAreaApps() -> Bool {
+        let removedApps = apps.filter {
+            hasLocalFileInExcludedScanArea($0)
+        }
+        guard !removedApps.isEmpty else {
+            return false
+        }
+
+        let removedIDs = Set(removedApps.map(\.id))
+        for removedApp in removedApps {
+            IconStore.shared.delete(fileName: removedApp.iconFileName)
+            licenseStorage.delete(for: removedApp.id)
+        }
+        apps.removeAll {
+            removedIDs.contains($0.id)
+        }
+        if let selectedAppID,
+           removedIDs.contains(selectedAppID) {
+            self.selectedAppID = nil
+        }
+        return true
     }
 
     private func clearAutomaticGitHubMetadata(at index: Int) {
@@ -1112,6 +1780,10 @@ final class CatalogStore: ObservableObject {
     }
 
     private func addSuggestion(_ suggestion: CatalogSuggestion, to index: Int) {
+        guard !isRejectedSuggestion(suggestion, appName: apps[index].name)
+        else {
+            return
+        }
         var suggestions = apps[index].suggestions
         guard !suggestions.contains(where: {
             $0.kind == suggestion.kind
@@ -1155,6 +1827,30 @@ final class CatalogStore: ObservableObject {
         queueNextTranslation()
     }
 
+    private func isRejectedSuggestion(
+        _ suggestion: CatalogSuggestion,
+        appName: String
+    ) -> Bool {
+        if let sourceURL = suggestion.sourceURL,
+           ConfirmedMetadataMatchStore.shared.isRejected(
+            appName: appName,
+            url: sourceURL
+           )
+        {
+            return true
+        }
+        guard let identifier = suggestion.sourceIdentifier,
+              identifier.hasPrefix("apple:"),
+              let trackID = Int(identifier.dropFirst("apple:".count))
+        else {
+            return false
+        }
+        return ConfirmedMetadataMatchStore.shared.isRejected(
+            appName: appName,
+            appleTrackID: trackID
+        )
+    }
+
     private func rememberConfirmedMatch(
         suggestion: CatalogSuggestion,
         appName: String
@@ -1172,6 +1868,28 @@ final class CatalogStore: ObservableObject {
             return
         }
         ConfirmedMetadataMatchStore.shared.confirm(
+            appName: appName,
+            appleTrackID: trackID
+        )
+    }
+
+    private func rememberRejectedMatch(
+        suggestion: CatalogSuggestion,
+        appName: String
+    ) {
+        if let sourceURL = suggestion.sourceURL {
+            ConfirmedMetadataMatchStore.shared.reject(
+                appName: appName,
+                url: sourceURL
+            )
+        }
+        guard let identifier = suggestion.sourceIdentifier,
+              identifier.hasPrefix("apple:"),
+              let trackID = Int(identifier.dropFirst("apple:".count))
+        else {
+            return
+        }
+        ConfirmedMetadataMatchStore.shared.reject(
             appName: appName,
             appleTrackID: trackID
         )
@@ -1217,10 +1935,15 @@ final class CatalogStore: ObservableObject {
             }
             addSource(source, to: index)
         } else {
-            addDescriptionSuggestion(
-                description,
-                source: source,
-                sourceURL: sourceURL,
+            addSuggestion(
+                CatalogSuggestion(
+                    kind: .description,
+                    value: description,
+                    sourceLabel: source,
+                    sourceURL: sourceURL,
+                    detectedLanguage: language,
+                    needsTranslation: false
+                ),
                 to: index
             )
         }
@@ -1284,22 +2007,26 @@ final class CatalogStore: ObservableObject {
     }
 
     private func offerWebsitePromptIfNeeded() {
-        guard pendingWebsitePrompt == nil,
-              let app = apps.first(where: {
-                  $0.homepage == nil
-                      && !$0.suppressesWebsitePrompt
-                      && !$0.suggestions.contains(where: {
-                          $0.kind == .homepage
-                      })
-                      && !promptedWebsiteAppIDs.contains($0.id)
-              })
-        else {
+        summarizeWebsiteReview(foundCount: apps.count)
+    }
+
+    private func summarizeWebsiteReview(foundCount: Int) {
+        let unresolvedCount = appsNeedingWebsiteReview.count
+        guard unresolvedCount > 0 else {
+            websiteReviewSummary = nil
             return
         }
-        pendingWebsitePrompt = PendingWebsitePrompt(
-            appID: app.id,
-            appName: app.name
+        websiteReviewSummary = WebsiteReviewSummary(
+            foundCount: foundCount,
+            unresolvedCount: unresolvedCount
         )
+    }
+
+    private func updateWebsiteReviewSummaryAfterChange() {
+        guard let summary = websiteReviewSummary else {
+            return
+        }
+        summarizeWebsiteReview(foundCount: summary.foundCount)
     }
 
     private func migrateIcons(in entries: [AppEntry]) -> [AppEntry] {

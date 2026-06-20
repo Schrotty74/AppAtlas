@@ -100,7 +100,8 @@ struct CatalogScanReconciler: Sendable {
         AppNameNormalizer.catalogIdentityKey(
             name: app.name,
             category: app.category,
-            subcategory: app.subcategory
+            subcategory: app.subcategory,
+            preservesAttachedYear: true
         )
     }
 }

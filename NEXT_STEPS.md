@@ -91,9 +91,43 @@
 
 ## Offene Aufgaben
 
+- Release-Angaben prüfen und vereinheitlichen: In den Projektregeln steht
+  teils noch offizieller Release `1.0.1`, während README und HISTORY bereits
+  `1.1.1` nennen.
 - Rückmeldungen zu Version 1.0.1 sammeln und priorisieren.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
+- Scanner-Erkennung als nächster Schwerpunkt:
+  schneller Scan bleibt lokal und darf nicht durch Online-Abfragen blockieren.
+  Er soll aber deutlich mehr Apps über eine lokale Wissensdatenbank erkennen
+  können. Dafür bekannte App-Namen mit Homepage, Download, GitHub und
+  Icon-Quelle pflegen, zum Beispiel Pearcleaner, AnyDesk, Affinity, Photoshop,
+  Downie und VLC.
+- Die Trefferbewertung soll mit diesen Schwellen arbeiten:
+  `automaticThreshold = 0.80`, `reviewThreshold = 0.65` und
+  `minimumAutomaticMargin = 0.08`.
+- Homebrew-Cask-Katalog nicht live im schnellen Scan abfragen, sondern bei
+  bewusster Online-Aktualisierung herunterladen, lokal cachen und danach als
+  schnelle strukturierte Wissensquelle verwenden. Der Cache wird beim
+  bewussten Online-Lauf aktualisiert und danach lokal beim schnellen Abgleich
+  genutzt.
+- Weitere strukturierte Quellen wie Setapp, GitHub, App Store und gegebenenfalls
+  MacUpdater-ähnliche Exportdaten nur gezielt und nach klarer Priorität nutzen:
+  zuerst lokale und gecachte Quellen, danach Online-Quellen. Nicht blind pro App
+  Websuche starten.
+- Installer-Dateien wie `.dmg`, `.pkg` und `.zip` anders bewerten als echte
+  `.app`-Bundles. Installer erhalten nur dann konkrete App-Metadaten, wenn die
+  Zuordnung über lokale Wissensdatenbank, bestätigte Quelle oder sichere
+  Online-Quelle eindeutig ist.
+- Sammeldialog für unklare Apps korrigieren: nicht alle Apps ohne Homepage
+  auflisten, sondern nur Apps, die nach allen aktivierten Erkennungsstufen
+  weiterhin nicht sicher erkannt wurden. Bei aktivierter erweiterter Suche darf
+  der Dialog erst nach Abschluss dieser erweiterten Suche erscheinen.
+- Nachbearbeitung unklarer Apps als Sammelliste führen: pro App eine URL
+  eintragen, danach automatisch Homepage, Download-Link, Icon, Beschreibung und
+  gegebenenfalls GitHub-Link aus dieser URL ableiten. Erledigte Apps fallen aus
+  der Liste heraus; dauerhaft übersprungene Apps werden bei späteren Scans nicht
+  erneut automatisch abgefragt.
 
 ## Verbindliche Regeln
 

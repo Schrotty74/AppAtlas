@@ -112,6 +112,19 @@ struct AppDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
+                    Task {
+                        await store.refreshApp(displayedApp)
+                    }
+                } label: {
+                    if store.isRefreshingApp(displayedApp.id) {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label("Diese App aktualisieren", systemImage: "arrow.clockwise")
+                    }
+                }
+                .disabled(store.isRefreshingApp(displayedApp.id))
+                Button {
                     showEditor = true
                 } label: {
                     Label("Bearbeiten", systemImage: "pencil")
@@ -287,6 +300,15 @@ struct AppDetailView: View {
                     .font(.largeTitle.bold())
                 Text(displayedApp.summary)
                     .foregroundStyle(theme.mutedText)
+                if store.isRefreshingApp(displayedApp.id) {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Diese App wird aktualisiert …")
+                            .font(.caption)
+                            .foregroundStyle(theme.mutedText)
+                    }
+                }
             }
         }
     }

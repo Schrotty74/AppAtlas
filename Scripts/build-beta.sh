@@ -17,6 +17,10 @@ release_directory="$root_directory/dist/AppAtlas-$version"
 app_bundle="$release_directory/AppAtlas.app"
 zip_file="$root_directory/Backup/AppAtlas-$version-macos.zip"
 checksum_file="$zip_file.sha256"
+bundle_identifier="at.schrotty.appatlas"
+if [[ "$version" == *beta* ]]; then
+    bundle_identifier="at.schrotty.appatlas.beta"
+fi
 
 export SWIFTPM_HOME="$root_directory/.build-cache/swiftpm"
 export CLANG_MODULE_CACHE_PATH="$root_directory/.build-cache/clang"
@@ -135,6 +139,7 @@ fi
 sed \
     -e "s/__VERSION__/$version/g" \
     -e "s/__BUILD_NUMBER__/$build_number/g" \
+    -e "s/at.schrotty.appatlas/$bundle_identifier/g" \
     "$root_directory/Packaging/Info.plist" \
     > "$app_bundle/Contents/Info.plist"
 

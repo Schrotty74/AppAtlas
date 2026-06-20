@@ -16,7 +16,7 @@ actor WebMetadataLookup {
         }
 
         var request = URLRequest(url: homepage)
-        request.timeoutInterval = 15
+        request.timeoutInterval = 8
         request.setValue("AppAtlas/0.1", forHTTPHeaderField: "User-Agent")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -32,8 +32,9 @@ actor WebMetadataLookup {
                 in: html,
                 names: ["description", "og:description"]
             ).map { String($0.prefix(500)) }
+            let ogImage = metaContent(in: html, names: ["og:image"])
             let previewURL = needsIcon
-                ? metaContent(in: html, names: ["og:image"])
+                ? ogImage
                     .flatMap {
                         URL(string: $0, relativeTo: homepage)?.absoluteURL
                     }
@@ -46,8 +47,27 @@ actor WebMetadataLookup {
             } else {
                 nil
             }
+            let linkedIcon: Data? = if needsIcon,
+                                       previewIcon == nil
+            {
+                await firstLinkedIcon(in: html, baseURL: homepage)
+            } else {
+                nil
+            }
+            let bodyIcon: Data? = if needsIcon,
+                                     previewIcon == nil,
+                                     linkedIcon == nil
+            {
+                await firstBodyLogoIcon(in: html, baseURL: homepage)
+            } else {
+                nil
+            }
             let iconData: Data? = if let previewIcon {
                 previewIcon
+            } else if let linkedIcon {
+                linkedIcon
+            } else if let bodyIcon {
+                bodyIcon
             } else if needsIcon
                 && OfficialWebsiteLookup.allowsGenericWebsiteIcon(homepage)
             {
@@ -59,6 +79,101 @@ actor WebMetadataLookup {
         } catch {
             return nil
         }
+    }
+
+    private func firstLinkedIcon(in html: String, baseURL: URL) async -> Data? {
+        for url in linkedIconURLs(in: html, baseURL: baseURL) {
+            if let iconData = await OnlineIconLoader.shared.iconData(from: url) {
+                return iconData
+            }
+        }
+        return nil
+    }
+
+    private func firstBodyLogoIcon(
+        in html: String,
+        baseURL: URL
+    ) async -> Data? {
+        for url in bodyLogoIconURLs(in: html, baseURL: baseURL) {
+            if let iconData = await OnlineIconLoader.shared.iconData(from: url) {
+                return iconData
+            }
+        }
+        return nil
+    }
+
+    private func linkedIconURLs(in html: String, baseURL: URL) -> [URL] {
+        let pattern = #"<link\b[^>]*>"#
+        guard let regex = try? NSRegularExpression(
+            pattern: pattern,
+            options: [.caseInsensitive]
+        ) else {
+            return []
+        }
+        return regex.matches(
+            in: html,
+            range: NSRange(html.startIndex..., in: html)
+        )
+        .compactMap { match -> URL? in
+            guard let range = Range(match.range, in: html) else {
+                return nil
+            }
+            let tag = String(html[range])
+            let rel = attribute("rel", in: tag)?.lowercased() ?? ""
+            guard rel.contains("icon") else {
+                return nil
+            }
+            guard let href = attribute("href", in: tag) else {
+                return nil
+            }
+            return URL(string: href, relativeTo: baseURL)?.absoluteURL
+        }
+        .filter(Self.isLikelyIconURL)
+    }
+
+    private func bodyLogoIconURLs(in html: String, baseURL: URL) -> [URL] {
+        let pattern = #"<img\b[^>]*>"#
+        guard let regex = try? NSRegularExpression(
+            pattern: pattern,
+            options: [.caseInsensitive]
+        ) else {
+            return []
+        }
+        return regex.matches(
+            in: html,
+            range: NSRange(html.startIndex..., in: html)
+        )
+        .compactMap { match -> URL? in
+            guard let range = Range(match.range, in: html) else {
+                return nil
+            }
+            let tag = String(html[range])
+            guard let src = attribute("src", in: tag),
+                  let url = URL(string: src, relativeTo: baseURL)?.absoluteURL
+            else {
+                return nil
+            }
+            return Self.isLikelyBodyLogoIconURL(url) ? url : nil
+        }
+    }
+
+    private func attribute(_ name: String, in tag: String) -> String? {
+        let escaped = NSRegularExpression.escapedPattern(for: name)
+        let pattern = #"\b\#(escaped)\s*=\s*["']([^"']+)["']"#
+        guard let regex = try? NSRegularExpression(
+            pattern: pattern,
+            options: [.caseInsensitive]
+        ),
+        let match = regex.firstMatch(
+            in: tag,
+            range: NSRange(tag.startIndex..., in: tag)
+        ),
+        let range = Range(match.range(at: 1), in: tag)
+        else {
+            return nil
+        }
+        return decodeHTMLEntities(String(tag[range]))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func metaContent(in html: String, names: [String]) -> String? {
@@ -102,13 +217,21 @@ actor WebMetadataLookup {
         return [
             "appicon",
             "app-icon",
+            "product-icon",
+            "product-icons",
             "apple-touch-icon",
             "favicon",
-            "/icon",
-            "logo"
+            "/icon"
         ].contains { value.contains($0) }
             && !value.contains("screenshot")
             && !value.contains("preview")
             && !value.contains("banner")
+    }
+
+    nonisolated private static func isLikelyBodyLogoIconURL(_ url: URL) -> Bool {
+        let fileName = url.lastPathComponent.lowercased()
+        let fileExtension = url.pathExtension.lowercased()
+        return (fileName.contains("logo") || fileName.contains("icon"))
+            && ["png", "svg"].contains(fileExtension)
     }
 }

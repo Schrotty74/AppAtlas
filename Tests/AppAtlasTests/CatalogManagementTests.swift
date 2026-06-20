@@ -1,8 +1,28 @@
+import AppKit
 import Foundation
 import Testing
 @testable import AppAtlas
 
 struct CatalogManagementTests {
+    @Test
+    func localDataDirectoriesAreSeparatedByBuildBundleIdentifier() {
+        #expect(
+            AppLocalDataDirectory.directoryName(
+                bundleIdentifier: "at.schrotty.appatlas.dev"
+            ) == "AppAtlas-Dev"
+        )
+        #expect(
+            AppLocalDataDirectory.directoryName(
+                bundleIdentifier: "at.schrotty.appatlas.beta"
+            ) == "AppAtlas-Beta"
+        )
+        #expect(
+            AppLocalDataDirectory.directoryName(
+                bundleIdentifier: "at.schrotty.appatlas"
+            ) == "AppAtlas"
+        )
+    }
+
     @Test
     func importsLicenseManagerJSONAndMatchesOnlyConfidentApps() throws {
         let json = """
@@ -678,6 +698,393 @@ struct CatalogManagementTests {
     }
 
     @Test @MainActor
+    func scanDropsEntriesInsideExcludedFolders() throws {
+        let previousExcludedDirectories = UserDefaults.standard.object(
+            forKey: ScannerSettings.excludedDirectoriesKey
+        )
+        defer {
+            if let previousExcludedDirectories {
+                UserDefaults.standard.set(
+                    previousExcludedDirectories,
+                    forKey: ScannerSettings.excludedDirectoriesKey
+                )
+            } else {
+                UserDefaults.standard.removeObject(
+                    forKey: ScannerSettings.excludedDirectoriesKey
+                )
+            }
+        }
+        UserDefaults.standard.set(
+            "GDrive",
+            forKey: ScannerSettings.excludedDirectoriesKey
+        )
+
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let excludedFile = LocalAppFile(
+            fileName: "action launcher plugin 4 release.apk",
+            fileType: "apk",
+            sourceCategory: "GDrive",
+            sourceSubcategory: "Handy/Apps",
+            relativePath: "GDrive/Handy/Apps/action launcher plugin 4 release.apk",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        let includedFile = LocalAppFile(
+            fileName: "Visible Tool.dmg",
+            fileType: "dmg",
+            sourceCategory: "Tools",
+            sourceSubcategory: "",
+            relativePath: "Tools/Visible Tool.dmg",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        store.add(
+            AppEntry(
+                name: "action launcher plugin 4 release",
+                category: "GDrive",
+                subcategory: "Handy/Apps",
+                files: [excludedFile]
+            )
+        )
+
+        store.mergeScannedApps([
+            AppEntry(
+                name: "action launcher plugin 4 release",
+                category: "GDrive",
+                subcategory: "Handy/Apps",
+                files: [excludedFile]
+            ),
+            AppEntry(
+                name: "Visible Tool",
+                category: "Tools",
+                subcategory: "",
+                files: [includedFile]
+            )
+        ])
+
+        #expect(store.apps.map(\.name) == ["Visible Tool"])
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func scanDropsEntriesInsideSelectedExcludedFolderCategories() throws {
+        struct BookmarkRecord: Codable {
+            let bookmarkData: Data
+            let displayPath: String
+        }
+
+        let previousExcludedBookmarks = UserDefaults.standard.object(
+            forKey: ScannerSettings.excludedFolderBookmarksKey
+        )
+        defer {
+            if let previousExcludedBookmarks {
+                UserDefaults.standard.set(
+                    previousExcludedBookmarks,
+                    forKey: ScannerSettings.excludedFolderBookmarksKey
+                )
+            } else {
+                UserDefaults.standard.removeObject(
+                    forKey: ScannerSettings.excludedFolderBookmarksKey
+                )
+            }
+        }
+
+        let records = [
+            BookmarkRecord(
+                bookmarkData: Data(),
+                displayPath: "/ExternalDemo/Backup/Firefox"
+            ),
+            BookmarkRecord(
+                bookmarkData: Data(),
+                displayPath: "/ExternalDemo/GDrive"
+            )
+        ]
+        UserDefaults.standard.set(
+            try JSONEncoder().encode(records),
+            forKey: ScannerSettings.excludedFolderBookmarksKey
+        )
+
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let excludedFile = LocalAppFile(
+            fileName: "Firefox Profile Backup.zip",
+            fileType: "zip",
+            sourceCategory: "",
+            sourceSubcategory: "",
+            relativePath: "Profiles/Firefox Profile Backup.zip",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+        let includedFile = LocalAppFile(
+            fileName: "Visible Tool.dmg",
+            fileType: "dmg",
+            sourceCategory: "Tools",
+            sourceSubcategory: "",
+            relativePath: "Tools/Visible Tool.dmg",
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: nil
+        )
+
+        store.add(
+            AppEntry(
+                name: "Firefox Profile Backup",
+                category: "Firefox",
+                subcategory: "Profiles",
+                files: [excludedFile]
+            )
+        )
+        #expect(store.appsNeedingWebsiteReview.isEmpty)
+
+        store.mergeScannedApps([
+            AppEntry(
+                name: "Visible Tool",
+                category: "Tools",
+                subcategory: "",
+                files: [includedFile]
+            )
+        ])
+
+        #expect(store.apps.map(\.name) == ["Visible Tool"])
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func fastScanAddsConservativeKnownLocalLinks() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+
+        store.mergeScannedApps([
+            AppEntry(
+                name: "Affinity",
+                category: "Grafik",
+                subcategory: "",
+                files: [
+                    LocalAppFile(
+                        fileName: "Affinity.dmg",
+                        fileType: "dmg",
+                        sourceCategory: "Grafik",
+                        sourceSubcategory: "",
+                        relativePath: "Grafik/Affinity.dmg",
+                        sizeInBytes: 0,
+                        modifiedAt: nil,
+                        detectedVersion: nil
+                    )
+                ]
+            )
+        ])
+
+        let result = try #require(store.apps.first)
+        #expect(result.homepage == URL(string: "https://affinity.serif.com/"))
+        #expect(result.downloadURL == URL(string: "https://affinity.serif.com/"))
+        #expect(result.metadataSources?.contains("Lokaler Hersteller-Hinweis") == true)
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func fastScanAddsKnownLinksForCommonApps() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+
+        store.mergeScannedApps([
+            knownScannedApp(
+                name: "Adobe Photoshop",
+                fileName: "Adobe Photoshop v27.1.0 AIO.pkg",
+                category: "Grafik",
+                subcategory: "Adobe"
+            ),
+            knownScannedApp(
+                name: "Pearcleaner",
+                fileName: "Pearcleaner.dmg",
+                category: "System",
+                subcategory: ""
+            ),
+            knownScannedApp(
+                name: "VLC",
+                fileName: "VLC.app",
+                category: "Multimedia",
+                subcategory: "Video"
+            )
+        ])
+
+        let apps = Dictionary(uniqueKeysWithValues: store.apps.map {
+            ($0.name, $0)
+        })
+        #expect(
+            apps["Adobe Photoshop"]?.homepage
+                == URL(string: "https://www.adobe.com/products/photoshop.html")
+        )
+        #expect(
+            apps["Pearcleaner"]?.githubURL
+                == URL(string: "https://github.com/alienator88/Pearcleaner")
+        )
+        #expect(
+            apps["VLC"]?.downloadURL
+                == URL(string: "https://www.videolan.org/vlc/download-macosx.html")
+        )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func fastScanUsesCachedHomebrewCaskMetadata() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let catalogURL = directory.appendingPathComponent("catalog.json")
+        let caskURL = directory.appendingPathComponent("homebrew-cask.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        try Data(
+            """
+            [
+              {
+                "token": "kaset",
+                "full_token": "kaset",
+                "name": ["Kaset"],
+                "desc": "Audio cassette player for macOS.",
+                "homepage": "https://example.com/kaset",
+                "url": "https://example.com/kaset.dmg"
+              }
+            ]
+            """.utf8
+        ).write(to: caskURL)
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: catalogURL),
+            homebrewCaskMetadataCache: HomebrewCaskMetadataCache(
+                fileURL: caskURL
+            )
+        )
+
+        store.mergeScannedApps([
+            knownScannedApp(
+                name: "kaset",
+                fileName: "kaset-v0.9.0.dmg",
+                category: "Multimedia",
+                subcategory: "Audio"
+            )
+        ])
+
+        let app = try #require(store.apps.first)
+        #expect(app.homepage == URL(string: "https://example.com/kaset"))
+        #expect(app.downloadURL == URL(string: "https://example.com/kaset.dmg"))
+        #expect(app.summary == "Audio cassette player for macOS")
+        #expect(app.metadataSources?.contains("Homebrew-Cask-Katalog") == true)
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    @Test @MainActor
+    func cachedHomebrewLookupStaysFastForLargeCatalogs() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let caskURL = directory.appendingPathComponent("homebrew-cask.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        let casks = (0..<5_000).map {
+            """
+              {
+                "token": "tool-\($0)",
+                "full_token": "tool-\($0)",
+                "name": ["Tool \($0)"],
+                "desc": "Utility app \($0)",
+                "homepage": "https://example.com/tool-\($0)",
+                "url": "https://example.com/tool-\($0).dmg"
+              }
+            """
+        }.joined(separator: ",\n")
+        try Data("[\(casks)]".utf8).write(to: caskURL)
+        let cache = HomebrewCaskMetadataCache(fileURL: caskURL)
+        let apps = (0..<400).map {
+            AppEntry(
+                name: "Tool \($0)",
+                category: "Tools",
+                subcategory: "",
+                files: [
+                    localFile(
+                        named: "tool-\($0).dmg",
+                        category: "Tools"
+                    )
+                ]
+            )
+        }
+        let startedAt = ContinuousClock.now
+        let matches = apps.compactMap { cache.metadata(for: $0) }
+        let duration = startedAt.duration(to: .now)
+
+        #expect(matches.count == apps.count)
+        #expect(duration < .seconds(3))
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    @Test @MainActor
+    func fastScanReusesConfirmedLocalLinks() throws {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let confirmedStore = ConfirmedMetadataMatchStore(defaults: defaults)
+        confirmedStore.confirm(
+            appName: "Example Tool",
+            url: try #require(URL(string: "https://example.com/tool"))
+        )
+        let urls = confirmedStore.confirmedURLs(for: "Example Tool")
+
+        #expect(urls == [URL(string: "https://example.com/tool")])
+    }
+
+    @Test
+    func scannerNameCleanupRemovesLeadingNumbersAndInstallerSuffixes() {
+        #expect(
+            AppNameNormalizer.displayName(for: "02 RapidRAW.dmg")
+                == "RapidRAW"
+        )
+        #expect(
+            AppNameNormalizer.displayName(for: "kaset-v0.9.0.dmg")
+                == "kaset"
+        )
+        #expect(
+            AppNameNormalizer.displayName(
+                for: "Adobe Photoshop v27.1.0 AIO.pkg"
+            ) == "Adobe Photoshop"
+        )
+    }
+
+    @Test
+    func catalogEntryFilterDropsTechnicalInstallerHelpers() {
+        let filter = CatalogEntryFilter()
+        #expect(!filter.shouldInclude(localFile(named: "Activation.pkg")))
+        #expect(!filter.shouldInclude(localFile(named: "Adobe Runtime UB.pkg")))
+        #expect(filter.shouldInclude(localFile(named: "Adobe Photoshop.pkg")))
+    }
+
+    @Test @MainActor
     func keepsManualMetadataEdits() throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -740,6 +1147,44 @@ struct CatalogManagementTests {
         #expect(
             store.apps.first?.details == "Eine konkrete Beschreibung."
         )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func automaticForeignDescriptionDoesNotStartTranslationDownload() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL),
+            targetLanguageProvider: { "de" }
+        )
+        let app = AppEntry(
+            name: "Metadata Test",
+            details: "Metadata Test ist eine Anwendung aus dem Bereich Test. Beschreibung und offizielle Links können lokal ergänzt oder online verifiziert werden.",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        store.add(app)
+
+        store.applyOnlineMetadata(
+            AppleArtworkLookup.Metadata(
+                description: "A focused app for managing audio recordings.",
+                homepage: nil,
+                downloadURL: nil,
+                artworkURL: nil
+            ),
+            iconData: nil,
+            to: app.id
+        )
+
+        let suggestion = try #require(store.apps.first?.suggestions.first)
+        #expect(suggestion.kind == .description)
+        #expect(suggestion.needsTranslation == false)
+        #expect(store.pendingTranslation == nil)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
@@ -901,6 +1346,49 @@ struct CatalogManagementTests {
         )
     }
 
+    @Test @MainActor
+    func automaticOnlineIconsAreNotReusedAcrossDifferentApps() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        store.add([
+            AppEntry(
+                name: "Adobe Photoshop",
+                category: "Grafik",
+                subcategory: "Adobe",
+                files: []
+            ),
+            AppEntry(
+                name: "Adobe Lightroom Classic",
+                category: "Grafik",
+                subcategory: "Adobe",
+                files: []
+            )
+        ])
+        let iconData = try #require(testIconData())
+        let photoshopID = try #require(
+            store.apps.first { $0.name == "Adobe Photoshop" }?.id
+        )
+        let lightroomID = try #require(
+            store.apps.first { $0.name == "Adobe Lightroom Classic" }?.id
+        )
+
+        #expect(store.applyIconData(iconData, to: photoshopID))
+        #expect(!store.applyIconData(iconData, to: lightroomID))
+        #expect(
+            store.apps.first { $0.id == photoshopID }?.iconOrigin == .website
+        )
+        #expect(
+            store.apps.first { $0.id == lightroomID }?.hasIcon == false
+        )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
     @Test
     func repositoryPagesAreMetadataSourcesButNotGenericIconSources() throws {
         let github = try #require(URL(string: "https://github.com/example/app"))
@@ -1038,6 +1526,71 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func metadataScorerRejectsDifferentProductEditions() {
+        #expect(
+            AppNameNormalizer.displayName(
+                for: "Adobe Photoshop v27.1.0 AIO.pkg"
+            ) == "Adobe Photoshop"
+        )
+
+        let app = AppEntry(
+            name: "Adobe Photoshop",
+            category: "Grafik",
+            subcategory: "Adobe",
+            files: [
+                LocalAppFile(
+                    fileName: "Adobe Photoshop v27.1.0 AIO.pkg",
+                    fileType: "pkg",
+                    sourceCategory: "Grafik",
+                    sourceSubcategory: "Adobe",
+                    relativePath: "Grafik/Adobe/Adobe Photoshop v27.1.0 AIO.pkg",
+                    sizeInBytes: 0,
+                    modifiedAt: nil,
+                    detectedVersion: "27.1.0"
+                )
+            ]
+        )
+        let elements = MetadataMatchCandidate(
+            name: "Adobe Photoshop Elements 2026",
+            contextText: "Adobe photo editor",
+            developer: "Adobe",
+            url: URL(string: "https://www.adobe.com/products/photoshop-elements.html"),
+            bundleIdentifier: nil,
+            sourceReliability: 0.95
+        )
+        let photoshop = MetadataMatchCandidate(
+            name: "Adobe Photoshop",
+            contextText: "Adobe photo editor",
+            developer: "Adobe",
+            url: URL(string: "https://www.adobe.com/products/photoshop.html"),
+            bundleIdentifier: nil,
+            sourceReliability: 0.95
+        )
+
+        #expect(MetadataMatchScorer.score(app: app, candidate: elements) == 0)
+        #expect(
+            MetadataMatchScorer.hasConflictingProductQualifier(
+                appName: "Adobe Photoshop",
+                candidateURL: URL(
+                    string: "https://www.adobe.com/products/photoshop-elements/whats-new.html"
+                )
+            )
+        )
+        #expect(
+            !MetadataMatchScorer.hasConflictingProductQualifier(
+                appName: "Adobe Photoshop",
+                candidateURL: URL(
+                    string: "https://www.adobe.com/products/photoshop.html"
+                )
+            )
+        )
+        #expect(
+            MetadataMatchScorer.score(app: app, candidate: photoshop)
+                > MetadataMatchScorer.automaticThreshold
+        )
+    }
+
+    @Test
     func metadataScorerUsesBundleIdentifierAndCategoryContext() {
         let file = LocalAppFile(
             fileName: "Affinity.app",
@@ -1084,6 +1637,115 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func metadataScorerUsesBundleIdentifierToBreakCloseTies() throws {
+        let app = AppEntry(
+            name: "AppCleaner",
+            category: "System",
+            subcategory: "Cleaner",
+            files: [
+                LocalAppFile(
+                    fileName: "AppCleaner.app",
+                    fileType: "app",
+                    sourceCategory: "System",
+                    sourceSubcategory: "Cleaner",
+                    relativePath: "System/Cleaner/AppCleaner.app",
+                    sizeInBytes: 0,
+                    modifiedAt: nil,
+                    detectedVersion: nil,
+                    bundleIdentifier: "net.freemacsoft.AppCleaner"
+                )
+            ]
+        )
+        let wrong = MetadataMatchCandidate(
+            name: "AppCleaner",
+            contextText: "Cleaner utility",
+            developer: nil,
+            url: nil,
+            bundleIdentifier: "com.example.AppCleaner",
+            sourceReliability: 0.95
+        )
+        let correct = MetadataMatchCandidate(
+            name: "AppCleaner",
+            contextText: "Cleaner utility",
+            developer: nil,
+            url: nil,
+            bundleIdentifier: "net.freemacsoft.AppCleaner",
+            sourceReliability: 0.95
+        )
+
+        let selection = try #require(
+            MetadataMatchScorer.result(
+                app: app,
+                ranked: MetadataMatchScorer.ranked(
+                    app: app,
+                    candidates: [wrong, correct],
+                    candidate: { $0 }
+                )
+            )
+        )
+
+        #expect(selection.candidate.bundleIdentifier == correct.bundleIdentifier)
+        #expect(selection.match.decision == .automatic)
+        #expect(
+            selection.match.margin
+                >= MetadataMatchScorer.minimumAutomaticMargin
+        )
+    }
+
+    @Test
+    func metadataScorerUsesConfiguredReviewThresholds() {
+        #expect(MetadataMatchScorer.automaticThreshold == 0.80)
+        #expect(MetadataMatchScorer.reviewThreshold == 0.65)
+        #expect(MetadataMatchScorer.minimumAutomaticMargin == 0.08)
+    }
+
+    @Test @MainActor
+    func websiteReviewListOnlyShowsUnresolvedLookupMisses() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        store.add([
+            AppEntry(
+                name: "Only Missing Homepage",
+                category: "Test",
+                subcategory: "",
+                files: []
+            ),
+            AppEntry(
+                name: "Failed Lookup",
+                category: "Test",
+                subcategory: "",
+                files: [],
+                onlineLookupStatus: .failed
+            ),
+            AppEntry(
+                name: "Suppressed Failed Lookup",
+                category: "Test",
+                subcategory: "",
+                files: [],
+                websitePromptSuppressed: true,
+                onlineLookupStatus: .failed
+            ),
+            AppEntry(
+                name: "Found Homepage",
+                category: "Test",
+                subcategory: "",
+                homepage: URL(string: "https://example.com"),
+                files: [],
+                onlineLookupStatus: .failed
+            )
+        ])
+
+        #expect(store.appsNeedingWebsiteReview.map(\.name) == ["Failed Lookup"])
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test
     func confirmedMetadataMatchesRemainLocalAndReusable() throws {
         let suiteName = "AppAtlasTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -1103,6 +1765,23 @@ struct CatalogManagementTests {
             candidateURL: url
         ) == 1)
         #expect(store.isConfirmed(appName: "Example", appleTrackID: 42))
+
+        store.reject(appName: "Rejected Example", url: url)
+        store.reject(appName: "Rejected Example", appleTrackID: 99)
+        let reloadedStore = ConfirmedMetadataMatchStore(defaults: defaults)
+
+        #expect(reloadedStore.isRejected(
+            appName: "Rejected Example",
+            url: url
+        ))
+        #expect(reloadedStore.isRejected(
+            appName: "Rejected Example",
+            appleTrackID: 99
+        ))
+        #expect(reloadedStore.domainScore(
+            for: "Rejected Example",
+            candidateURL: url
+        ) == 0)
     }
 
     @Test
@@ -2394,9 +3073,71 @@ struct CatalogManagementTests {
     }
 
     @MainActor
+    private func knownScannedApp(
+        name: String,
+        fileName: String,
+        category: String,
+        subcategory: String
+    ) -> AppEntry {
+        AppEntry(
+            name: name,
+            category: category,
+            subcategory: subcategory,
+            files: [
+                localFile(
+                    named: fileName,
+                    category: category,
+                    subcategory: subcategory
+                )
+            ]
+        )
+    }
+
+    private func localFile(
+        named fileName: String,
+        category: String = "Test",
+        subcategory: String = ""
+    ) -> LocalAppFile {
+        LocalAppFile(
+            fileName: fileName,
+            fileType: (fileName as NSString).pathExtension.lowercased(),
+            sourceCategory: category,
+            sourceSubcategory: subcategory,
+            relativePath: [category, subcategory, fileName]
+                .filter { !$0.isEmpty }
+                .joined(separator: "/"),
+            sizeInBytes: 0,
+            modifiedAt: nil,
+            detectedVersion: AppNameNormalizer.detectVersion(in: fileName)
+        )
+    }
+
+    private func testIconData() -> Data? {
+        let size = NSSize(width: 128, height: 128)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(
+            roundedRect: NSRect(origin: .zero, size: size),
+            xRadius: 28,
+            yRadius: 28
+        ).fill()
+        NSColor.white.setFill()
+        NSBezierPath(
+            ovalIn: NSRect(x: 38, y: 38, width: 52, height: 52)
+        ).fill()
+        image.unlockFocus()
+        guard let tiff = image.tiffRepresentation else {
+            return nil
+        }
+        return IconImageConverter.compactPNG(from: tiff)
+    }
+
+    @MainActor
     private func makeCatalogStore(
         persistence: CatalogPersistence = CatalogPersistence(),
         licenseStorage: any LicenseStorage = InMemoryLicenseStorage(),
+        homebrewCaskMetadataCache: HomebrewCaskMetadataCache = .shared,
         targetLanguageProvider: @escaping @Sendable () -> String = {
             AppLanguageChoice.current.resolvedLanguage()
         }
@@ -2404,6 +3145,7 @@ struct CatalogManagementTests {
         CatalogStore(
             persistence: persistence,
             licenseStorage: licenseStorage,
+            homebrewCaskMetadataCache: homebrewCaskMetadataCache,
             targetLanguageProvider: targetLanguageProvider
         )
     }

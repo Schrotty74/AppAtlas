@@ -262,7 +262,7 @@ struct AppSettingsView: View {
 
                 HStack {
                     TextField(
-                        "Ordnername oder relativer Pfad",
+                        "Ordnername oder Muster ausschließen",
                         text: $newExcludedDirectory
                     )
                     Button("Hinzufügen") {
@@ -291,8 +291,8 @@ struct AppSettingsView: View {
                 }
 
                 Text(
-                    "Ein Ordnername gilt in jeder Ebene. Ein relativer Pfad "
-                        + "wie „Kategorie/Archiv“ gilt nur für diesen Pfad. "
+                    "Für wiederkehrende Ordnernamen oder relative Pfade. "
+                        + "Für konkrete lokale Ordner oben die Ordnerauswahl nutzen. "
                         + "Die Änderung wird beim nächsten Scan angewendet."
                 )
                 .foregroundStyle(.secondary)

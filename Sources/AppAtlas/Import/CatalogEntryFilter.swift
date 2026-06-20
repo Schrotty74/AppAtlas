@@ -14,6 +14,8 @@ struct CatalogEntryFilter: Sendable {
             .lowercased()
 
         let technicalTerms = [
+            "activation",
+            "adobe runtime",
             "keygen",
             "license.zip",
             "uninstall ",
@@ -22,6 +24,7 @@ struct CatalogEntryFilter: Sendable {
             "sanitizer",
             "pop-up fixer",
             "runtime_",
+            "runtime ub",
             "guest-tools"
         ]
         return !technicalTerms.contains { name.contains($0) }

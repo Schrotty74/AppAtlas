@@ -28,6 +28,13 @@ struct ScanImportView: View {
                 .font(.callout)
                 .foregroundStyle(theme.mutedText)
 
+                Label(
+                    "Tipp: Das reine Einlesen ist lokal. Icons aus echten .app-Bundles werden direkt übernommen. Online-Daten wie Beschreibungen, Homepages und Downloadlinks solltest du danach bewusst über „Online-Daten aktualisieren“ ergänzen; die erweiterte Online-Suche kann bei großen Sammlungen lange dauern.",
+                    systemImage: "clock.badge.exclamationmark"
+                )
+                .font(.callout)
+                .foregroundStyle(.orange)
+
                 HStack {
                     Button("Quellordner auswählen …", action: chooseFolder)
                     Text(sourceBookmark.displayPath)

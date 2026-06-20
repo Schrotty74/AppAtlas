@@ -28,6 +28,7 @@ struct AppEditorView: View {
     @State private var iconURL: String = ""
     @State private var showIconImporter = false
     @State private var isLoadingIcon = false
+    @State private var iconLoadError: String?
     @State private var isTargetedForIconDrop = false
     @State private var licenseRecord = AppLicenseRecord()
     @State private var revealSerial = false
@@ -74,16 +75,30 @@ struct AppEditorView: View {
                             }
                         }
                     }
-                    HStack {
-                        TextField("Direkte Bild-URL für App-Icon", text: $iconURL)
-                        Button("Icon laden") {
-                            loadIconFromURL()
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Direkte Bild-URL für App-Icon")
+                            .font(.caption)
+                            .foregroundStyle(theme.mutedText)
+                        HStack {
+                            TextField(
+                                "https://example.com/icon.png",
+                                text: $iconURL
+                            )
+                            .textFieldStyle(.roundedBorder)
+                            Button("Icon laden") {
+                                loadIconFromURL()
+                            }
+                            .disabled(
+                                iconURL.trimmingCharacters(
+                                    in: .whitespacesAndNewlines
+                                ).isEmpty || isLoadingIcon
+                            )
                         }
-                        .disabled(
-                            iconURL.trimmingCharacters(
-                                in: .whitespacesAndNewlines
-                            ).isEmpty || isLoadingIcon
-                        )
+                        if let iconLoadError {
+                            Text(iconLoadError)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
                     }
                     if isLoadingIcon {
                         ProgressView("Icon wird geladen …")
@@ -337,13 +352,20 @@ struct AppEditorView: View {
 
     private func loadIconFromURL() {
         guard let url = url(iconURL) else {
+            iconLoadError = "Bitte eine vollständige URL mit https:// eingeben."
             return
         }
+        iconLoadError = nil
         isLoadingIcon = true
         Task {
-            if let data = await OnlineIconLoader.shared.iconData(from: url) {
+            do {
+                let data = try await OnlineIconLoader.shared.manualIconData(
+                    from: url
+                )
                 iconData = data
                 iconWasChanged = true
+            } catch {
+                iconLoadError = error.localizedDescription
             }
             isLoadingIcon = false
         }

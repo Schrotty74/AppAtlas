@@ -17,8 +17,8 @@ struct ContentSheetsModifier: ViewModifier {
             ) { sheet in
                 sheetContent(for: sheet)
             }
-            .sheet(item: $store.pendingWebsitePrompt) { prompt in
-                WebsitePromptView(prompt: prompt)
+            .sheet(item: $store.websiteReviewSummary) { summary in
+                WebsiteReviewSummaryView(summary: summary)
                     .environmentObject(store)
             }
     }

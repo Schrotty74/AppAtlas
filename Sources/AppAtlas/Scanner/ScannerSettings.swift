@@ -49,6 +49,21 @@ enum ScannerSettings {
             }
     }
 
+    static var excludedPathHints: [String] {
+        let bookmarkHints = excludedFolderDisplayPaths.flatMap { path in
+            let components = path
+                .split(separator: "/")
+                .map(String.init)
+            guard let last = components.last else {
+                return [path]
+            }
+            return [path, last]
+        }
+        return Array(Set(excludedDirectories + bookmarkHints)).sorted {
+            $0.localizedStandardCompare($1) == .orderedAscending
+        }
+    }
+
     static func addExcludedFolder(_ url: URL) throws {
         let standardizedURL = url.standardizedFileURL
         let bookmarkData = try standardizedURL.bookmarkData(

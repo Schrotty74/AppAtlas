@@ -77,6 +77,27 @@ struct ContentToolbar: ToolbarContent {
             .disabled(store.isEnriching || store.apps.isEmpty)
 
             if store.isEnriching {
+                Button {
+                    if store.isEnrichmentPaused {
+                        store.resumeEnrichment()
+                    } else {
+                        store.pauseEnrichment()
+                    }
+                } label: {
+                    Label(
+                        store.isEnrichmentPaused ? "Fortsetzen" : "Pausieren",
+                        systemImage: store.isEnrichmentPaused
+                            ? "play.fill"
+                            : "pause.fill"
+                    )
+                }
+
+                Button(role: .destructive) {
+                    store.cancelEnrichment()
+                } label: {
+                    Label("Abbrechen", systemImage: "xmark.circle")
+                }
+
                 Text(store.enrichmentProgress)
             }
 
@@ -211,13 +232,38 @@ private struct ContentNavigationToolbar: View {
             )
             .disabled(store.isEnriching || store.apps.isEmpty)
 
+            if store.isEnriching {
+                Button {
+                    if store.isEnrichmentPaused {
+                        store.resumeEnrichment()
+                    } else {
+                        store.pauseEnrichment()
+                    }
+                } label: {
+                    Label(
+                        store.isEnrichmentPaused ? "Fortsetzen" : "Pausieren",
+                        systemImage: store.isEnrichmentPaused
+                            ? "play.fill"
+                            : "pause.fill"
+                    )
+                }
+                .help(store.isEnrichmentPaused ? "Online-Aktualisierung fortsetzen" : "Online-Aktualisierung pausieren")
+
+                Button(role: .destructive) {
+                    store.cancelEnrichment()
+                } label: {
+                    Label("Abbrechen", systemImage: "xmark.circle")
+                }
+                .help("Online-Aktualisierung abbrechen")
+            }
+
             Button(action: showScanner) {
                 Label(
-                    "Apps scannen",
-                    systemImage: "magnifyingglass.circle.fill"
+                    "Ordner scannen",
+                    systemImage: "folder.badge.plus"
                 )
             }
-            .help("Einen frei gewählten Quellordner rein lesend scannen")
+            .help("Einen lokalen Ordner auswählen und Apps einlesen")
 
             Menu {
                 ForEach(AppLayout.allCases) { layout in
