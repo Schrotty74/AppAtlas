@@ -1,5 +1,12 @@
 # Projekthistorie
 
+## 1.2.0-beta.2 – Metadaten- und Stabilitätskorrekturen
+
+- Zweite Beta der 1.2.0-Reihe mit den aktuellen Korrekturen für
+  Metadaten-Vorschläge, Icon-Verarbeitung und lokale Datenpfade.
+- 1.2.0-beta.1 bleibt als frühere Beta erhalten; diese Version ist ein
+  separates Pre-Release.
+
 ## 1.2.0-beta.1 – Metadaten, Icons und getrennte Beta-Daten
 
 - Development-, Beta- und Release-Builds verwenden getrennte lokale
