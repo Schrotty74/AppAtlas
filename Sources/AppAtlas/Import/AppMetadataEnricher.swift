@@ -48,9 +48,9 @@ struct AppMetadataEnricher: Sendable {
             sourceText: cleaned
         )
         guard !hints.isEmpty else {
-            return String(cleaned.prefix(900))
+            return String(cleaned.prefix(3000))
         }
-        return String(cleaned.prefix(900))
+        return String(cleaned.prefix(3000))
             + "\n\nTypische Funktionen:\n"
             + hints.prefix(4).map { "• \($0)" }.joined(separator: "\n")
     }

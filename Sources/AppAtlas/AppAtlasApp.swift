@@ -22,11 +22,6 @@ struct AppAtlasApp: App {
                 .environmentObject(store)
                 .environment(\.locale, selectedLanguage.locale)
                 .frame(minWidth: 980, minHeight: 620)
-                .task {
-                    if store.apps.isEmpty {
-                        await store.loadBundledCatalog()
-                    }
-                }
         }
         .windowToolbarStyle(.unified)
         Settings {

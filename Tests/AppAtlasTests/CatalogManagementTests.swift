@@ -1,9 +1,28 @@
 import AppKit
 import Foundation
+import ImageIO
 import Testing
 @testable import AppAtlas
 
 struct CatalogManagementTests {
+    @Test
+    func cinebenchLogoURLDownloadsValidPNG() async throws {
+        let url = try #require(URL(
+            string: "https://cinebench.net/wp-content/uploads/2025/09/Cinebench_logo.png"
+        ))
+        let (data, response) = try await URLSession.shared.data(from: url)
+        let http = try #require(response as? HTTPURLResponse)
+
+        #expect(http.statusCode == 200)
+        #expect(data.starts(with: [0x89, 0x50, 0x4E, 0x47]))
+
+        let source = try #require(
+            CGImageSourceCreateWithData(data as CFData, nil)
+        )
+        #expect(CGImageSourceGetCount(source) > 0)
+        #expect(CGImageSourceGetType(source) as String? == "public.png")
+    }
+
     @Test
     func localDataDirectoriesAreSeparatedByBuildBundleIdentifier() {
         #expect(
@@ -256,21 +275,13 @@ struct CatalogManagementTests {
 
         await store.loadBundledCatalog()
 
-        let app = try #require(store.apps.first)
         #expect(store.pendingTranslation == nil)
 
         store.refreshDescriptionTranslations()
 
         let refreshedApp = try #require(store.apps.first)
-        #expect(
-            refreshedApp.suggestions.contains {
-                $0.kind == .description
-                    && $0.needsTranslation
-                    && $0.detectedLanguage == "en"
-            }
-        )
-        #expect(store.pendingTranslation?.appID == app.id)
-        #expect(store.pendingTranslation?.targetLanguage == "de")
+        #expect(refreshedApp.suggestions.isEmpty)
+        #expect(store.pendingTranslation == nil)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
@@ -307,7 +318,6 @@ struct CatalogManagementTests {
 
         await store.loadBundledCatalog()
 
-        let german = try #require(store.apps.first { $0.name == "German" })
         #expect(store.pendingTranslation == nil)
 
         store.refreshDescriptionTranslations()
@@ -319,15 +329,8 @@ struct CatalogManagementTests {
             store.apps.first { $0.name == "German" }
         )
         #expect(!refreshedEnglish.suggestions.contains { $0.kind == .description })
-        #expect(
-            refreshedGerman.suggestions.contains {
-                $0.kind == .description
-                    && $0.needsTranslation
-                    && $0.detectedLanguage == "de"
-            }
-        )
-        #expect(store.pendingTranslation?.appID == german.id)
-        #expect(store.pendingTranslation?.targetLanguage == "en")
+        #expect(!refreshedGerman.suggestions.contains { $0.kind == .description })
+        #expect(store.pendingTranslation == nil)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
@@ -996,8 +999,94 @@ struct CatalogManagementTests {
         let app = try #require(store.apps.first)
         #expect(app.homepage == URL(string: "https://example.com/kaset"))
         #expect(app.downloadURL == URL(string: "https://example.com/kaset.dmg"))
-        #expect(app.summary == "Audio cassette player for macOS")
+        let suggestion = try #require(app.suggestions.first)
+        #expect(suggestion.value == "Audio cassette player for macOS.")
+        #expect(!suggestion.needsTranslation)
+        #expect(store.pendingTranslation == nil)
         #expect(app.metadataSources?.contains("Homebrew-Cask-Katalog") == true)
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    @Test
+    func homebrewCaskLookupHandlesVersionedLocalFileNames() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let caskURL = directory.appendingPathComponent("homebrew-cask.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        try Data(
+            """
+            [
+              {
+                "token": "iina",
+                "full_token": "iina",
+                "name": ["IINA"],
+                "desc": "Modern media player.",
+                "homepage": "https://iina.io/",
+                "url": "https://dl.iina.io/IINA.v1.4.3.dmg"
+              },
+              {
+                "token": "mos",
+                "full_token": "mos",
+                "name": ["Mos"],
+                "desc": "Mouse scrolling utility.",
+                "homepage": "https://mos.caldis.me/",
+                "url": "https://github.com/Caldis/Mos/releases/latest"
+              },
+              {
+                "token": "latest",
+                "full_token": "latest",
+                "name": ["Latest"],
+                "desc": "App update tracker.",
+                "homepage": "https://max.codes/latest",
+                "url": "https://max.codes/latest/0.11.zip"
+              }
+            ]
+            """.utf8
+        ).write(to: caskURL)
+        let cache = HomebrewCaskMetadataCache(fileURL: caskURL)
+
+        let iina = AppEntry(
+            name: "IINA.v",
+            category: "Multimedia",
+            subcategory: "",
+            files: [
+                localFile(
+                    named: "IINA.v1.4.2-build164.dmg",
+                    category: "Multimedia"
+                )
+            ]
+        )
+        let mos = AppEntry(
+            name: "Mos.Versions",
+            category: "Hardware",
+            subcategory: "Mouse",
+            files: [
+                localFile(
+                    named: "Mos.Versions.4.2.0-20260505.1.zip",
+                    category: "Hardware",
+                    subcategory: "Mouse"
+                )
+            ]
+        )
+        let latest = AppEntry(
+            name: "",
+            category: "System",
+            subcategory: "Updates",
+            files: [
+                localFile(
+                    named: "Latest.zip",
+                    category: "System",
+                    subcategory: "Updates"
+                )
+            ]
+        )
+
+        #expect(cache.metadata(for: iina)?.homepage == URL(string: "https://iina.io/"))
+        #expect(cache.metadata(for: mos)?.homepage == URL(string: "https://mos.caldis.me/"))
+        #expect(cache.metadata(for: latest)?.homepage == URL(string: "https://max.codes/latest"))
         try? FileManager.default.removeItem(at: directory)
     }
 
@@ -1057,6 +1146,20 @@ struct CatalogManagementTests {
         let urls = confirmedStore.confirmedURLs(for: "Example Tool")
 
         #expect(urls == [URL(string: "https://example.com/tool")])
+        #expect(confirmedStore.confirmedURLs(
+            matchingHomepage: try #require(URL(string: "https://example.com/"))
+        ) == [URL(string: "https://example.com/tool")])
+        confirmedStore.confirm(
+            appName: "Rejected Tool",
+            url: try #require(URL(string: "https://example.com/rejected-icon.png"))
+        )
+        confirmedStore.reject(
+            appName: "Rejected Tool",
+            url: try #require(URL(string: "https://example.com/rejected-icon.png"))
+        )
+        #expect(!confirmedStore.confirmedURLs(
+            matchingHomepage: try #require(URL(string: "https://example.com"))
+        ).contains(try #require(URL(string: "https://example.com/rejected-icon.png"))))
     }
 
     @Test
@@ -1073,6 +1176,27 @@ struct CatalogManagementTests {
             AppNameNormalizer.displayName(
                 for: "Adobe Photoshop v27.1.0 AIO.pkg"
             ) == "Adobe Photoshop"
+        )
+        #expect(AppNameNormalizer.displayName(for: "IINA.v") == "IINA")
+        #expect(
+            AppNameNormalizer.displayName(for: "Mos.Versions") == "Mos"
+        )
+        #expect(
+            AppNameNormalizer.displayName(for: "Lap_0.2.0_aarch64.dmg")
+                == "Lap"
+        )
+        #expect(
+            AppNameNormalizer.displayName(
+                for: "peazip-10.9.0.DARWIN.aarch64.dmg"
+            ) == "peazip"
+        )
+        #expect(
+            AppNameNormalizer.displayName(for: "Example_arm64.zip")
+                == "Example"
+        )
+        #expect(
+            AppNameNormalizer.displayName(for: "Example_x86_64.zip")
+                == "Example"
         )
     }
 
@@ -1122,6 +1246,7 @@ struct CatalogManagementTests {
         let icon = try #require(Data(base64Encoded:
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
         ))
+        let description = "Eine konkrete Beschreibung \(UUID().uuidString)."
         let app = AppEntry(
             name: "Metadata Test",
             details: "Metadata Test ist eine Anwendung aus dem Bereich Test. Beschreibung und offizielle Links können lokal ergänzt oder online verifiziert werden.",
@@ -1134,7 +1259,7 @@ struct CatalogManagementTests {
 
         store.applyOnlineMetadata(
             AppleArtworkLookup.Metadata(
-                description: "Eine konkrete Beschreibung.",
+                description: description,
                 homepage: nil,
                 downloadURL: nil,
                 artworkURL: nil
@@ -1144,16 +1269,17 @@ struct CatalogManagementTests {
         )
 
         #expect(store.apps.first?.hasIcon == true)
-        #expect(
-            store.apps.first?.details == "Eine konkrete Beschreibung."
-        )
+        #expect(store.pendingTranslation == nil)
+        let suggestion = try #require(store.apps.first?.suggestions.first)
+        store.acceptSuggestion(suggestion.id, for: app.id)
+        #expect(store.apps.first?.details == description)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
     }
 
     @Test @MainActor
-    func automaticForeignDescriptionDoesNotStartTranslationDownload() throws {
+    func automaticForeignDescriptionStartsTranslationDownload() throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
@@ -1185,6 +1311,108 @@ struct CatalogManagementTests {
         #expect(suggestion.kind == .description)
         #expect(suggestion.needsTranslation == false)
         #expect(store.pendingTranslation == nil)
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func acceptedDescriptionSuggestionDoesNotReappearAfterRefresh() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL),
+            targetLanguageProvider: { "de" }
+        )
+        let description = "Akzeptierte Beschreibung \(UUID().uuidString)."
+        let app = AppEntry(
+            name: "Accepted Description Test \(UUID().uuidString)",
+            details: "Beschreibung und offizielle Links können lokal ergänzt oder online verifiziert werden.",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        store.add(app)
+
+        store.applyOnlineMetadata(
+            AppleArtworkLookup.Metadata(
+                description: description,
+                homepage: nil,
+                downloadURL: nil,
+                artworkURL: nil
+            ),
+            iconData: nil,
+            to: app.id
+        )
+        let suggestion = try #require(store.apps.first?.suggestions.first)
+        store.acceptSuggestion(suggestion.id, for: app.id)
+
+        #expect(store.apps.first?.suggestions.isEmpty == true)
+
+        store.applyOnlineMetadata(
+            AppleArtworkLookup.Metadata(
+                description: description,
+                homepage: nil,
+                downloadURL: nil,
+                artworkURL: nil
+            ),
+            iconData: nil,
+            to: app.id
+        )
+
+        #expect(store.apps.first?.suggestions.isEmpty == true)
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func rejectedDescriptionSuggestionDoesNotReappearAfterRefresh() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL),
+            targetLanguageProvider: { "de" }
+        )
+        let description = "Abgelehnte Beschreibung \(UUID().uuidString)."
+        let app = AppEntry(
+            name: "Rejected Description Test \(UUID().uuidString)",
+            details: "Beschreibung und offizielle Links können lokal ergänzt oder online verifiziert werden.",
+            category: "Test",
+            subcategory: "",
+            files: []
+        )
+        store.add(app)
+
+        store.applyOnlineMetadata(
+            AppleArtworkLookup.Metadata(
+                description: description,
+                homepage: nil,
+                downloadURL: nil,
+                artworkURL: nil
+            ),
+            iconData: nil,
+            to: app.id
+        )
+        let suggestion = try #require(store.apps.first?.suggestions.first)
+        store.dismissSuggestion(suggestion.id, for: app.id)
+
+        #expect(store.apps.first?.suggestions.isEmpty == true)
+
+        store.applyOnlineMetadata(
+            AppleArtworkLookup.Metadata(
+                description: description,
+                homepage: nil,
+                downloadURL: nil,
+                artworkURL: nil
+            ),
+            iconData: nil,
+            to: app.id
+        )
+
+        #expect(store.apps.first?.suggestions.isEmpty == true)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
@@ -1317,6 +1545,25 @@ struct CatalogManagementTests {
     }
 
     @Test
+    func transparentWhitePixelsDoNotMakeIconTooBright() throws {
+        let size = NSSize(width: 128, height: 128)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        NSColor.white.withAlphaComponent(0.04).setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
+        NSColor.black.setFill()
+        NSBezierPath(
+            ovalIn: NSRect(x: 56, y: 56, width: 16, height: 16)
+        ).fill()
+        image.unlockFocus()
+
+        let tiff = try #require(image.tiffRepresentation)
+        let png = try #require(IconImageConverter.compactPNG(from: tiff))
+
+        #expect(IconQualityInspector.isLikelyAppIcon(png))
+    }
+
+    @Test
     func onlineIconChecksRequireQualityAndIconLikeURLs() throws {
         let iconData = try #require(Data(base64Encoded: """
         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
@@ -1342,6 +1589,40 @@ struct CatalogManagementTests {
                 try #require(
                     URL(string: "https://example.com/images/banner-logo.png")
                 )
+            )
+        )
+        let nextAbsoluteURL = try #require(URL(
+            string: "https://example.com/_next/image?url=https%3A%2F%2Fcdn.example.com%2Fassets%2Fapp-icon.svg&w=256&q=75"
+        ))
+        let nextRelativeURL = try #require(URL(
+            string: "https://example.com/_next/image?url=%2Fassets%2Fproduct-icon.png&w=512&q=80"
+        ))
+        let regularURL = try #require(URL(
+            string: "https://example.com/_assets/app-icon.png?w=512"
+        ))
+
+        #expect(
+            OnlineIconLoader.imageSourceURL(from: nextAbsoluteURL)
+                .absoluteString == "https://cdn.example.com/assets/app-icon.svg"
+        )
+        #expect(
+            OnlineIconLoader.imageSourceURL(from: nextRelativeURL)
+                .absoluteString == "https://example.com/assets/product-icon.png"
+        )
+        #expect(
+            OnlineIconLoader.imageSourceURL(from: regularURL)
+                .absoluteString == regularURL.absoluteString
+        )
+        #expect(
+            OnlineIconLoader.cacheKey(
+                for: try #require(URL(
+                    string: "https://example.com/assets/app-icon.png#preview"
+                ))
+            ) == "https://example.com/assets/app-icon.png"
+        )
+        #expect(
+            WebMetadataLookup.isLikelyIconURL(
+                OnlineIconLoader.imageSourceURL(from: nextAbsoluteURL)
             )
         )
     }
@@ -1383,6 +1664,117 @@ struct CatalogManagementTests {
         )
         #expect(
             store.apps.first { $0.id == lightroomID }?.hasIcon == false
+        )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func automaticOnlineIconCanBeSharedBySameHomepageFamily() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let homepage = try #require(URL(string: "https://cinebench.net/"))
+        let iconData = try #require(testIconData())
+        let cinebench2024 = AppEntry(
+            name: "Cinebench 2024",
+            category: "Benchmark",
+            subcategory: "",
+            homepage: homepage,
+            files: []
+        )
+        let cinebenchR23 = AppEntry(
+            name: "CinebenchR23",
+            category: "Benchmark",
+            subcategory: "",
+            homepage: homepage,
+            files: []
+        )
+        store.add([cinebench2024, cinebenchR23])
+
+        #expect(store.applyIconData(iconData, to: cinebenchR23.id))
+        #expect(store.applyIconData(iconData, to: cinebench2024.id))
+        #expect(
+            store.apps.first { $0.id == cinebench2024.id }?.iconOrigin
+                == .website
+        )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func automaticOnlineIconReplacesLowQualityPlaceholderOnly() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let placeholderIcon = try #require(Data(base64Encoded:
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        ))
+        let goodIcon = try #require(testIconData())
+        let placeholderApp = AppEntry(
+            name: "Cinebench 2024",
+            category: "Benchmark",
+            subcategory: "",
+            iconData: placeholderIcon,
+            files: []
+        )
+        let goodIconApp = AppEntry(
+            name: "Cinebench R23",
+            category: "Benchmark",
+            subcategory: "",
+            iconData: goodIcon,
+            files: []
+        )
+        store.add([placeholderApp, goodIconApp])
+
+        #expect(
+            store.applyIconData(
+                goodIcon,
+                to: placeholderApp.id
+            )
+        )
+        #expect(
+            !store.applyIconData(
+                goodIcon,
+                to: goodIconApp.id
+            )
+        )
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func automaticOnlineIconReplacesMissingStoredIconReference() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let app = AppEntry(
+            name: "Cinebench 2024",
+            category: "Benchmark",
+            subcategory: "",
+            iconFileName: "missing-icon.png",
+            files: [],
+            userCustomizations: UserCustomizations(icon: true),
+            iconOrigin: .manual
+        )
+        let iconData = try #require(testIconData())
+        store.add([app])
+
+        #expect(store.applyIconData(iconData, to: app.id))
+        #expect(
+            store.apps.first { $0.id == app.id }?.iconOrigin == .website
         )
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
@@ -1759,15 +2151,35 @@ struct CatalogManagementTests {
 
         store.confirm(appName: "Example", url: url)
         store.confirm(appName: "Example", appleTrackID: 42)
+        store.confirm(
+            appName: "Example",
+            suggestionKind: CatalogSuggestionKind.description.rawValue,
+            value: "Eine bestätigte Beschreibung."
+        )
 
         #expect(store.domainScore(
             for: "Example",
             candidateURL: url
         ) == 1)
         #expect(store.isConfirmed(appName: "Example", appleTrackID: 42))
+        #expect(store.isConfirmed(appName: "Other Example", url: url))
+        #expect(store.isConfirmed(
+            appName: "Example",
+            suggestionKind: CatalogSuggestionKind.description.rawValue,
+            value: "Eine bestätigte Beschreibung."
+        ))
+        #expect(store.domainScore(
+            for: "Other Example",
+            candidateURL: url
+        ) == 1)
 
         store.reject(appName: "Rejected Example", url: url)
         store.reject(appName: "Rejected Example", appleTrackID: 99)
+        store.reject(
+            appName: "Rejected Example",
+            suggestionKind: CatalogSuggestionKind.description.rawValue,
+            value: "Eine abgelehnte Beschreibung."
+        )
         let reloadedStore = ConfirmedMetadataMatchStore(defaults: defaults)
 
         #expect(reloadedStore.isRejected(
@@ -1775,8 +2187,17 @@ struct CatalogManagementTests {
             url: url
         ))
         #expect(reloadedStore.isRejected(
+            appName: "Other Example",
+            url: url
+        ))
+        #expect(reloadedStore.isRejected(
             appName: "Rejected Example",
             appleTrackID: 99
+        ))
+        #expect(reloadedStore.isRejected(
+            appName: "Rejected Example",
+            suggestionKind: CatalogSuggestionKind.description.rawValue,
+            value: "Eine abgelehnte Beschreibung."
         ))
         #expect(reloadedStore.domainScore(
             for: "Rejected Example",
@@ -1803,7 +2224,7 @@ struct CatalogManagementTests {
             DescriptionLanguageProcessor.originalWithLanguageNote(
                 english,
                 language: "en"
-            ).contains("Originalsprache: en")
+            ) == english
         )
     }
 
@@ -1845,7 +2266,7 @@ struct CatalogManagementTests {
     }
 
     @Test @MainActor
-    func untranslatedSuggestionCanStillBeAcceptedWithLanguageNote() throws {
+    func translatedSuggestionReplacesOriginalDescription() throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("catalog.json")
@@ -1871,7 +2292,7 @@ struct CatalogManagementTests {
         store.acceptSuggestion(suggestion.id, for: app.id)
 
         let result = try #require(store.apps.first)
-        #expect(result.details.contains("Originalsprache: en"))
+        #expect(result.details.contains("An English app description."))
         #expect(result.suggestions.isEmpty)
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
@@ -2680,6 +3101,8 @@ struct CatalogManagementTests {
     func catalogStatisticsSummarizeLocalCatalogAndLicenses() throws {
         let licenseStorage = InMemoryLicenseStorage()
         let store = makeCatalogStore(licenseStorage: licenseStorage)
+        let validIconData = testIconData()
+        #expect(validIconData != nil)
         let licensed = AppEntry(
             name: "Lizenzierte App",
             summary: "Hat eine Beschreibung",
@@ -2687,7 +3110,7 @@ struct CatalogManagementTests {
             category: "Office",
             subcategory: "",
             homepage: URL(string: "https://example.invalid"),
-            iconFileName: "icon.png",
+            iconData: validIconData,
             files: [
                 LocalAppFile(
                     fileName: "Licensed.dmg",

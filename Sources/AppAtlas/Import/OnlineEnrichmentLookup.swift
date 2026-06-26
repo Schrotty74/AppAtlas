@@ -18,10 +18,11 @@ struct SlowOnlineResult: Sendable {
 enum OnlineEnrichmentLookup {
     static func fastResult(for app: AppEntry) async -> FastOnlineResult {
         await withTimeout(seconds: 8) {
+            let needsIcon = !hasValidIcon(app)
             async let apple = AppleArtworkLookup.shared.metadata(for: app)
             async let website: WebMetadataLookup.Metadata? = {
                 guard let metadataURL = metadataSourceURL(for: app),
-                      !app.hasIcon
+                      needsIcon
                         || AppMetadataEnricher.needsDescriptionExpansion(
                             app.details
                         )
@@ -30,12 +31,12 @@ enum OnlineEnrichmentLookup {
                 }
                 return await WebMetadataLookup.shared.metadata(
                     for: metadataURL,
-                    needsIcon: !app.hasIcon
+                    needsIcon: needsIcon
                 )
             }()
             let appleMetadata = await apple
             let appleIconData: Data?
-            if !app.hasIcon,
+            if needsIcon,
                let artworkURL = appleMetadata?.artworkURL
             {
                 appleIconData = await OnlineIconLoader.shared.iconData(
@@ -132,6 +133,18 @@ enum OnlineEnrichmentLookup {
 
     private static func shouldDiscoverHomepage(for app: AppEntry) -> Bool {
         app.homepage == nil && !app.customizations.links
+    }
+
+    private static func hasValidIcon(_ app: AppEntry) -> Bool {
+        if let iconData = app.iconData {
+            return IconQualityInspector.isLikelyAppIcon(iconData)
+        }
+        guard let fileName = app.iconFileName,
+              let data = IconStore.shared.data(fileName: fileName, thumbnail: false)
+        else {
+            return false
+        }
+        return IconQualityInspector.isLikelyAppIcon(data)
     }
 
     static func slowResults(for apps: [AppEntry]) async -> [SlowOnlineResult] {

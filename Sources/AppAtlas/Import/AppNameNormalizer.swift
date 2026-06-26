@@ -85,12 +85,15 @@ enum AppNameNormalizer {
             #"(?i)\s*\([^)]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^)]*\)\s*$"#,
             #"(?i)\s*\[[^]]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^]]*\]\s*$"#,
             #"(?i)(^|[\s._-]+)latest(?=$|[\s._-]+)"#,
+            #"(?i)[\s._-]+v$"#,
+            #"(?i)[\s._-]+versions?$"#,
             #"(?i)[\s_-]+v?\d+\.\d+(?:\.\d+){0,2}.*$"#,
             #"(?i)[\s_-]+\d{4}(?:[\s_-].*)?$"#,
             #"(?i)[\s._-]+\d{6,}.*$"#,
+            #"(?i)[\s._-]+(?:aarch64|arm64|x86[\s._-]*64|x86|x64).*$"#,
             #"(?i)(?<=[a-z])\d+(?:[\s._-]+[a-z]*\d+[a-z0-9]*)+$"#,
             #"(?i)[\s._-]+[a-z]*\d+[a-z0-9]*(?:[\s._-]+[a-z]*\d+[a-z0-9]*)*$"#,
-            #"(?i)[\s._-]+(?:aio|setup|installer|install|release|macos|mac|osx|darwin|universal|arm64|x64|apple[\s._-]*silicon).*$"#
+            #"(?i)[\s._-]+(?:aio|setup|installer|install|release|macos|mac|osx|darwin|universal|aarch64|arm64|x86[\s._-]*64|x86|x64|apple[\s._-]*silicon).*$"#
         ]
         if !preservingAttachedYear {
             patterns.append(#"(?i)(?<=[a-z])(?:19|20)\d{2}$"#)

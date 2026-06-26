@@ -73,9 +73,10 @@ enum IconQualityInspector {
 
         var weightedBrightness = 0.0
         var totalAlpha = 0.0
+        let visibleAlphaThreshold = 0.10
         for index in stride(from: 0, to: pixels.count, by: 4) {
             let alpha = Double(pixels[index + 3]) / 255
-            guard alpha > 0 else {
+            guard alpha >= visibleAlphaThreshold else {
                 continue
             }
             let red = Double(pixels[index]) / 255

@@ -10,6 +10,8 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         var urls: Set<String> = []
         var rejectedURLs: Set<String> = []
         var rejectedAppleTrackIDs: Set<Int> = []
+        var confirmedSuggestionValues: Set<String> = []
+        var rejectedSuggestionValues: Set<String> = []
 
         init(
             domains: Set<String> = [],
@@ -17,7 +19,9 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
             appleTrackIDs: Set<Int> = [],
             urls: Set<String> = [],
             rejectedURLs: Set<String> = [],
-            rejectedAppleTrackIDs: Set<Int> = []
+            rejectedAppleTrackIDs: Set<Int> = [],
+            confirmedSuggestionValues: Set<String> = [],
+            rejectedSuggestionValues: Set<String> = []
         ) {
             self.domains = domains
             self.githubRepositories = githubRepositories
@@ -25,6 +29,8 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
             self.urls = urls
             self.rejectedURLs = rejectedURLs
             self.rejectedAppleTrackIDs = rejectedAppleTrackIDs
+            self.confirmedSuggestionValues = confirmedSuggestionValues
+            self.rejectedSuggestionValues = rejectedSuggestionValues
         }
 
         init(from decoder: Decoder) throws {
@@ -52,6 +58,14 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
             rejectedAppleTrackIDs = try container.decodeIfPresent(
                 Set<Int>.self,
                 forKey: .rejectedAppleTrackIDs
+            ) ?? []
+            confirmedSuggestionValues = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .confirmedSuggestionValues
+            ) ?? []
+            rejectedSuggestionValues = try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .rejectedSuggestionValues
             ) ?? []
         }
     }
@@ -91,6 +105,19 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         }
     }
 
+    func confirm(appName: String, suggestionKind: String, value: String) {
+        guard let key = Self.suggestionValueKey(
+            kind: suggestionKind,
+            value: value
+        ) else {
+            return
+        }
+        update(appName: appName) {
+            $0.confirmedSuggestionValues.insert(key)
+            $0.rejectedSuggestionValues.remove(key)
+        }
+    }
+
     func reject(appName: String, url: URL) {
         update(appName: appName) {
             $0.rejectedURLs.insert(Self.normalizedURLString(url))
@@ -103,13 +130,37 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
         }
     }
 
+    func reject(appName: String, suggestionKind: String, value: String) {
+        guard let key = Self.suggestionValueKey(
+            kind: suggestionKind,
+            value: value
+        ) else {
+            return
+        }
+        update(appName: appName) {
+            $0.rejectedSuggestionValues.insert(key)
+        }
+    }
+
     func domainScore(for appName: String, candidateURL: URL) -> Double {
-        guard let host = Self.normalizedHost(candidateURL),
-              let record = records()[Self.key(appName)]
-        else {
+        guard let host = Self.normalizedHost(candidateURL) else {
             return 0
         }
-        if record.rejectedURLs.contains(Self.normalizedURLString(candidateURL)) {
+        let candidate = Self.normalizedURLString(candidateURL)
+        let currentRecords = records()
+        if currentRecords.values.contains(where: {
+            $0.rejectedURLs.contains(candidate)
+        }) {
+            return 0
+        }
+        if currentRecords.values.contains(where: { record in
+            record.urls.compactMap(URL.init(string:)).contains {
+                Self.normalizedURLString($0) == candidate
+            }
+        }) {
+            return 1
+        }
+        guard let record = currentRecords[Self.key(appName)] else {
             return 0
         }
         if host == "github.com" {
@@ -131,10 +182,45 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
             == true
     }
 
+    func isConfirmed(appName: String, url: URL) -> Bool {
+        let candidate = Self.normalizedURLString(url)
+        let currentRecords = records()
+        return currentRecords[Self.key(appName)]?.urls
+            .compactMap(URL.init(string:))
+            .contains { Self.normalizedURLString($0) == candidate } == true
+            || currentRecords.values.contains {
+                $0.urls.compactMap(URL.init(string:)).contains {
+                    Self.normalizedURLString($0) == candidate
+                }
+            }
+    }
+
+    func isConfirmed(
+        appName: String,
+        suggestionKind: String,
+        value: String
+    ) -> Bool {
+        guard let key = Self.suggestionValueKey(
+            kind: suggestionKind,
+            value: value
+        ) else {
+            return false
+        }
+        let currentRecords = records()
+        return currentRecords[Self.key(appName)]?
+            .confirmedSuggestionValues
+            .contains(key) == true
+    }
+
     func isRejected(appName: String, url: URL) -> Bool {
-        records()[Self.key(appName)]?.rejectedURLs.contains(
-            Self.normalizedURLString(url)
+        let candidate = Self.normalizedURLString(url)
+        let currentRecords = records()
+        return currentRecords[Self.key(appName)]?.rejectedURLs.contains(
+            candidate
         ) == true
+            || currentRecords.values.contains {
+                $0.rejectedURLs.contains(candidate)
+            }
     }
 
     func isRejected(appName: String, appleTrackID: Int) -> Bool {
@@ -142,19 +228,67 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
             .contains(appleTrackID) == true
     }
 
+    func isRejected(
+        appName: String,
+        suggestionKind: String,
+        value: String
+    ) -> Bool {
+        guard let key = Self.suggestionValueKey(
+            kind: suggestionKind,
+            value: value
+        ) else {
+            return false
+        }
+        let currentRecords = records()
+        return currentRecords[Self.key(appName)]?
+            .rejectedSuggestionValues
+            .contains(key) == true
+    }
+
     func confirmedURLs(for appName: String) -> [URL] {
-        guard let record = records()[Self.key(appName)] else {
+        let currentRecords = records()
+        var urls: Set<URL> = []
+        if let record = currentRecords[Self.key(appName)] {
+            urls.formUnion(Self.confirmedURLs(
+                in: record,
+                excludingRejectedURLsIn: currentRecords
+            ))
+        }
+        return urls.sorted {
+            $0.absoluteString.localizedStandardCompare($1.absoluteString)
+                == .orderedAscending
+        }
+    }
+
+    func confirmedURLs(matchingHomepage homepage: URL) -> [URL] {
+        guard let homepageHost = Self.normalizedHost(homepage) else {
             return []
         }
-        return record.urls
-            .compactMap(URL.init(string:))
-            .filter {
-                !record.rejectedURLs.contains(Self.normalizedURLString($0))
-            }
-            .sorted {
-                $0.absoluteString.localizedStandardCompare($1.absoluteString)
-                    == .orderedAscending
-            }
+        let homepageURL = Self.normalizedURLString(homepage)
+        let matches = records().values.filter { record in
+            record.domains.contains(homepageHost)
+                || record.domains.contains {
+                    homepageHost.hasSuffix(".\($0)")
+                        || $0.hasSuffix(".\(homepageHost)")
+                }
+                || record.urls
+                    .compactMap(URL.init(string:))
+                    .contains {
+                        Self.normalizedURLString($0) == homepageURL
+                    }
+        }
+        return Array(
+            Set(matches.flatMap {
+                Self.confirmedURLs(
+                    in: $0,
+                    excludingRejectedURLsIn: records()
+                )
+            })
+        )
+        .sorted {
+            $0.absoluteString.localizedStandardCompare($1.absoluteString)
+                == .orderedAscending
+        }
     }
 
     private func update(
@@ -190,6 +324,43 @@ final class ConfirmedMetadataMatchStore: @unchecked Sendable {
 
     private static func key(_ appName: String) -> String {
         AppNameMatcher.normalized(appName)
+    }
+
+    private static func suggestionValueKey(
+        kind: String,
+        value: String
+    ) -> String? {
+        let normalizedValue = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(
+                of: #"\s+"#,
+                with: " ",
+                options: .regularExpression
+            )
+            .lowercased()
+        guard !normalizedValue.isEmpty else {
+            return nil
+        }
+        return [
+            kind.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+            normalizedValue
+        ].joined(separator: "\u{1F}")
+    }
+
+    private static func confirmedURLs(
+        in record: Record,
+        excludingRejectedURLsIn records: [String: Record]
+    ) -> [URL] {
+        let rejectedURLs = Set(records.values.flatMap(\.rejectedURLs))
+        return record.urls
+            .compactMap(URL.init(string:))
+            .filter {
+                !rejectedURLs.contains(Self.normalizedURLString($0))
+            }
+            .sorted {
+                $0.absoluteString.localizedStandardCompare($1.absoluteString)
+                    == .orderedAscending
+            }
     }
 
     private static func normalizedHost(_ url: URL) -> String? {

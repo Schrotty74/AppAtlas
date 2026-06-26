@@ -11,9 +11,15 @@ let package = Package(
     products: [
         .executable(name: "AppAtlas", targets: ["AppAtlas"])
     ],
+    dependencies: [
+        .package(path: "../AppMetadataKit")
+    ],
     targets: [
         .executableTarget(
             name: "AppAtlas",
+            dependencies: [
+                "AppMetadataKit"
+            ],
             resources: [
                 .process("Resources")
             ],

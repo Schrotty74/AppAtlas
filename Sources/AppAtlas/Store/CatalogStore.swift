@@ -23,6 +23,7 @@ final class CatalogStore: ObservableObject {
     private let licenseStorage: any LicenseStorage
     private let homebrewCaskMetadataCache: HomebrewCaskMetadataCache
     private var enrichmentTask: Task<Void, Never>?
+    private var lastEnrichmentPersistDate: Date?
     private var promptedWebsiteAppIDs: Set<AppEntry.ID> = []
     static let needsReviewFilter = "__needs_review__"
     static let subcategoryFilterPrefix = "__subcategory__:"
@@ -49,6 +50,7 @@ final class CatalogStore: ObservableObject {
         self.licenseStorage = licenseStorage
         self.homebrewCaskMetadataCache = homebrewCaskMetadataCache
         self.targetLanguageProvider = targetLanguageProvider
+        loadInitialCatalogSnapshot()
     }
 
     var filteredApps: [AppEntry] {
@@ -80,18 +82,20 @@ final class CatalogStore: ObservableObject {
     }
 
     var websitePromptExclusions: [AppEntry] {
-        apps.filter {
+        let policy = excludedScanAreaPolicy()
+        return apps.filter {
             $0.suppressesWebsitePrompt
-                && !hasLocalFileInExcludedScanArea($0)
+                && !hasLocalFileInExcludedScanArea($0, policy: policy)
         }
             .sorted(by: Self.sortApps)
     }
 
     var appsNeedingWebsiteReview: [AppEntry] {
-        apps.filter { app in
+        let policy = excludedScanAreaPolicy()
+        return apps.filter { app in
             app.homepage == nil
                 && !app.suppressesWebsitePrompt
-                && !hasLocalFileInExcludedScanArea(app)
+                && !hasLocalFileInExcludedScanArea(app, policy: policy)
                 && needsWebsiteReview(app)
         }
         .sorted(by: Self.sortApps)
@@ -211,7 +215,7 @@ final class CatalogStore: ObservableObject {
                         in: .whitespacesAndNewlines
                     ).isEmpty
             }.count,
-            appsWithoutIcon: apps.filter { !$0.hasIcon }.count,
+            appsWithoutIcon: apps.filter { !hasValidIcon($0) }.count,
             appsWithoutHomepage: apps.filter { $0.homepage == nil }.count,
             appsWithLicenseData: apps.filter {
                 licenseStorage.hasRecord(for: $0.id)
@@ -272,21 +276,34 @@ final class CatalogStore: ObservableObject {
         )
     }
 
+    private func loadInitialCatalogSnapshot() {
+        do {
+            guard let savedApps = try persistence.load() else {
+                return
+            }
+            let preparedApps = prepareLoadedApps(savedApps)
+            apps = preparedApps.apps
+            importError = nil
+            if preparedApps.needsPersistence {
+                Task { @MainActor [weak self] in
+                    self?.persist()
+                }
+            }
+        } catch {
+            persistenceError = "Der gespeicherte Katalog konnte nicht geladen werden: \(error.localizedDescription)"
+        }
+    }
+
     func loadBundledCatalog() async {
         do {
             let persistence = persistence
             if let savedApps = try await Task.detached(
                 operation: { try persistence.load() }
             ).value {
-                let repairedApps = Self.splittingMergedEntries(in: savedApps)
-                let enrichedApps = AppMetadataEnricher().enrich(
-                    repairedApps.filter(CatalogEntryFilter().shouldInclude)
-                )
-                apps = migrateIcons(in: enrichedApps)
-                    .sorted(by: Self.sortApps)
-                let removedExcludedApps = removeExcludedScanAreaApps()
+                let preparedApps = prepareLoadedApps(savedApps)
+                apps = preparedApps.apps
                 importError = nil
-                if apps != savedApps || removedExcludedApps {
+                if preparedApps.needsPersistence {
                     persist()
                 }
                 return
@@ -298,6 +315,59 @@ final class CatalogStore: ObservableObject {
         apps = []
         importError = nil
         persist()
+    }
+
+    private func prepareLoadedApps(
+        _ savedApps: [AppEntry]
+    ) -> (apps: [AppEntry], needsPersistence: Bool) {
+        let repairedApps = Self.splittingMergedEntries(in: savedApps)
+        let enrichedApps = AppMetadataEnricher().enrich(
+            repairedApps.filter(CatalogEntryFilter().shouldInclude)
+        )
+        apps = migrateIcons(in: enrichedApps)
+            .sorted(by: Self.sortApps)
+        let removedExcludedApps = removeExcludedScanAreaApps()
+        let clearedTranslationFlags = clearDescriptionTranslationFlags()
+        let removedDuplicateSuggestions = removeDuplicateSuggestions()
+        return (
+            apps,
+            apps != savedApps || removedExcludedApps
+                || clearedTranslationFlags
+                || removedDuplicateSuggestions
+        )
+    }
+
+    private func clearDescriptionTranslationFlags() -> Bool {
+        pendingTranslation = nil
+        var changed = false
+        for index in apps.indices {
+            var suggestions = apps[index].suggestions
+            var appChanged = false
+            for suggestionIndex in suggestions.indices where
+                suggestions[suggestionIndex].kind == .description
+                    && suggestions[suggestionIndex].needsTranslation
+            {
+                suggestions[suggestionIndex].needsTranslation = false
+                appChanged = true
+            }
+            if appChanged {
+                apps[index].reviewSuggestions = suggestions
+                changed = true
+            }
+        }
+        return changed
+    }
+
+    private func removeDuplicateSuggestions() -> Bool {
+        var changed = false
+        for index in apps.indices {
+            let suggestions = deduplicatedSuggestions(apps[index].suggestions)
+            if suggestions.count != apps[index].suggestions.count {
+                apps[index].reviewSuggestions = suggestions
+                changed = true
+            }
+        }
+        return changed
     }
 
     static func splittingMergedEntries(in entries: [AppEntry]) -> [AppEntry] {
@@ -328,48 +398,6 @@ final class CatalogStore: ObservableObject {
 
     func refreshDescriptionTranslations() {
         pendingTranslation = nil
-        let targetLanguage = targetLanguageProvider()
-        for index in apps.indices {
-            let remainingSuggestions = apps[index].suggestions.filter {
-                !($0.kind == .description
-                    && $0.needsTranslation
-                    && DescriptionLanguageProcessor.matches(
-                        $0.detectedLanguage,
-                        targetLanguage: targetLanguage
-                    ))
-            }
-            apps[index].reviewSuggestions = remainingSuggestions
-            guard !apps[index].customizations.description,
-                  !apps[index].details.trimmingCharacters(
-                      in: .whitespacesAndNewlines
-                  ).isEmpty,
-                  let language = DescriptionLanguageProcessor.detectedLanguage(
-                      for: apps[index].details
-                  ),
-                  !DescriptionLanguageProcessor.matches(
-                      language,
-                      targetLanguage: targetLanguage
-                  ),
-                  !apps[index].suggestions.contains(where: {
-                      $0.kind == .description
-                          && $0.needsTranslation
-                          && $0.detectedLanguage == language
-                  })
-            else {
-                continue
-            }
-            addSuggestion(
-                CatalogSuggestion(
-                    kind: .description,
-                    value: apps[index].details,
-                    sourceLabel: "Gespeicherte Beschreibung",
-                    detectedLanguage: language,
-                    needsTranslation: true
-                ),
-                to: index
-            )
-        }
-        queueNextTranslation()
     }
 
     func add(_ app: AppEntry) {
@@ -404,7 +432,11 @@ final class CatalogStore: ObservableObject {
         {
             customizations.icon = true
         }
-        if previous.summary != app.summary || previous.details != app.details {
+        let editedDescription = app.details
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if (previous.summary != app.summary || previous.details != app.details),
+           !editedDescription.isEmpty
+        {
             customizations.description = true
         }
         if previous.homepage != app.homepage
@@ -444,7 +476,8 @@ final class CatalogStore: ObservableObject {
     func applyOnlineMetadata(
         _ metadata: AppleArtworkLookup.Metadata,
         iconData: Data?,
-        to appID: AppEntry.ID
+        to appID: AppEntry.ID,
+        shouldPersist: Bool = true
     ) {
         guard let index = apps.firstIndex(where: { $0.id == appID }) else {
             return
@@ -496,7 +529,9 @@ final class CatalogStore: ObservableObject {
                     to: index
                 )
             }
-            persist()
+            if shouldPersist {
+                persist()
+            }
             return
         }
         if apps[index].developer == nil {
@@ -511,7 +546,7 @@ final class CatalogStore: ObservableObject {
                 apps[index].downloadURL = downloadURL
             }
         }
-        if !apps[index].hasIcon,
+        if !hasValidIcon(apps[index]),
            !apps[index].customizations.icon,
            let iconData,
            isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
@@ -531,7 +566,9 @@ final class CatalogStore: ObservableObject {
         if metadata.homepage != nil || metadata.downloadURL != nil {
             addSource("iTunes", to: index)
         }
-        persist()
+        if shouldPersist {
+            persist()
+        }
     }
 
     func enrichCatalog() async {
@@ -606,7 +643,6 @@ final class CatalogStore: ObservableObject {
         {
             apps[index].reviewStatus = .needsReview
         }
-        queueNextTranslation()
         updateWebsiteReviewSummaryAfterChange()
         persist()
     }
@@ -635,6 +671,7 @@ final class CatalogStore: ObservableObject {
 
     private func runOnlineEnrichment() async {
         isEnriching = true
+        lastEnrichmentPersistDate = nil
         let measurement = ProcessUsageMeasurement()
         var measuredAppCount = 0
         let concurrency = OnlineUpdateSettings.currentConcurrency
@@ -648,14 +685,17 @@ final class CatalogStore: ObservableObject {
             isEnrichmentPaused = false
             enrichmentProgress = ""
             enrichmentTask = nil
+            persist()
         }
 
+        let initialIconState = await Self.iconState(for: apps)
         for index in apps.indices {
             pruneInvalidSuggestions(at: index)
+            if initialIconState.missing.contains(apps[index].id) {
+                clearMissingIconReference(at: index, isKnownMissing: true)
+            }
             repairIncorrectAutomaticIconProtection(at: index)
-            if let iconData = iconData(for: apps[index]),
-               !IconQualityInspector.isLikelyAppIcon(iconData)
-            {
+            if initialIconState.invalid.contains(apps[index].id) {
                 IconStore.shared.delete(fileName: apps[index].iconFileName)
                 apps[index].iconFileName = nil
                 apps[index].iconData = nil
@@ -671,9 +711,10 @@ final class CatalogStore: ObservableObject {
         try? await homebrewCaskMetadataCache.refresh()
         applyLocalFastScanMetadata()
         persist()
+        let validIconIDs = await Self.validIconIDs(for: apps)
 
         let candidates = apps.filter {
-            needsOnlineMetadata($0)
+            needsOnlineMetadata($0, hasValidIcon: validIconIDs.contains($0.id))
                 && (
                     usesExtendedSearch
                         || !OnlineEnrichmentAttemptCache.shared.shouldSkip($0)
@@ -688,10 +729,14 @@ final class CatalogStore: ObservableObject {
         )
 
         if usesExtendedSearch {
+            let refreshedValidIconIDs = await Self.validIconIDs(for: apps)
             let candidateIDs = Set(candidates.map(\.id))
             let remaining = apps.filter {
                 candidateIDs.contains($0.id)
-                    && !hasCompleteOnlineMetadata($0)
+                    && !hasCompleteOnlineMetadata(
+                        $0,
+                        hasValidIcon: refreshedValidIconIDs.contains($0.id)
+                    )
             }
             measuredAppCount += remaining.count
             await runSlowOnlineEnrichment(
@@ -710,7 +755,14 @@ final class CatalogStore: ObservableObject {
     }
 
     private func needsOnlineMetadata(_ app: AppEntry) -> Bool {
-        !app.hasIcon
+        needsOnlineMetadata(app, hasValidIcon: hasValidIcon(app))
+    }
+
+    private func needsOnlineMetadata(
+        _ app: AppEntry,
+        hasValidIcon: Bool
+    ) -> Bool {
+        !hasValidIcon
             || app.homepage == nil
             || app.downloadURL == nil
             || (app.githubURL != nil && !app.customizations.links)
@@ -750,7 +802,7 @@ final class CatalogStore: ObservableObject {
                     recordMiss: recordMisses
                 )
                 enrichmentProgress = "Schnelle Suche \(completed) / \(total)"
-                persist()
+                persistEnrichmentProgressIfNeeded()
                 if nextIndex < candidates.count {
                     let app = candidates[nextIndex]
                     nextIndex += 1
@@ -798,7 +850,7 @@ final class CatalogStore: ObservableObject {
                     recordMiss: true
                 )
                 enrichmentProgress = "Erweiterte Suche \(completed) / \(total)"
-                persist()
+                persistEnrichmentProgressIfNeeded()
                 if nextIndex < candidates.count {
                     let app = candidates[nextIndex]
                     nextIndex += 1
@@ -855,6 +907,7 @@ final class CatalogStore: ObservableObject {
             return
         }
         pruneInvalidSuggestions(at: index)
+        clearMissingIconReference(at: index)
         repairIncorrectAutomaticIconProtection(at: index)
         if let iconData = iconData(for: apps[index]),
            !IconQualityInspector.isLikelyAppIcon(iconData)
@@ -871,8 +924,33 @@ final class CatalogStore: ObservableObject {
         removeDuplicateAutomaticOnlineIcons()
     }
 
+    private func clearMissingIconReference(
+        at index: Int,
+        isKnownMissing: Bool = false
+    ) {
+        guard apps[index].iconFileName != nil,
+              apps[index].iconData == nil,
+              isKnownMissing || iconData(for: apps[index]) == nil
+        else {
+            return
+        }
+        apps[index].iconFileName = nil
+        if apps[index].customizations.icon {
+            var customizations = apps[index].customizations
+            customizations.icon = false
+            apps[index].userCustomizations = customizations
+        }
+    }
+
     private func hasCompleteOnlineMetadata(_ app: AppEntry) -> Bool {
-        app.hasIcon
+        hasCompleteOnlineMetadata(app, hasValidIcon: hasValidIcon(app))
+    }
+
+    private func hasCompleteOnlineMetadata(
+        _ app: AppEntry,
+        hasValidIcon: Bool
+    ) -> Bool {
+        hasValidIcon
             && app.homepage != nil
             && app.downloadURL != nil
             && !AppMetadataEnricher.needsDescriptionExpansion(app.details)
@@ -912,9 +990,17 @@ final class CatalogStore: ObservableObject {
     }
 
     private func applyConfirmedURLs(to index: Int) {
-        for url in ConfirmedMetadataMatchStore.shared.confirmedURLs(
-            for: apps[index].name
-        ) {
+        let store = ConfirmedMetadataMatchStore.shared
+        var urls = store.confirmedURLs(for: apps[index].name)
+        if let homepage = apps[index].homepage {
+            urls.append(contentsOf: store.confirmedURLs(
+                matchingHomepage: homepage
+            ))
+        }
+        for url in Array(Set(urls)).sorted(by: {
+            $0.absoluteString.localizedStandardCompare($1.absoluteString)
+                == .orderedAscending
+        }) {
             guard let host = url.host?.lowercased() else {
                 continue
             }
@@ -977,16 +1063,11 @@ final class CatalogStore: ObservableObject {
            AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
            !apps[index].customizations.description
         {
-            apps[index].summary = AppMetadataEnricher.summary(
-                from: description
+            recordDescription(
+                description,
+                source: "Homebrew-Cask-Katalog",
+                for: apps[index].id
             )
-            apps[index].details = AppMetadataEnricher.expandedDescription(
-                sourceText: description,
-                category: apps[index].category,
-                subcategory: apps[index].subcategory,
-                keywords: apps[index].keywords
-            )
-            addSource("Homebrew-Cask-Katalog", to: index)
         }
     }
 
@@ -997,16 +1078,24 @@ final class CatalogStore: ObservableObject {
             applyOnlineMetadata(
                 metadata,
                 iconData: result.appleIconData,
-                to: result.appID
+                to: result.appID,
+                shouldPersist: false
             )
         }
+        let savedITunesIcon = apps.first(where: { $0.id == result.appID })?
+            .iconOrigin == .iTunes
         guard let index = apps.firstIndex(where: { $0.id == result.appID }),
               let metadata = result.website
         else {
             return hasAppChanged(result.appID, comparedTo: before)
         }
-        if let iconData = metadata.iconData {
-            if applyIconData(iconData, to: result.appID) {
+        if !savedITunesIcon,
+           let iconData = metadata.iconData {
+            if applyIconData(
+                iconData,
+                to: result.appID,
+                shouldPersist: false
+            ) {
                 addSource("Herstellerseite", to: index)
             }
         }
@@ -1054,7 +1143,11 @@ final class CatalogStore: ObservableObject {
         }
         if let metadata = result.website {
             if let iconData = metadata.iconData {
-                if applyIconData(iconData, to: result.appID) {
+                if applyIconData(
+                    iconData,
+                    to: result.appID,
+                    shouldPersist: false
+                ) {
                     addSource("Herstellerseite", to: index)
                 }
             }
@@ -1186,9 +1279,14 @@ final class CatalogStore: ObservableObject {
     }
 
     @discardableResult
-    func applyIconData(_ iconData: Data, to appID: AppEntry.ID) -> Bool {
+    func applyIconData(
+        _ iconData: Data,
+        to appID: AppEntry.ID,
+        shouldPersist: Bool = true
+    ) -> Bool {
         guard iconData.count <= IconImageConverter.maximumStoredBytes,
               let index = apps.firstIndex(where: { $0.id == appID }),
+              apps[index].iconOrigin != .iTunes,
               shouldReplaceIcon(in: apps[index]),
               isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
         else {
@@ -1197,28 +1295,19 @@ final class CatalogStore: ObservableObject {
         apps[index].iconData = iconData
         apps[index].iconOrigin = .website
         apps[index] = migrateIcon(in: apps[index])
-        persist()
+        if shouldPersist {
+            persist()
+        }
         return true
     }
 
     func acceptSuggestion(_ suggestionID: CatalogSuggestion.ID, for appID: AppEntry.ID) {
         guard let index = apps.firstIndex(where: { $0.id == appID }),
-              var suggestion = apps[index].suggestions.first(
+              let suggestion = apps[index].suggestions.first(
                 where: { $0.id == suggestionID }
               )
         else {
             return
-        }
-        if suggestion.kind == .description && suggestion.needsTranslation {
-            suggestion.value =
-                DescriptionLanguageProcessor.originalWithLanguageNote(
-                    suggestion.value,
-                    language: suggestion.detectedLanguage
-                )
-            suggestion.needsTranslation = false
-            if pendingTranslation?.suggestionID == suggestionID {
-                pendingTranslation = nil
-            }
         }
         switch suggestion.kind {
         case .description:
@@ -1256,7 +1345,6 @@ final class CatalogStore: ObservableObject {
             apps[index].reviewStatus = .confirmed
         }
         persist()
-        queueNextTranslation()
         if suggestion.kind == .homepage {
             Task {
                 await enrichFromConfirmedWebsite(for: appID)
@@ -1386,42 +1474,6 @@ final class CatalogStore: ObservableObject {
         updateWebsiteReviewSummaryAfterChange()
     }
 
-    func completeTranslation(
-        _ translation: String?,
-        for pending: PendingTranslation
-    ) {
-        guard let index = apps.firstIndex(where: { $0.id == pending.appID }),
-              let suggestionIndex = apps[index].suggestions.firstIndex(
-                where: { $0.id == pending.suggestionID }
-              )
-        else {
-            pendingTranslation = nil
-            queueNextTranslation()
-            return
-        }
-        var suggestions = apps[index].suggestions
-        if let translation, !translation.isEmpty {
-            suggestions[suggestionIndex].value = translation
-            suggestions[suggestionIndex].needsTranslation = false
-            apps[index].reviewSuggestions = suggestions
-            if !apps[index].customizations.description {
-                acceptSuggestion(suggestions[suggestionIndex].id, for: pending.appID)
-            }
-        } else {
-            suggestions[suggestionIndex].value =
-                DescriptionLanguageProcessor.originalWithLanguageNote(
-                    suggestions[suggestionIndex].value,
-                    language: suggestions[suggestionIndex].detectedLanguage
-                )
-            suggestions[suggestionIndex].needsTranslation = false
-            apps[index].reviewSuggestions = suggestions
-            apps[index].reviewStatus = .needsReview
-            persist()
-        }
-        pendingTranslation = nil
-        queueNextTranslation()
-    }
-
     func delete(_ app: AppEntry) {
         apps.removeAll { $0.id == app.id }
         IconStore.shared.delete(fileName: app.iconFileName)
@@ -1448,18 +1500,19 @@ final class CatalogStore: ObservableObject {
 
     func mergeScannedApps(_ scannedApps: [AppEntry]) {
         websiteReviewSummary = nil
+        let policy = excludedScanAreaPolicy()
         let includedScannedApps = scannedApps.filter {
-            !hasLocalFileInExcludedScanArea($0)
+            !hasLocalFileInExcludedScanArea($0, policy: policy)
         }
         let existingApps = apps.filter {
-            !hasLocalFileInExcludedScanArea($0)
+            !hasLocalFileInExcludedScanArea($0, policy: policy)
         }
         let result = CatalogScanReconciler().reconcile(
             existingApps: existingApps,
             scannedApps: includedScannedApps
         )
         let excludedRemovedApps = apps.filter {
-            hasLocalFileInExcludedScanArea($0)
+            hasLocalFileInExcludedScanArea($0, policy: policy)
         }
         for removedApp in excludedRemovedApps {
             IconStore.shared.delete(fileName: removedApp.iconFileName)
@@ -1470,7 +1523,7 @@ final class CatalogStore: ObservableObject {
             licenseStorage.delete(for: removedApp.id)
         }
         apps = result.apps.filter {
-            !hasLocalFileInExcludedScanArea($0)
+            !hasLocalFileInExcludedScanArea($0, policy: policy)
         }
         _ = removeExcludedScanAreaApps()
         apps = migrateIcons(in: apps)
@@ -1483,10 +1536,11 @@ final class CatalogStore: ObservableObject {
         with importedApps: [AppEntry],
         licenses: [UUID: AppLicenseRecord] = [:]
     ) throws {
+        let policy = excludedScanAreaPolicy()
         let includedApps = importedApps
             .filter(CatalogEntryFilter().shouldInclude)
             .filter {
-                !hasLocalFileInExcludedScanArea($0)
+                !hasLocalFileInExcludedScanArea($0, policy: policy)
             }
             .sorted(by: Self.sortApps)
         let includedIDs = Set(includedApps.map(\.id))
@@ -1523,9 +1577,20 @@ final class CatalogStore: ObservableObject {
         }
     }
 
+    private func persistEnrichmentProgressIfNeeded() {
+        let now = Date()
+        guard lastEnrichmentPersistDate == nil
+            || now.timeIntervalSince(lastEnrichmentPersistDate ?? now) >= 2
+        else {
+            return
+        }
+        lastEnrichmentPersistDate = now
+        persist()
+    }
+
     private func needsReview(_ app: AppEntry) -> Bool {
         !app.suggestions.isEmpty
-            || !app.hasIcon
+            || !hasValidIcon(app)
             || app.homepage == nil
             || AppMetadataEnricher.needsDescriptionExpansion(app.details)
     }
@@ -1570,10 +1635,18 @@ final class CatalogStore: ObservableObject {
     }
 
     private func shouldReplaceIcon(in app: AppEntry) -> Bool {
+        if app.iconOrigin == .iTunes {
+            return false
+        }
+        guard let iconData = iconData(for: app),
+              IconQualityInspector.isLikelyAppIcon(iconData)
+        else {
+            return true
+        }
         guard !app.customizations.icon, app.iconOrigin != .manual else {
             return false
         }
-        return !app.hasIcon || app.iconOrigin == .iTunes
+        return false
     }
 
     private func isAcceptableAutomaticOnlineIcon(
@@ -1583,12 +1656,20 @@ final class CatalogStore: ObservableObject {
         guard IconQualityInspector.isLikelyOnlineAppIcon(candidateIconData) else {
             return false
         }
+        return !hasDuplicateAutomaticOnlineIcon(candidateIconData, for: app)
+    }
+
+    private func hasDuplicateAutomaticOnlineIcon(
+        _ candidateIconData: Data,
+        for app: AppEntry
+    ) -> Bool {
         let fingerprint = iconFingerprint(for: candidateIconData)
         let normalizedName = normalizedIconOwnerName(app.name)
-        return !apps.contains { other in
+        return apps.contains { other in
             guard other.id != app.id,
                   isAutomaticOnlineIcon(other),
                   normalizedIconOwnerName(other.name) != normalizedName,
+                  !sharesConfirmedHomepageFamily(app, other),
                   let otherIconData = iconData(for: other)
             else {
                 return false
@@ -1613,7 +1694,15 @@ final class CatalogStore: ObservableObject {
                     normalizedIconOwnerName(apps[$0].name)
                 }
             )
-            guard onlineIndices.count > 1, distinctNames.count > 1 else {
+            let distinctFamilies = Set(
+                onlineIndices.map {
+                    iconFamilyKey(for: apps[$0])
+                }
+            )
+            guard onlineIndices.count > 1,
+                  distinctNames.count > 1,
+                  distinctFamilies.count > 1
+            else {
                 continue
             }
             for index in onlineIndices {
@@ -1650,6 +1739,32 @@ final class CatalogStore: ObservableObject {
             .joined(separator: " ")
     }
 
+    private func sharesConfirmedHomepageFamily(
+        _ lhs: AppEntry,
+        _ rhs: AppEntry
+    ) -> Bool {
+        iconFamilyKey(for: lhs) == iconFamilyKey(for: rhs)
+    }
+
+    private func iconFamilyKey(for app: AppEntry) -> String {
+        guard let homepage = app.homepage,
+              let host = normalizedHomepageHost(homepage)
+        else {
+            return "name:\(normalizedIconOwnerName(app.name))"
+        }
+        return "homepage:\(host)"
+    }
+
+    private func normalizedHomepageHost(_ url: URL) -> String? {
+        guard var host = url.host?.lowercased() else {
+            return nil
+        }
+        if host.hasPrefix("www.") {
+            host.removeFirst(4)
+        }
+        return host
+    }
+
     private func pruneInvalidSuggestions(at index: Int) {
         let appName = apps[index].name
         let suggestions = apps[index].suggestions.filter { suggestion in
@@ -1671,10 +1786,20 @@ final class CatalogStore: ObservableObject {
         }
     }
 
-    private func hasLocalFileInExcludedScanArea(_ app: AppEntry) -> Bool {
-        let policy = ScanExclusionPolicy(
+    private func excludedScanAreaPolicy() -> ScanExclusionPolicy {
+        ScanExclusionPolicy(
             customExcludedDirectories: ScannerSettings.excludedPathHints
         )
+    }
+
+    private func hasLocalFileInExcludedScanArea(_ app: AppEntry) -> Bool {
+        hasLocalFileInExcludedScanArea(app, policy: excludedScanAreaPolicy())
+    }
+
+    private func hasLocalFileInExcludedScanArea(
+        _ app: AppEntry,
+        policy: ScanExclusionPolicy
+    ) -> Bool {
         let appPath = [
             app.category,
             app.subcategory,
@@ -1722,8 +1847,9 @@ final class CatalogStore: ObservableObject {
 
     @discardableResult
     private func removeExcludedScanAreaApps() -> Bool {
+        let policy = excludedScanAreaPolicy()
         let removedApps = apps.filter {
-            hasLocalFileInExcludedScanArea($0)
+            hasLocalFileInExcludedScanArea($0, policy: policy)
         }
         guard !removedApps.isEmpty else {
             return false
@@ -1784,7 +1910,24 @@ final class CatalogStore: ObservableObject {
         else {
             return
         }
+        guard !isConfirmedSuggestion(suggestion, appName: apps[index].name)
+        else {
+            return
+        }
         var suggestions = apps[index].suggestions
+        if let duplicateIndex = suggestions.firstIndex(where: {
+            shouldDeduplicateSuggestion($0, with: suggestion)
+        }) {
+            if shouldReplaceDuplicateSuggestion(
+                suggestions[duplicateIndex],
+                with: suggestion
+            ) {
+                suggestions[duplicateIndex] = suggestion
+                apps[index].reviewSuggestions = suggestions
+                apps[index].reviewStatus = .needsReview
+            }
+            return
+        }
         guard !suggestions.contains(where: {
             $0.kind == suggestion.kind
                 && $0.value.caseInsensitiveCompare(suggestion.value)
@@ -1797,6 +1940,100 @@ final class CatalogStore: ObservableObject {
         apps[index].reviewStatus = .needsReview
     }
 
+    private func deduplicatedSuggestions(
+        _ suggestions: [CatalogSuggestion]
+    ) -> [CatalogSuggestion] {
+        var deduplicated: [CatalogSuggestion] = []
+        for suggestion in suggestions {
+            if let duplicateIndex = deduplicated.firstIndex(where: {
+                shouldDeduplicateSuggestion($0, with: suggestion)
+            }) {
+                if shouldReplaceDuplicateSuggestion(
+                    deduplicated[duplicateIndex],
+                    with: suggestion
+                ) {
+                    deduplicated[duplicateIndex] = suggestion
+                }
+            } else {
+                deduplicated.append(suggestion)
+            }
+        }
+        return deduplicated
+    }
+
+    private func shouldDeduplicateSuggestion(
+        _ lhs: CatalogSuggestion,
+        with rhs: CatalogSuggestion
+    ) -> Bool {
+        if suggestionDuplicateKey(lhs) == suggestionDuplicateKey(rhs) {
+            return true
+        }
+        if isITunesDescription(lhs), isITunesDescription(rhs) {
+            return true
+        }
+        return isAppleSuggestion(lhs)
+            && isAppleSuggestion(rhs)
+            && normalizedSuggestionValue(lhs)
+                == normalizedSuggestionValue(rhs)
+    }
+
+    private func shouldReplaceDuplicateSuggestion(
+        _ existing: CatalogSuggestion,
+        with replacement: CatalogSuggestion
+    ) -> Bool {
+        if isITunesDescription(existing), isITunesDescription(replacement) {
+            return replacement.value.count > existing.value.count
+        }
+        return suggestionConfidence(replacement) > suggestionConfidence(existing)
+    }
+
+    private func suggestionDuplicateKey(_ suggestion: CatalogSuggestion) -> String {
+        [
+            suggestion.sourceLabel
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased(),
+            normalizedSuggestionValue(suggestion)
+        ].joined(separator: "\u{1F}")
+    }
+
+    private func normalizedSuggestionValue(_ suggestion: CatalogSuggestion) -> String {
+        suggestion.value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
+    private func isAppleSuggestion(_ suggestion: CatalogSuggestion) -> Bool {
+        let source = suggestion.sourceLabel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return source.hasPrefix("itunes") || source.hasPrefix("apple")
+    }
+
+    private func isITunesDescription(_ suggestion: CatalogSuggestion) -> Bool {
+        suggestion.kind == .description
+            && suggestion.sourceLabel
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare("iTunes") == .orderedSame
+    }
+
+    private func suggestionConfidence(_ suggestion: CatalogSuggestion) -> Int {
+        let source = suggestion.sourceLabel
+        if source
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .hasPrefix("itunes")
+        {
+            return 100
+        }
+        guard let percentRange = source.range(of: #"\d+\s*%"#, options: .regularExpression)
+        else {
+            return 0
+        }
+        return Int(
+            source[percentRange].filter(\.isNumber)
+        ) ?? 0
+    }
+
     private func addDescriptionSuggestion(
         _ description: String,
         source: String,
@@ -1807,7 +2044,6 @@ final class CatalogStore: ObservableObject {
         let language = DescriptionLanguageProcessor.detectedLanguage(
             for: description
         )
-        let targetLanguage = targetLanguageProvider()
         addSuggestion(
             CatalogSuggestion(
                 kind: .description,
@@ -1816,28 +2052,30 @@ final class CatalogStore: ObservableObject {
                 sourceURL: sourceURL,
                 sourceIdentifier: sourceIdentifier,
                 detectedLanguage: language,
-                needsTranslation:
-                    !DescriptionLanguageProcessor.matches(
-                        language,
-                        targetLanguage: targetLanguage
-                    )
+                needsTranslation: false
             ),
             to: index
         )
-        queueNextTranslation()
     }
 
     private func isRejectedSuggestion(
         _ suggestion: CatalogSuggestion,
         appName: String
     ) -> Bool {
-        if let sourceURL = suggestion.sourceURL,
-           ConfirmedMetadataMatchStore.shared.isRejected(
+        if ConfirmedMetadataMatchStore.shared.isRejected(
             appName: appName,
-            url: sourceURL
-           )
-        {
+            suggestionKind: suggestion.kind.rawValue,
+            value: suggestion.value
+        ) {
             return true
+        }
+        for url in rememberedURLs(for: suggestion) {
+            if ConfirmedMetadataMatchStore.shared.isRejected(
+                appName: appName,
+                url: url
+            ) {
+                return true
+            }
         }
         guard let identifier = suggestion.sourceIdentifier,
               identifier.hasPrefix("apple:"),
@@ -1851,11 +2089,47 @@ final class CatalogStore: ObservableObject {
         )
     }
 
+    private func isConfirmedSuggestion(
+        _ suggestion: CatalogSuggestion,
+        appName: String
+    ) -> Bool {
+        if ConfirmedMetadataMatchStore.shared.isConfirmed(
+            appName: appName,
+            suggestionKind: suggestion.kind.rawValue,
+            value: suggestion.value
+        ) {
+            return true
+        }
+        for url in rememberedURLs(for: suggestion) {
+            if ConfirmedMetadataMatchStore.shared.isConfirmed(
+                appName: appName,
+                url: url
+            ) {
+                return true
+            }
+        }
+        guard let identifier = suggestion.sourceIdentifier,
+              identifier.hasPrefix("apple:"),
+              let trackID = Int(identifier.dropFirst("apple:".count))
+        else {
+            return false
+        }
+        return ConfirmedMetadataMatchStore.shared.isConfirmed(
+            appName: appName,
+            appleTrackID: trackID
+        )
+    }
+
     private func rememberConfirmedMatch(
         suggestion: CatalogSuggestion,
         appName: String
     ) {
-        if let sourceURL = suggestion.sourceURL {
+        ConfirmedMetadataMatchStore.shared.confirm(
+            appName: appName,
+            suggestionKind: suggestion.kind.rawValue,
+            value: suggestion.value
+        )
+        for sourceURL in rememberedURLs(for: suggestion) {
             ConfirmedMetadataMatchStore.shared.confirm(
                 appName: appName,
                 url: sourceURL
@@ -1877,7 +2151,12 @@ final class CatalogStore: ObservableObject {
         suggestion: CatalogSuggestion,
         appName: String
     ) {
-        if let sourceURL = suggestion.sourceURL {
+        ConfirmedMetadataMatchStore.shared.reject(
+            appName: appName,
+            suggestionKind: suggestion.kind.rawValue,
+            value: suggestion.value
+        )
+        for sourceURL in rememberedURLs(for: suggestion) {
             ConfirmedMetadataMatchStore.shared.reject(
                 appName: appName,
                 url: sourceURL
@@ -1893,6 +2172,22 @@ final class CatalogStore: ObservableObject {
             appName: appName,
             appleTrackID: trackID
         )
+    }
+
+    private func rememberedURLs(for suggestion: CatalogSuggestion) -> [URL] {
+        var urls: [URL] = []
+        if let sourceURL = suggestion.sourceURL {
+            urls.append(sourceURL)
+        }
+        switch suggestion.kind {
+        case .homepage, .download, .github:
+            if let valueURL = URL(string: suggestion.value) {
+                urls.append(valueURL)
+            }
+        case .description, .icon:
+            break
+        }
+        return Array(Set(urls))
     }
 
     private func matchLabel(
@@ -1914,10 +2209,25 @@ final class CatalogStore: ObservableObject {
         else {
             return
         }
+        let targetLanguage = targetLanguageProvider()
+        if DescriptionLanguageProcessor.isGermanTarget(targetLanguage) {
+            addSuggestion(
+                CatalogSuggestion(
+                    kind: .description,
+                    value: description,
+                    sourceLabel: source,
+                    sourceURL: sourceURL,
+                    detectedLanguage: DescriptionLanguageProcessor
+                        .detectedLanguage(for: description),
+                    needsTranslation: false
+                ),
+                to: index
+            )
+            return
+        }
         let language = DescriptionLanguageProcessor.detectedLanguage(
             for: description
         )
-        let targetLanguage = targetLanguageProvider()
         if DescriptionLanguageProcessor.matches(
             language,
             targetLanguage: targetLanguage
@@ -1969,43 +2279,6 @@ final class CatalogStore: ObservableObject {
         apps[index].metadataSources = sources
     }
 
-    private func queueNextTranslation() {
-        guard pendingTranslation == nil else {
-            return
-        }
-        let targetLanguage = targetLanguageProvider()
-        for app in apps {
-            if let suggestion = app.suggestions.first(where: {
-                $0.needsTranslation
-                    && !DescriptionLanguageProcessor.matches(
-                        $0.detectedLanguage,
-                        targetLanguage: targetLanguage
-                    )
-            }),
-               let language = suggestion.detectedLanguage
-            {
-                pendingTranslation = PendingTranslation(
-                    id: suggestion.id,
-                    appID: app.id,
-                    suggestionID: suggestion.id,
-                    text: suggestion.value,
-                    sourceLanguage: language,
-                    targetLanguage: targetLanguage
-                )
-                if #unavailable(macOS 15.0) {
-                    let pending = pendingTranslation
-                    Task { @MainActor in
-                        await Task.yield()
-                        if let pending {
-                            completeTranslation(nil, for: pending)
-                        }
-                    }
-                }
-                return
-            }
-        }
-    }
-
     private func offerWebsitePromptIfNeeded() {
         summarizeWebsiteReview(foundCount: apps.count)
     }
@@ -2049,6 +2322,17 @@ final class CatalogStore: ObservableObject {
     }
 
     private func iconData(for app: AppEntry) -> Data? {
+        Self.iconData(for: app)
+    }
+
+    private func hasValidIcon(_ app: AppEntry) -> Bool {
+        guard let iconData = iconData(for: app) else {
+            return false
+        }
+        return IconQualityInspector.isLikelyAppIcon(iconData)
+    }
+
+    nonisolated private static func iconData(for app: AppEntry) -> Data? {
         if let iconData = app.iconData {
             return iconData
         }
@@ -2056,6 +2340,46 @@ final class CatalogStore: ObservableObject {
             return nil
         }
         return IconStore.shared.data(fileName: fileName, thumbnail: false)
+    }
+
+    nonisolated private static func validIconIDs(
+        for apps: [AppEntry]
+    ) async -> Set<AppEntry.ID> {
+        await Task.detached {
+            Set(apps.compactMap { app in
+                guard let iconData = iconData(for: app),
+                      IconQualityInspector.isLikelyAppIcon(iconData)
+                else {
+                    return nil
+                }
+                return app.id
+            })
+        }.value
+    }
+
+    nonisolated private static func iconState(
+        for apps: [AppEntry]
+    ) async -> (valid: Set<AppEntry.ID>, invalid: Set<AppEntry.ID>, missing: Set<AppEntry.ID>) {
+        await Task.detached {
+            var valid = Set<AppEntry.ID>()
+            var invalid = Set<AppEntry.ID>()
+            var missing = Set<AppEntry.ID>()
+            for app in apps {
+                guard app.iconData != nil || app.iconFileName != nil else {
+                    continue
+                }
+                guard let iconData = iconData(for: app) else {
+                    missing.insert(app.id)
+                    continue
+                }
+                if IconQualityInspector.isLikelyAppIcon(iconData) {
+                    valid.insert(app.id)
+                } else {
+                    invalid.insert(app.id)
+                }
+            }
+            return (valid, invalid, missing)
+        }.value
     }
 
     private static func sortApps(_ lhs: AppEntry, _ rhs: AppEntry) -> Bool {

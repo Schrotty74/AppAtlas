@@ -39,15 +39,6 @@ struct CatalogReviewSection: View {
                             .lineLimit(suggestion.kind == .description ? 8 : 2)
                             .textSelection(.enabled)
 
-                        if suggestion.needsTranslation {
-                            Label(
-                                "Wird vor der Übernahme lokal übersetzt",
-                                systemImage: "character.bubble"
-                            )
-                            .font(.caption)
-                            .foregroundStyle(theme.mutedText)
-                        }
-
                         HStack {
                             Button("Übernehmen") {
                                 store.acceptSuggestion(

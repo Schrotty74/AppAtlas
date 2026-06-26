@@ -6,10 +6,16 @@ enum DescriptionLanguageProcessor {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
         return recognizer.dominantLanguage?.rawValue
+            ?? NLLanguage.english.rawValue
     }
 
     static func isGerman(_ language: String?) -> Bool {
         language == NLLanguage.german.rawValue
+    }
+
+    static func isGermanTarget(_ language: String) -> Bool {
+        language == NLLanguage.german.rawValue
+            || language.lowercased().hasPrefix("de")
     }
 
     static func matches(_ language: String?, targetLanguage: String) -> Bool {
@@ -20,9 +26,6 @@ enum DescriptionLanguageProcessor {
         _ text: String,
         language: String?
     ) -> String {
-        guard let language, !language.isEmpty else {
-            return text
-        }
-        return "\(text)\n\n(Originalsprache: \(language))"
+        text
     }
 }

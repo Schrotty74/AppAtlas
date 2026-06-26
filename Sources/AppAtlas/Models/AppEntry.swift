@@ -1,4 +1,5 @@
 import Foundation
+import AppMetadataKit
 
 struct AppEntry: Identifiable, Hashable, Codable, Sendable {
     let id: UUID
@@ -244,6 +245,12 @@ struct AppEntry: Identifiable, Hashable, Codable, Sendable {
             }
             return tag
         }
+    }
+}
+
+extension AppEntry: EnrichableApp {
+    var bundleIdentifiers: [String] {
+        files.compactMap(\.bundleIdentifier)
     }
 }
 

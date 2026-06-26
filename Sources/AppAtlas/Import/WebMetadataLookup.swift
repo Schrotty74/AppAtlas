@@ -17,7 +17,10 @@ actor WebMetadataLookup {
 
         var request = URLRequest(url: homepage)
         request.timeoutInterval = 8
-        request.setValue("AppAtlas/0.1", forHTTPHeaderField: "User-Agent")
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            forHTTPHeaderField: "User-Agent"
+        )
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse,
@@ -31,13 +34,14 @@ actor WebMetadataLookup {
             let description = metaContent(
                 in: html,
                 names: ["description", "og:description"]
-            ).map { String($0.prefix(500)) }
+            ).map { String($0.prefix(1500)) }
             let ogImage = metaContent(in: html, names: ["og:image"])
             let previewURL = needsIcon
                 ? ogImage
                     .flatMap {
                         URL(string: $0, relativeTo: homepage)?.absoluteURL
                     }
+                    .map(OnlineIconLoader.imageSourceURL)
                     .flatMap {
                         Self.isLikelyIconURL($0) ? $0 : nil
                     }
@@ -75,13 +79,19 @@ actor WebMetadataLookup {
             } else {
                 nil
             }
-            return Metadata(description: description, iconData: iconData)
+            return Metadata(
+                description: description,
+                iconData: iconData
+            )
         } catch {
             return nil
         }
     }
 
-    private func firstLinkedIcon(in html: String, baseURL: URL) async -> Data? {
+    private func firstLinkedIcon(
+        in html: String,
+        baseURL: URL
+    ) async -> Data? {
         for url in linkedIconURLs(in: html, baseURL: baseURL) {
             if let iconData = await OnlineIconLoader.shared.iconData(from: url) {
                 return iconData
@@ -126,7 +136,9 @@ actor WebMetadataLookup {
             guard let href = attribute("href", in: tag) else {
                 return nil
             }
-            return URL(string: href, relativeTo: baseURL)?.absoluteURL
+            return URL(string: href, relativeTo: baseURL)
+                .map(\.absoluteURL)
+                .map(OnlineIconLoader.imageSourceURL)
         }
         .filter(Self.isLikelyIconURL)
     }
@@ -153,7 +165,8 @@ actor WebMetadataLookup {
             else {
                 return nil
             }
-            return Self.isLikelyBodyLogoIconURL(url) ? url : nil
+            let imageURL = OnlineIconLoader.imageSourceURL(from: url)
+            return Self.isLikelyBodyLogoIconURL(imageURL) ? imageURL : nil
         }
     }
 

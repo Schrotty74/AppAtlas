@@ -136,9 +136,13 @@ actor AppleArtworkLookup {
                 let normalizedTrackName = AppNameMatcher.normalized(
                     candidate.trackName
                 )
-                let boostedScore = normalizedTrackName.contains(normalizedAppName)
-                    ? score + 0.15
-                    : score
+                let boostedScore = if normalizedTrackName == normalizedAppName {
+                    score + 0.40
+                } else if normalizedTrackName.contains(normalizedAppName) {
+                    score + 0.30
+                } else {
+                    score
+                }
                 return (candidate: candidate, score: boostedScore)
             }
             .sorted {
@@ -199,7 +203,7 @@ actor AppleArtworkLookup {
     ) -> Metadata {
         Metadata(
             description: result.description.map {
-                String($0.prefix(500))
+                String($0.prefix(3000))
             },
             homepage: result.sellerUrl.flatMap(URL.init(string:))
                 ?? fallbackHomepage(from: result.trackViewUrl),

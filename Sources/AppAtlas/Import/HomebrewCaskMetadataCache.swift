@@ -99,9 +99,12 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
         let names = [app.name] + app.files.flatMap {
             [$0.fileName, AppNameNormalizer.displayName(for: $0.fileName)]
         }
-        return Array(Set(names.map(AppNameMatcher.normalized))).filter {
-            !$0.isEmpty
-        }
+        return Array(Set(names.flatMap {
+            [
+                AppNameMatcher.normalized($0),
+                Self.homebrewLookupKey($0)
+            ]
+        })).filter { !$0.isEmpty }
     }
 
     private func isPlausible(_ cask: Cask, for app: AppEntry) -> Bool {
@@ -147,9 +150,12 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
 
         var lookupKeys: [String] {
             let names = [token, fullToken].compactMap { $0 } + name
-            return Array(Set(names.map(AppNameMatcher.normalized))).filter {
-                !$0.isEmpty
-            }
+            return Array(Set(names.flatMap {
+                [
+                    AppNameMatcher.normalized($0),
+                    HomebrewCaskMetadataCache.homebrewLookupKey($0)
+                ]
+            })).filter { !$0.isEmpty }
         }
 
         var homepageURL: URL? {
@@ -168,6 +174,41 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
                 return host == "github.com" || host.hasSuffix(".github.com")
             }
         }
+    }
+
+    private static func homebrewLookupKey(_ value: String) -> String {
+        var result = (value as NSString).deletingPathExtension
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            .lowercased()
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .replacingOccurrences(of: ".", with: " ")
+            .replacingOccurrences(of: "+", with: " ")
+            .replacingOccurrences(
+                of: #"\b(?:versions?|installer|setup|webinstall)\b"#,
+                with: " ",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"\b(?:macos|mac|darwin|universal|arm64|aarch64|x64|intel|apple\s*silicon)\b"#,
+                with: " ",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"\b(?:v|build)?\d+[a-z0-9]*(?:\s+\d+[a-z0-9]*)*\b.*$"#,
+                with: "",
+                options: .regularExpression
+            )
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        result = result.replacingOccurrences(
+            of: #"\s+"#,
+            with: " ",
+            options: .regularExpression
+        )
+        return result.filter { $0.isLetter || $0.isNumber }
     }
 }
 

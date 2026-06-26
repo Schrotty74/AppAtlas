@@ -74,7 +74,7 @@ actor RedditDescriptionLookup {
             }
             return Result(
                 description: String(
-                    selection.candidate.selftext.prefix(500)
+                    selection.candidate.selftext.prefix(1500)
                 ),
                 sourceURL: sourceURL
             )

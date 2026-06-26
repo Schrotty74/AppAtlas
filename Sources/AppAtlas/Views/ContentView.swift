@@ -58,13 +58,6 @@ struct ContentView: View {
             AppAtlasBackground()
                 .environment(\.appAtlasTheme, theme)
         )
-        .background {
-            CatalogTranslationView()
-                .environmentObject(store)
-        }
-        .onChange(of: languageChoice) { _, _ in
-            store.refreshDescriptionTranslations()
-        }
         .toolbar {
             ContentToolbar(
                 selectedLayout: $selectedLayout,
