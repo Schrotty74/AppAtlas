@@ -6,6 +6,15 @@
   <img src="Sources/AppAtlas/Resources/AppIcon.png" width="180" alt="AppAtlas Logo">
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Swift-6.0-orange?logo=swift" alt="Swift 6.0">
+  <img src="https://img.shields.io/badge/macOS-14%2B-blue?logo=apple" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/License-GPL--3.0-green" alt="GPL-3.0">
+  <img src="https://img.shields.io/github/v/release/Schrotty74/AppAtlas" alt="Release">
+  <img src="https://img.shields.io/github/downloads/Schrotty74/AppAtlas/total" alt="Downloads">
+  <img src="https://img.shields.io/badge/Privacy-Audited-brightgreen" alt="Privacy Audited">
+</p>
+
 AppAtlas is a native, privacy-focused SwiftUI app for macOS. It organizes
 personal app collections from user-selected folders and manages icons,
 descriptions, links, tags, license information, and local catalog exports.
