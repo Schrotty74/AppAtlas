@@ -38,6 +38,9 @@ xcodebuild \
     -destination 'platform=macOS' \
     build
 
+APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-release-package.sh final
+
 echo "Final wurde aus Beta veröffentlicht."
+echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
 echo "Beta-Commit: $beta_commit"
 echo "Aktueller Branch: $(git branch --show-current)"

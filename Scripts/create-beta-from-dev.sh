@@ -79,10 +79,13 @@ xcodebuild \
     -destination 'platform=macOS' \
     build
 
+APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-release-package.sh beta
+
 restore_local_dev_state
 trap - ERR
 
 echo "Beta wurde aus Dev erstellt."
+echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
 echo "Dev-Commit: $dev_commit"
 echo "Lokaler Dev-Stand wurde wiederhergestellt."
 echo "Aktueller Branch: $(git branch --show-current)"

@@ -47,7 +47,8 @@ Das Skript:
 4. uebernimmt committed Dev-Aenderungen per Fast-Forward,
 5. uebernimmt den lokalen Dev-Snapshot als neuen Beta-Commit,
 6. baut das Xcode-Scheme `AppAtlas Beta`,
-7. stellt den lokalen Dev-Arbeitsstand wieder her.
+7. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
+8. stellt den lokalen Dev-Arbeitsstand wieder her.
 
 `dev` wird dabei nicht veraendert und nicht gepusht.
 
@@ -62,7 +63,8 @@ Das Skript:
 1. verlangt einen sauberen Git-Arbeitsstand,
 2. wechselt auf `beta`,
 3. übernimmt `beta` per Fast-Forward nach `main`,
-4. baut das Xcode-Scheme `AppAtlas Final`.
+4. baut das Xcode-Scheme `AppAtlas Final`,
+5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final.
 
 `beta` wird dabei nicht verändert.
 
