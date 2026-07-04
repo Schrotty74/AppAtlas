@@ -135,11 +135,12 @@ struct ScanImportView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Katalog mit \(selectedAppIDs.count) Apps abgleichen") {
                         if let result {
-                            store.mergeScannedApps(
-                                result.apps.filter {
-                                    selectedAppIDs.contains($0.id)
-                                }
-                            )
+                            let selectedApps = result.apps.filter {
+                                selectedAppIDs.contains($0.id)
+                            }
+                            Task {
+                                await store.mergeScannedAppsAsync(selectedApps)
+                            }
                         }
                         dismiss()
                     }

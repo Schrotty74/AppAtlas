@@ -76,16 +76,19 @@ xcodebuild \
     -project AppAtlas.xcodeproj \
     -scheme "AppAtlas Beta" \
     -configuration Beta \
-    -destination 'platform=macOS' \
+    -destination 'generic/platform=macOS' \
     build
 
 APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-release-package.sh beta
+
+git push origin beta
 
 restore_local_dev_state
 trap - ERR
 
 echo "Beta wurde aus Dev erstellt."
 echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
+echo "Branch beta wurde zu origin gepusht."
 echo "Dev-Commit: $dev_commit"
 echo "Lokaler Dev-Stand wurde wiederhergestellt."
 echo "Aktueller Branch: $(git branch --show-current)"

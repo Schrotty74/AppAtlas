@@ -35,12 +35,15 @@ xcodebuild \
     -project AppAtlas.xcodeproj \
     -scheme "AppAtlas Final" \
     -configuration Final \
-    -destination 'platform=macOS' \
+    -destination 'generic/platform=macOS' \
     build
 
 APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-release-package.sh final
 
+git push origin main
+
 echo "Final wurde aus Beta veröffentlicht."
 echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
+echo "Branch main wurde zu origin gepusht."
 echo "Beta-Commit: $beta_commit"
 echo "Aktueller Branch: $(git branch --show-current)"

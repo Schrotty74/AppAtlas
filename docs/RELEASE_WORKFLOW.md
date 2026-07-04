@@ -48,9 +48,21 @@ Das Skript:
 5. uebernimmt den lokalen Dev-Snapshot als neuen Beta-Commit,
 6. baut das Xcode-Scheme `AppAtlas Beta`,
 7. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
-8. stellt den lokalen Dev-Arbeitsstand wieder her.
+8. pusht den Branch `beta` nach GitHub,
+9. stellt den lokalen Dev-Arbeitsstand wieder her.
 
 `dev` wird dabei nicht veraendert und nicht gepusht.
+
+Wenn nur der Xcode-Build der Beta-Variante geprüft werden soll, ohne die
+aktive Scheme in Xcode manuell umzuschalten:
+
+```sh
+./Scripts/build-xcode-beta.sh
+```
+
+Dieses Skript verwendet immer explizit `-scheme "AppAtlas Beta"` und
+`-configuration Beta`. Es hängt nicht von der aktuell in Xcode ausgewählten
+Scheme ab.
 
 ## Beta als Final veröffentlichen
 
@@ -64,7 +76,8 @@ Das Skript:
 2. wechselt auf `beta`,
 3. übernimmt `beta` per Fast-Forward nach `main`,
 4. baut das Xcode-Scheme `AppAtlas Final`,
-5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final.
+5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final,
+6. pusht den Branch `main` nach GitHub.
 
 `beta` wird dabei nicht verändert.
 
