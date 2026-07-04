@@ -12,6 +12,10 @@ enum AppResources {
         {
             return appBundle
         }
+        #if SWIFT_PACKAGE
         return Bundle.module
+        #else
+        return Bundle.main
+        #endif
     }
 }
