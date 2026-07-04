@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject private var store: CatalogStore
+    @EnvironmentObject private var updateChecker: AppUpdateChecker
     @AppStorage("selectedLayout") private var selectedLayout = AppLayout.classic.rawValue
     @AppStorage("appAtlasTheme") private var selectedThemeID = AppAtlasTheme.system.rawValue
     @AppStorage("appAtlasCustomThemes") private var customThemesRaw = "[]"
@@ -12,6 +13,7 @@ struct ContentView: View {
     @StateObject private var presentation = ContentPresentationState()
     @StateObject private var systemAppearance = SystemAppearanceObserver()
     @State private var backupReminderDismissed = false
+    @State private var updateBannerDismissed = false
 
     private var customThemes: [AppAtlasThemeDefinition] {
         AppAtlasThemeDefinition.decodeList(customThemesRaw)
@@ -93,7 +95,13 @@ struct ContentView: View {
             )
         }
         .safeAreaInset(edge: .top) {
-            backupReminderBanner
+            VStack(spacing: 0) {
+                updateBanner
+                backupReminderBanner
+            }
+        }
+        .task {
+            await updateChecker.checkAutomaticallyAfterLaunch()
         }
         .modifier(
             ContentSheetsModifier(
@@ -120,6 +128,30 @@ struct ContentView: View {
 
     private var layout: AppLayout {
         AppLayout(rawValue: selectedLayout) ?? .classic
+    }
+
+    @ViewBuilder
+    private var updateBanner: some View {
+        if !updateBannerDismissed,
+           case .updateAvailable(let info) = updateChecker.status {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.down.circle")
+                Text("AppAtlas \(info.latestVersion) ist verfügbar.")
+                    .font(.headline)
+                Text("Du kannst die neue Version auf GitHub laden.")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Release öffnen") {
+                    updateChecker.openReleasePage()
+                }
+                Button("Später") {
+                    updateBannerDismissed = true
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.thinMaterial)
+        }
     }
 
     @ViewBuilder

@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct AppAtlasApp: App {
     @StateObject private var store = CatalogStore()
+    @StateObject private var updateChecker = AppUpdateChecker()
     @AppStorage(AppLanguageChoice.storageKey)
     private var languageChoice = AppLanguageChoice.automatic.rawValue
 
@@ -20,12 +21,14 @@ struct AppAtlasApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(store)
+                .environmentObject(updateChecker)
                 .environment(\.locale, selectedLanguage.locale)
                 .frame(minWidth: 980, minHeight: 620)
         }
         .windowToolbarStyle(.unified)
         Settings {
             AppSettingsView()
+                .environmentObject(updateChecker)
                 .environment(\.locale, selectedLanguage.locale)
         }
         .commands {

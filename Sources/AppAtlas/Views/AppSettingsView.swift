@@ -46,6 +46,7 @@ struct OnlineUpdatePerformance: Codable, Sendable {
 }
 
 struct AppSettingsView: View {
+    @EnvironmentObject private var updateChecker: AppUpdateChecker
     @AppStorage(AppLanguageChoice.storageKey)
     private var languageChoice = AppLanguageChoice.automatic.rawValue
     @AppStorage(OnlineUpdateSettings.concurrencyKey)
@@ -142,6 +143,35 @@ struct AppSettingsView: View {
                 Text(
                     "Die Erinnerung bleibt lokal auf diesem Mac und soll dich "
                         + "regelmäßig an einen eigenen Katalogexport erinnern."
+                )
+                .foregroundStyle(.secondary)
+            }
+
+            Section("Updates") {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("AppAtlas-Version")
+                        Text(updateStatusText)
+                            .foregroundStyle(updateStatusColor)
+                    }
+                    Spacer()
+                    Button("Nach Updates suchen") {
+                        Task {
+                            await updateChecker.checkManually()
+                        }
+                    }
+                    .disabled(updateChecker.status == .checking)
+                }
+
+                if case .updateAvailable = updateChecker.status {
+                    Button("Release auf GitHub öffnen") {
+                        updateChecker.openReleasePage()
+                    }
+                }
+
+                Text(
+                    "Automatisch wird höchstens einmal pro Tag geprüft. "
+                        + "Manuelle Prüfungen sind jederzeit möglich."
                 )
                 .foregroundStyle(.secondary)
             }
@@ -356,6 +386,32 @@ struct AppSettingsView: View {
             OnlineUpdatePerformance.self,
             from: performanceData
         )
+    }
+
+    private var updateStatusText: String {
+        switch updateChecker.status {
+        case .idle:
+            "Noch nicht geprüft."
+        case .checking:
+            "Updateprüfung läuft …"
+        case .upToDate:
+            "AppAtlas ist aktuell."
+        case .updateAvailable(let info):
+            "Neue Version verfügbar: \(info.latestVersion)"
+        case .failed(let message):
+            "Updateprüfung fehlgeschlagen: \(message)"
+        }
+    }
+
+    private var updateStatusColor: Color {
+        switch updateChecker.status {
+        case .updateAvailable:
+            .orange
+        case .failed:
+            .red
+        default:
+            .secondary
+        }
     }
 
     private var excludedDirectories: [String] {

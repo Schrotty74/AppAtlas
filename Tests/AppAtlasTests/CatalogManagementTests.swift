@@ -6,6 +6,15 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
+    func updateCheckerComparesGitHubTagsWithBundleVersions() {
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.1", than: "1.2.0"))
+        #expect(AppUpdateChecker.isNewerVersion("1.2.0", than: "1.1.9"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.0-beta.2", than: "1.2.0-beta.1"))
+        #expect(!AppUpdateChecker.isNewerVersion("v1.2.0", than: "1.2.0"))
+        #expect(!AppUpdateChecker.isNewerVersion("v1.1.1", than: "1.2.0"))
+    }
+
+    @Test
     func cinebenchLogoURLDownloadsValidPNG() async throws {
         let url = try #require(URL(
             string: "https://cinebench.net/wp-content/uploads/2025/09/Cinebench_logo.png"
@@ -1205,6 +1214,8 @@ struct CatalogManagementTests {
         let filter = CatalogEntryFilter()
         #expect(!filter.shouldInclude(localFile(named: "Activation.pkg")))
         #expect(!filter.shouldInclude(localFile(named: "Adobe Runtime UB.pkg")))
+        #expect(!filter.shouldInclude(localFile(named: "CCXP.pkg")))
+        #expect(!filter.shouldInclude(localFile(named: "Adobe Creative Cloud Cleaner Tool.app")))
         #expect(filter.shouldInclude(localFile(named: "Adobe Photoshop.pkg")))
     }
 
@@ -3312,10 +3323,35 @@ struct CatalogManagementTests {
             "Entwicklung/Editoren/Plugins",
             isDirectory: true
         )
+        let macSoftwareBackupDirectory = root.appendingPathComponent(
+            "Backup/Festplatte Diverses Backup/GDrive/Handy/Apps",
+            isDirectory: true
+        )
+        let downloaderConfigDirectory = root.appendingPathComponent(
+            "Download/JDownloader 2/cfg",
+            isDirectory: true
+        )
+        let nextPadPluginDirectory = root.appendingPathComponent(
+            "Entwicklung/Editoren/NextPad/Plugins",
+            isDirectory: true
+        )
+        let crackReadmeDirectory = root.appendingPathComponent(
+            "Grafik/Adobe/Adobe Lightroom Classic/CRACK - README",
+            isDirectory: true
+        )
+        let macosxDirectory = root.appendingPathComponent(
+            "__MACOSX",
+            isDirectory: true
+        )
         for directory in [
             includedDirectory,
             oldBackupDirectory,
-            pluginDirectory
+            pluginDirectory,
+            macSoftwareBackupDirectory,
+            downloaderConfigDirectory,
+            nextPadPluginDirectory,
+            crackReadmeDirectory,
+            macosxDirectory
         ] {
             try FileManager.default.createDirectory(
                 at: directory,
@@ -3327,6 +3363,11 @@ struct CatalogManagementTests {
         try Data().write(to: includedDirectory.appendingPathComponent("Mail_profile_backup.zip"))
         try Data().write(to: oldBackupDirectory.appendingPathComponent("OldTool.exe"))
         try Data().write(to: pluginDirectory.appendingPathComponent("EditorPlugin.zip"))
+        try Data().write(to: macSoftwareBackupDirectory.appendingPathComponent("AndroPods.apk"))
+        try Data().write(to: downloaderConfigDirectory.appendingPathComponent("downloadList194.zip"))
+        try Data().write(to: nextPadPluginDirectory.appendingPathComponent("ComparePlus.zip"))
+        try Data().write(to: crackReadmeDirectory.appendingPathComponent("Offline Crack.dmg"))
+        try Data().write(to: macosxDirectory.appendingPathComponent("ArchiveHelper.dmg"))
 
         let result = try VolumeScanner().scan(root)
 
@@ -3350,6 +3391,49 @@ struct CatalogManagementTests {
             "Backup To Go.dmg",
             "AOMEI Backupper.zip"
         ]))
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test
+    func scanKeepsRealAppsFromReferenceComparison() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let appBundle = root.appendingPathComponent(
+            "Backup/Backup To Go 2.app",
+            isDirectory: true
+        )
+        let appInternalResource = appBundle.appendingPathComponent(
+            "Contents/Resources/InternalHelper.dmg"
+        )
+        let files = [
+            "Backup/App-Installer/AppStateSaver.dmg",
+            "Multimedia/Audio/Radiola-12.2.0.dmg",
+            "Hardware/Monitor/Atoll.2.2.0.dmg",
+            "Download/Harbor-1.2.10.dmg"
+        ]
+        try FileManager.default.createDirectory(
+            at: appInternalResource.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data().write(to: appInternalResource)
+        for path in files {
+            let url = root.appendingPathComponent(path)
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try Data().write(to: url)
+        }
+
+        let result = try VolumeScanner().scan(root)
+        let paths = Set(result.files.map(\.relativePath))
+
+        #expect(paths.contains("Backup/Backup To Go 2.app"))
+        #expect(!paths.contains("Backup/Backup To Go 2.app/Contents/Resources/InternalHelper.dmg"))
+        #expect(paths.contains("Backup/App-Installer/AppStateSaver.dmg"))
+        #expect(paths.contains("Multimedia/Audio/Radiola-12.2.0.dmg"))
+        #expect(paths.contains("Hardware/Monitor/Atoll.2.2.0.dmg"))
+        #expect(paths.contains("Download/Harbor-1.2.10.dmg"))
         try? FileManager.default.removeItem(at: root)
     }
 

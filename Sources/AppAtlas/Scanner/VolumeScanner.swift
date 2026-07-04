@@ -148,10 +148,13 @@ struct VolumeScanner: Sendable {
 
 struct ScanExclusionPolicy: Sendable {
     private let builtInExcludedDirectoryNames = Set([
-        "__macosx",
+        "macosx",
         "cfg",
-        "crack - readme",
+        "crack readme",
         "plugins"
+    ])
+    private let builtInExcludedPaths = Set([
+        "backup/festplatte diverses backup"
     ])
     private let customExcludedDirectoryNames: Set<String>
     private let customExcludedPaths: Set<String>
@@ -191,6 +194,7 @@ struct ScanExclusionPolicy: Sendable {
         }
 
         if url.hasDirectoryPath,
+           url.pathExtension.lowercased() != "app",
            normalizedComponents.count >= 2,
            firstComponent == "backup",
            normalizedComponents[1].contains("backup") {
@@ -210,6 +214,12 @@ struct ScanExclusionPolicy: Sendable {
         }
 
         let normalizedPath = normalizedComponents.joined(separator: "/")
+        if builtInExcludedPaths.contains(where: {
+            normalizedPath == $0 || normalizedPath.hasPrefix($0 + "/")
+        }) {
+            return true
+        }
+
         if customExcludedPaths.contains(where: {
             normalizedPath == $0 || normalizedPath.hasPrefix($0 + "/")
         }) {
