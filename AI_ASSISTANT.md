@@ -41,6 +41,11 @@ Der Assistent beantwortet Fragen zum eigenen Katalog, zum Beispiel:
 
 ## Release-Workflow für Codex
 
+- Dev bleibt lokal. Nicht jede Dev-Version committen oder pushen.
+- Erst wenn der Benutzer schreibt „Erstelle Beta aus Dev“, wird der aktuelle
+  lokale Dev-Stand als Beta übernommen und als Git-Commit auf `beta`
+  gespeichert.
+- Erst `beta` und `main` werden in Git/GitHub übernommen.
 - Wenn der Benutzer schreibt „Erstelle Beta aus Dev“, führe
   `./Scripts/create-beta-from-dev.sh` aus.
 - Wenn der Benutzer schreibt „Veröffentliche Beta als Final“, führe

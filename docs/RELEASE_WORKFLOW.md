@@ -1,10 +1,14 @@
 # Release-Workflow
 
-AppAtlas verwendet drei dauerhafte Git-Branches:
+AppAtlas verwendet drei Stufen:
 
-- `dev`: tägliche Entwicklung
-- `beta`: stabiler Teststand
-- `main`: veröffentlichter Final-Stand
+- `dev`: lokaler Arbeitsstand fuer taegliche Entwicklung
+- `beta`: stabiler Teststand in Git
+- `main`: veroeffentlichter Final-Stand in Git
+
+Wichtig: `dev` bleibt lokal. Nicht jede Dev-Version wird committed oder
+gepusht. Erst wenn aus dem aktuellen lokalen Dev-Stand eine Beta erstellt
+wird, wird daraus ein Git-Commit auf `beta`.
 
 Die Xcode-Schemes sind passend dazu eingerichtet:
 
@@ -26,6 +30,9 @@ git switch dev
 ./Scripts/build-current-branch.sh
 ```
 
+Lokale Aenderungen auf `dev` duerfen uncommitted bleiben. Das ist der normale
+Arbeitsmodus.
+
 ## Beta aus Dev erstellen
 
 ```sh
@@ -34,12 +41,15 @@ git switch dev
 
 Das Skript:
 
-1. verlangt einen sauberen Git-Arbeitsstand,
-2. wechselt auf `dev`,
-3. übernimmt `dev` per Fast-Forward nach `beta`,
-4. baut das Xcode-Scheme `AppAtlas Beta`.
+1. wechselt auf `dev`,
+2. sichert den aktuellen lokalen Dev-Stand temporaer, auch uncommitted Dateien,
+3. wechselt auf `beta`,
+4. uebernimmt committed Dev-Aenderungen per Fast-Forward,
+5. uebernimmt den lokalen Dev-Snapshot als neuen Beta-Commit,
+6. baut das Xcode-Scheme `AppAtlas Beta`,
+7. stellt den lokalen Dev-Arbeitsstand wieder her.
 
-`dev` wird dabei nicht verändert.
+`dev` wird dabei nicht veraendert und nicht gepusht.
 
 ## Beta als Final veröffentlichen
 
@@ -61,3 +71,5 @@ Das Skript:
 Beide Übernahme-Skripte verwenden `git merge --ff-only`. Wenn die Branches
 auseinanderlaufen, bricht das Skript ab, statt automatisch einen unsauberen
 Mischstand zu erzeugen.
+
+Ignorierte private Dateien werden nicht in den Beta-Snapshot aufgenommen.
