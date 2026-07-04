@@ -2,6 +2,9 @@
 .build/
 .build-cache/
 .swiftpm/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
 dist/
 Backup/*.zip
 Backup/*.sha256

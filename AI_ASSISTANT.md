@@ -38,3 +38,13 @@ Der Assistent beantwortet Fragen zum eigenen Katalog, zum Beispiel:
 - Das Apple-Modell benötigt unterstützte Hardware, macOS 26 und aktivierte
   Apple Intelligence.
 - Eine allgemeine Websuche über weitere Anbieter ist noch nicht integriert.
+
+## Release-Workflow für Codex
+
+- Wenn der Benutzer schreibt „Erstelle Beta aus Dev“, führe
+  `./Scripts/create-beta-from-dev.sh` aus.
+- Wenn der Benutzer schreibt „Veröffentliche Beta als Final“, führe
+  `./Scripts/publish-beta-as-final.sh` aus.
+- Wenn auf einem der Branches `dev`, `beta` oder `main` gebaut werden soll,
+  kann `./Scripts/build-current-branch.sh` verwendet werden.
+- Vor einem Push bleibt die ausdrückliche Benutzerfreigabe erforderlich.

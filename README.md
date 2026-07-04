@@ -140,6 +140,7 @@ typical catalog, export and database files from being added.
 - [Example theme Autumn Ember](docs/themes/example-autumn-ember.json)
 - [Example theme Winter Frost](docs/themes/example-winter-frost.json)
 - [Project structure](docs/PROJECT_STRUCTURE.md)
+- [Release workflow](docs/RELEASE_WORKFLOW.md)
 - [Privacy details](docs/PRIVACY.md)
 - [Privacy audit for AppAtlas 1.1.1](docs/PRIVACY_AUDIT_2026-06-17.md)
 

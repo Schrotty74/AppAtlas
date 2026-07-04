@@ -16,7 +16,9 @@ scratch_directory="$root_directory/.build/beta"
 release_directory="$root_directory/dist/AppAtlas-$version"
 app_bundle="$release_directory/AppAtlas.app"
 zip_file="$root_directory/Backup/AppAtlas-$version-macos.zip"
-checksum_file="$zip_file.sha256"
+dmg_file="$root_directory/Backup/AppAtlas-$version-macos.dmg"
+zip_checksum_file="$zip_file.sha256"
+dmg_checksum_file="$dmg_file.sha256"
 bundle_identifier="at.schrotty.appatlas"
 if [[ "$version" == *beta* ]]; then
     bundle_identifier="at.schrotty.appatlas.beta"
@@ -79,7 +81,12 @@ binary_directory="$(
         --show-bin-path
 )"
 
-rm -rf "$release_directory" "$zip_file" "$checksum_file"
+rm -rf \
+    "$release_directory" \
+    "$zip_file" \
+    "$dmg_file" \
+    "$zip_checksum_file" \
+    "$dmg_checksum_file"
 mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
 
 cp "$binary_directory/AppAtlas" "$app_bundle/Contents/MacOS/AppAtlas"
@@ -153,13 +160,28 @@ codesign \
 codesign --verify --deep --strict "$app_bundle"
 
 ditto -c -k --sequesterRsrc --keepParent "$app_bundle" "$zip_file"
+dmg_staging_directory="$release_directory/DMG"
+rm -rf "$dmg_staging_directory"
+mkdir -p "$dmg_staging_directory"
+cp -R "$app_bundle" "$dmg_staging_directory/AppAtlas.app"
+ln -s /Applications "$dmg_staging_directory/Applications"
+hdiutil create \
+    -volname "AppAtlas $version" \
+    -srcfolder "$dmg_staging_directory" \
+    -ov \
+    -format UDZO \
+    "$dmg_file"
 (
     cd "$root_directory/Backup"
     shasum -a 256 "$(basename "$zip_file")" \
-        > "$(basename "$checksum_file")"
+        > "$(basename "$zip_checksum_file")"
+    shasum -a 256 "$(basename "$dmg_file")" \
+        > "$(basename "$dmg_checksum_file")"
 )
 
 echo "Lokales Release-Paket erstellt (kein Backup):"
 echo "  $app_bundle"
+echo "  $dmg_file"
+echo "  $dmg_checksum_file"
 echo "  $zip_file"
-echo "  $checksum_file"
+echo "  $zip_checksum_file"
