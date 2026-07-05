@@ -116,88 +116,45 @@ require_gh() {
     fi
 }
 
+last_beta_tag() {
+    local tag
+
+    tag="$(git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true)"
+    if [[ -z "$tag" ]]; then
+        echo "Abbruch: kein letzter Beta-Tag gefunden." >&2
+        exit 1
+    fi
+
+    echo "$tag"
+}
+
 release_change_list() {
-    local previous_beta="$1"
-    local language="$2"
-    local note_prefix
-    local notes
+    local previous_beta_tag="$1"
     local subjects
 
-    case "$language" in
-        de)
-            note_prefix="Release-Note-DE:"
-            ;;
-        en)
-            note_prefix="Release-Note-EN:"
-            ;;
-        *)
-            echo "Abbruch: unbekannte Release-Notes-Sprache: $language" >&2
-            exit 1
-            ;;
-    esac
-
-    notes="$(
-        git log --reverse --no-merges --format='%B%x1e' "$previous_beta"..HEAD \
-            | awk -v prefix="$note_prefix" '
-                index($0, prefix) == 1 {
-                    note = substr($0, length(prefix) + 1)
-                    sub(/^[[:space:]]+/, "", note)
-                    if (note != "") {
-                        print "- " note
-                    }
-                }
-            ' || true
-    )"
-
-    if [[ -n "$notes" ]]; then
-        echo "$notes"
-        return
+    subjects="$(git log --reverse --no-merges --pretty=format:'- %s' "$previous_beta_tag"..HEAD || true)"
+    if [[ -z "$subjects" ]]; then
+        echo "Abbruch: keine Commit-Subjects seit $previous_beta_tag gefunden." >&2
+        exit 1
     fi
 
-    subjects="$(git log --reverse --no-merges --pretty=format:'- %s' "$previous_beta"..HEAD || true)"
-    if [[ -n "$subjects" ]]; then
-        echo "$subjects"
-        return
-    fi
-
-    case "$language" in
-        de)
-            echo "- Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand."
-            ;;
-        en)
-            echo "- This beta contains the current changes from the dev state."
-            ;;
-    esac
+    echo "$subjects"
 }
 
 write_release_notes() {
     local notes_file="$1"
     local version="$2"
-    local previous_beta="$3"
-    local changes_de
-    local changes_en
+    local previous_beta_tag="$3"
+    local changes
 
-    changes_de="$(release_change_list "$previous_beta" de)"
-    changes_en="$(release_change_list "$previous_beta" en)"
+    changes="$(release_change_list "$previous_beta_tag")"
 
     cat > "$notes_file" <<EOF
 # AppAtlas $version
 
-## Deutsch
+Changes since $previous_beta_tag:
 
-Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand.
-
-### Änderungen
-
-$changes_de
-
-## English
-
-This beta contains the current changes from the dev state.
-
-### Changes
-
-$changes_en
+$changes
 EOF
 }
 
@@ -229,6 +186,7 @@ require_gh
 
 version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
+previous_beta_tag="$(last_beta_tag)"
 artifact_base="$(artifact_base_name "$version")"
 backup_directory="$root_directory/Backup"
 zip_file="$backup_directory/$artifact_base.zip"
@@ -265,7 +223,7 @@ git push --set-upstream origin refs/heads/beta:refs/heads/beta
 write_release_notes \
     "$release_notes_file" \
     "$version" \
-    "$beta_before"
+    "$previous_beta_tag"
 create_github_release \
     "$version" \
     "$beta_commit" \
