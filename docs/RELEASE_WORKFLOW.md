@@ -10,11 +10,12 @@ Wichtig: `dev` bleibt lokal. Nicht jede Dev-Version wird committed oder
 gepusht. Erst wenn aus dem aktuellen lokalen Dev-Stand eine Beta erstellt
 wird, wird daraus ein Git-Commit auf `beta`.
 
-Die Xcode-Schemes sind passend dazu eingerichtet:
+Xcode wird fuer die taegliche Dev-Arbeit verwendet. Beta und Final laufen ueber
+die Release-Skripte:
 
 - `AppAtlas Dev` baut `Dev`
-- `AppAtlas Beta` baut `Beta`
-- `AppAtlas Final` baut `Final`
+- `create-beta-from-dev.sh` baut und veroeffentlicht Beta
+- `publish-beta-as-final.sh` baut und veroeffentlicht Final
 
 Die Varianten haben getrennte Bundle Identifier und dadurch getrennte
 macOS-Container, Einstellungen und AppAtlas-Datenordner:
@@ -43,9 +44,10 @@ Das Skript:
 
 1. verlangt, dass der aktuelle Branch `dev` ist,
 2. bleibt auf `dev` und wechselt keine Branches,
-3. baut das Xcode-Scheme `AppAtlas Beta`,
+3. baut das Beta-Paket ueber die Release-Skriptlogik,
 4. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
-5. speichert ZIP und DMG dauerhaft im Backup-Ordner,
+5. speichert ZIP, DMG, SHA256 und Release Notes unter
+   `Backup/releases/beta/<version>/`,
 6. erstellt aus dem aktuellen Dev-Arbeitsbaum einen Commit auf `beta`,
 7. pusht `beta` automatisch nach GitHub,
 8. schreibt englische Release Notes ohne technische Metadaten in eine Datei,
@@ -71,9 +73,10 @@ Das Skript:
 1. verlangt einen sauberen Git-Arbeitsstand,
 2. wechselt auf `beta`,
 3. übernimmt `beta` per Fast-Forward nach `main`,
-4. baut das Xcode-Scheme `AppAtlas Final`,
+4. baut das Final-Paket ueber die Release-Skriptlogik,
 5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final,
-6. speichert ZIP und DMG dauerhaft im Backup-Ordner,
+6. speichert ZIP, DMG und SHA256 unter
+   `Backup/releases/final/<version>/`,
 7. pusht `main` automatisch nach GitHub.
 
 `beta` wird dabei nicht verändert.

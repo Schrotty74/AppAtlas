@@ -20,7 +20,6 @@ cd "$root_directory"
 
 case "$channel" in
     beta)
-        scheme="AppAtlas Beta"
         configuration="Beta"
         app_display_name="AppAtlas Beta"
         app_bundle_name="AppAtlas Beta.app"
@@ -29,7 +28,6 @@ case "$channel" in
         default_version_suffix="-beta.local"
         ;;
     final)
-        scheme="AppAtlas Final"
         configuration="Final"
         app_display_name="AppAtlas"
         app_bundle_name="AppAtlas.app"
@@ -43,7 +41,7 @@ build_setting() {
     local name="$1"
     xcodebuild \
         -project AppAtlas.xcodeproj \
-        -scheme "$scheme" \
+        -target AppAtlas \
         -configuration "$configuration" \
         -derivedDataPath "$root_directory/.build/xcode-$channel-derived-data" \
         -clonedSourcePackagesDirPath "$root_directory/.build/xcode-$channel-source-packages" \
@@ -77,14 +75,25 @@ fi
 
 version="${APPATLAS_VERSION:-$default_version}"
 scratch_directory="$root_directory/.build/package-$channel"
-release_directory="$root_directory/dist/$dist_name_prefix-$version"
-app_bundle="$release_directory/$app_bundle_name"
 artifact_base_name="AppAtlas-$version-macos"
 if [[ "$channel" == "beta" && "$version" != *beta* ]]; then
     artifact_base_name="AppAtlas-Beta-$version-macos"
 fi
-zip_file="$root_directory/Backup/$artifact_base_name.zip"
-dmg_file="$root_directory/Backup/$artifact_base_name.dmg"
+
+case "$version" in
+    *local*|*test*)
+        backup_directory="$root_directory/Backup/local-test/$version"
+        release_directory="$root_directory/dist/local-test/$version"
+        ;;
+    *)
+        backup_directory="$root_directory/Backup/releases/$channel/$version"
+        release_directory="$root_directory/dist/releases/$channel/$version"
+        ;;
+esac
+
+app_bundle="$release_directory/$app_bundle_name"
+zip_file="$backup_directory/$artifact_base_name.zip"
+dmg_file="$backup_directory/$artifact_base_name.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
 
@@ -92,7 +101,7 @@ export SWIFTPM_HOME="$root_directory/.build-cache/swiftpm"
 export CLANG_MODULE_CACHE_PATH="$root_directory/.build-cache/clang"
 
 "$root_directory/Scripts/privacy-check.sh"
-mkdir -p "$root_directory/Backup"
+mkdir -p "$backup_directory"
 
 swift build \
     --package-path "$root_directory" \
@@ -245,7 +254,7 @@ then
         "$dmg_staging_directory"
 fi
 (
-    cd "$root_directory/Backup"
+    cd "$backup_directory"
     shasum -a 256 "$(basename "$zip_file")" \
         > "$(basename "$zip_checksum_file")"
     shasum -a 256 "$(basename "$dmg_file")" \

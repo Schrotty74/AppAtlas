@@ -13,12 +13,14 @@ case "$branch" in
         configuration="Dev"
         ;;
     beta)
-        scheme="AppAtlas Beta"
-        configuration="Beta"
+        echo "Beta wird nicht mehr ueber ein Xcode-Scheme gebaut." >&2
+        echo "Bitte ./Scripts/create-beta-from-dev.sh <version> auf dev verwenden." >&2
+        exit 1
         ;;
     main)
-        scheme="AppAtlas Final"
-        configuration="Final"
+        echo "Final wird nicht mehr ueber ein Xcode-Scheme gebaut." >&2
+        echo "Bitte ./Scripts/publish-beta-as-final.sh verwenden." >&2
+        exit 1
         ;;
     *)
         echo "Unbekannter Branch '$branch'." >&2

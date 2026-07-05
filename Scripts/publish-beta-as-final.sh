@@ -11,7 +11,7 @@ build_setting() {
     local name="$1"
     xcodebuild \
         -project AppAtlas.xcodeproj \
-        -scheme "AppAtlas Final" \
+        -target AppAtlas \
         -configuration Final \
         -derivedDataPath "$root_directory/.build/xcode-final-derived-data" \
         -clonedSourcePackagesDirPath "$root_directory/.build/xcode-final-source-packages" \
@@ -69,6 +69,18 @@ require_release_artifacts() {
             exit 1
         fi
     done
+}
+
+backup_directory_for_version() {
+    local version="$1"
+    case "$version" in
+        *local*|*test*)
+            echo "$root_directory/Backup/local-test/$version"
+            ;;
+        *)
+            echo "$root_directory/Backup/releases/final/$version"
+            ;;
+    esac
 }
 
 require_gh() {
@@ -227,7 +239,7 @@ ensure_branch_exists main beta
 
 version="$(release_version)"
 previous_final_tag="$(last_final_tag)"
-backup_directory="$root_directory/Backup"
+backup_directory="$(backup_directory_for_version "$version")"
 artifact_base="AppAtlas-$version-macos"
 zip_file="$backup_directory/$artifact_base.zip"
 dmg_file="$backup_directory/$artifact_base.dmg"
@@ -242,13 +254,6 @@ git switch main
 git merge --ff-only beta
 
 reset_final_container
-
-xcodebuild \
-    -project AppAtlas.xcodeproj \
-    -scheme "AppAtlas Final" \
-    -configuration Final \
-    -destination 'platform=macOS' \
-    build
 
 APPATLAS_VERSION="$version" \
     APPATLAS_ALLOW_RELEASE_PACKAGE=YES \
@@ -274,6 +279,7 @@ create_github_release \
 
 echo "Final wurde aus Beta veröffentlicht."
 echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
+echo "Ausgabeordner: $backup_directory"
 echo "GitHub Release wurde erstellt."
 echo "Beta-Commit: $beta_commit"
 echo "Aktueller Branch: $(git branch --show-current)"
