@@ -6,3 +6,4 @@ Changes since v1.2.0-beta.2:
 - Configure release branch workflow
 - Adjust release workflow for local dev snapshots
 - Add release package generation to workflow
+- Prepare AppAtlas 1.2.0 beta 3

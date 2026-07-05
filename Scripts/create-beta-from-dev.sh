@@ -132,9 +132,20 @@ release_change_list() {
     local previous_beta_tag="$1"
     local subjects
 
-    subjects="$(git log --reverse --no-merges --pretty=format:'- %s' "$previous_beta_tag"..HEAD || true)"
+    subjects="$(
+        git log --reverse --no-merges --pretty=format:'%s' "$previous_beta_tag"..HEAD \
+            -- Sources AppMetadataKit/Sources \
+            | awk '
+                /^(Prepare|Fix|Improve|Update)( |:)/ || /^Add( |:)/ {
+                    subject = tolower($0)
+                    if (subject !~ /(readme|script|workflow|xcode|project|release|infrastructure|github|badge|documentation|docs|package|scheme)/) {
+                        print "- " $0
+                    }
+                }
+            ' || true
+    )"
     if [[ -z "$subjects" ]]; then
-        echo "Abbruch: keine Commit-Subjects seit $previous_beta_tag gefunden." >&2
+        echo "Abbruch: keine App-Änderungs-Commits seit $previous_beta_tag gefunden." >&2
         exit 1
     fi
 
