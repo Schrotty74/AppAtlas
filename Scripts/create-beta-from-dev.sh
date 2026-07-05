@@ -118,57 +118,86 @@ require_gh() {
 
 release_change_list() {
     local previous_beta="$1"
-    local changes
+    local language="$2"
+    local note_prefix
+    local notes
+    local subjects
 
-    changes="$(git log --no-merges --pretty=format:'- %s (%h)' "$previous_beta"..HEAD || true)"
-    if [[ -z "$changes" ]]; then
-        echo "- Keine Commit-Zusammenfassung verfügbar."
+    case "$language" in
+        de)
+            note_prefix="Release-Note-DE:"
+            ;;
+        en)
+            note_prefix="Release-Note-EN:"
+            ;;
+        *)
+            echo "Abbruch: unbekannte Release-Notes-Sprache: $language" >&2
+            exit 1
+            ;;
+    esac
+
+    notes="$(
+        git log --reverse --no-merges --format='%B%x1e' "$previous_beta"..HEAD \
+            | awk -v prefix="$note_prefix" '
+                index($0, prefix) == 1 {
+                    note = substr($0, length(prefix) + 1)
+                    sub(/^[[:space:]]+/, "", note)
+                    if (note != "") {
+                        print "- " note
+                    }
+                }
+            ' || true
+    )"
+
+    if [[ -n "$notes" ]]; then
+        echo "$notes"
         return
     fi
 
-    echo "$changes"
+    subjects="$(git log --reverse --no-merges --pretty=format:'- %s' "$previous_beta"..HEAD || true)"
+    if [[ -n "$subjects" ]]; then
+        echo "$subjects"
+        return
+    fi
+
+    case "$language" in
+        de)
+            echo "- Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand."
+            ;;
+        en)
+            echo "- This beta contains the current changes from the dev state."
+            ;;
+    esac
 }
 
 write_release_notes() {
     local notes_file="$1"
     local version="$2"
-    local dev_commit="$3"
-    local beta_commit="$4"
-    local previous_beta="$5"
-    local zip_checksum="$6"
-    local dmg_checksum="$7"
-    local changes
+    local previous_beta="$3"
+    local changes_de
+    local changes_en
 
-    changes="$(release_change_list "$previous_beta")"
+    changes_de="$(release_change_list "$previous_beta" de)"
+    changes_en="$(release_change_list "$previous_beta" en)"
 
     cat > "$notes_file" <<EOF
-# AppAtlas Beta $version
+# AppAtlas $version
 
 ## Deutsch
 
-Automatisch erstellte Beta aus dem aktuellen Dev-Stand.
-
-- Dev-Commit: \`$dev_commit\`
-- Beta-Commit: \`$(git rev-parse --short "$beta_commit")\`
-- ZIP SHA256: \`$zip_checksum\`
-- DMG SHA256: \`$dmg_checksum\`
+Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand.
 
 ### Änderungen
 
-$changes
+$changes_de
 
 ## English
 
-Automatically created beta from the current dev state.
-
-- Dev commit: \`$dev_commit\`
-- Beta commit: \`$(git rev-parse --short "$beta_commit")\`
-- ZIP SHA256: \`$zip_checksum\`
-- DMG SHA256: \`$dmg_checksum\`
+This beta contains the current changes from the dev state.
 
 ### Changes
 
-$changes
+$changes_en
 EOF
 }
 
@@ -233,16 +262,10 @@ beta_commit="$(create_beta_commit "$version" "$tree")"
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
-zip_checksum="$(awk '{print $1}' "$zip_checksum_file")"
-dmg_checksum="$(awk '{print $1}' "$dmg_checksum_file")"
 write_release_notes \
     "$release_notes_file" \
     "$version" \
-    "$dev_commit" \
-    "$beta_commit" \
-    "$beta_before" \
-    "$zip_checksum" \
-    "$dmg_checksum"
+    "$beta_before"
 create_github_release \
     "$version" \
     "$beta_commit" \
