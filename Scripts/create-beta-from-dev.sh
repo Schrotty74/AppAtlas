@@ -74,13 +74,16 @@ ensure_beta_ref() {
 worktree_tree() {
     local changed_paths
 
-    changed_paths=("${(@f)$(
+    changed_paths=()
+    while IFS= read -r path; do
+        changed_paths+=("$path")
+    done < <(
         {
             git diff --name-only HEAD --
             git diff --cached --name-only
             git ls-files --others --exclude-standard
         } | sort -u
-    )}")
+    )
     if (( ${#changed_paths[@]} > 0 )); then
         git add -A -- "${changed_paths[@]}"
     fi
