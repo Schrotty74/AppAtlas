@@ -1,17 +1,10 @@
 # AppAtlas 1.2.0-beta.3
 
-## Deutsch
+Changes since v1.2.0-beta.2:
 
-Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand.
-
-### Änderungen
-
-- Diese Beta enthält die aktuellen Änderungen aus dem Dev-Stand.
-
-## English
-
-This beta contains the current changes from the dev state.
-
-### Changes
-
-- This beta contains the current changes from the dev state.
+- Add badges to README
+- Add GitHub update checks
+- Add Xcode project
+- Configure release branch workflow
+- Adjust release workflow for local dev snapshots
+- Add release package generation to workflow

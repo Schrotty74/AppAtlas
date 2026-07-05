@@ -150,8 +150,6 @@ write_release_notes() {
     changes="$(release_change_list "$previous_beta_tag")"
 
     cat > "$notes_file" <<EOF
-# AppAtlas $version
-
 Changes since $previous_beta_tag:
 
 $changes
