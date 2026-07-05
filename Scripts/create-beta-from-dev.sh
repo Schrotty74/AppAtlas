@@ -21,6 +21,13 @@ build_setting() {
         -project AppAtlas.xcodeproj \
         -scheme "AppAtlas Beta" \
         -configuration Beta \
+        -derivedDataPath "$root_directory/.build/xcode-beta-derived-data" \
+        -clonedSourcePackagesDirPath "$root_directory/.build/xcode-beta-source-packages" \
+        -packageCachePath "$root_directory/.build/xcode-beta-package-cache" \
+        -disablePackageRepositoryCache \
+        -skipPackageUpdates \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
         -showBuildSettings 2>/dev/null \
         | awk -F' = ' -v setting="$name" '$1 ~ setting "$" { print $2; exit }'
 }
@@ -65,11 +72,20 @@ ensure_beta_ref() {
 }
 
 worktree_tree() {
-    temporary_index="$(mktemp /tmp/appatlas-beta-index.XXXXXX)"
-    rm -f "$temporary_index"
-    GIT_INDEX_FILE="$temporary_index" git read-tree HEAD
-    GIT_INDEX_FILE="$temporary_index" git add -A -- .
-    GIT_INDEX_FILE="$temporary_index" git write-tree
+    local changed_paths
+
+    changed_paths=("${(@f)$(
+        {
+            git diff --name-only HEAD --
+            git diff --cached --name-only
+            git ls-files --others --exclude-standard
+        } | sort -u
+    )}")
+    if (( ${#changed_paths[@]} > 0 )); then
+        git add -A -- "${changed_paths[@]}"
+    fi
+
+    git write-tree
 }
 
 create_beta_commit() {
@@ -128,31 +144,112 @@ last_beta_tag() {
     echo "$tag"
 }
 
-release_change_list() {
+categorized_release_changes() {
     local previous_beta_tag="$1"
-    local subjects
+    local changes
 
-    subjects="$(git log --reverse --no-merges --pretty=format:'- %s' "$previous_beta_tag"..HEAD || true)"
-    if [[ -z "$subjects" ]]; then
-        echo "Abbruch: keine Commit-Subjects seit $previous_beta_tag gefunden." >&2
+    changes="$(
+        git log --reverse --no-merges --format='%b%x1e' "$previous_beta_tag"..HEAD \
+            | awk '
+                function trim(value) {
+                    sub(/^[[:space:]]+/, "", value)
+                    sub(/[[:space:]]+$/, "", value)
+                    return value
+                }
+
+                function bullet(value) {
+                    value = trim(value)
+                    sub(/^[*-][[:space:]]+/, "", value)
+                    return "- " value
+                }
+
+                function add(section, value) {
+                    value = bullet(value)
+                    if (value == "- ") {
+                        return
+                    }
+                    if (section == "fixed") {
+                        fixed[++fixed_count] = value
+                    } else if (section == "improved") {
+                        improved[++improved_count] = value
+                    } else if (section == "new") {
+                        new_items[++new_count] = value
+                    }
+                }
+
+                {
+                    line = trim($0)
+                    if (line == "" || line == "\036") {
+                        next
+                    }
+
+                    lower = tolower(line)
+                    if (lower ~ /(fix|bug|hang|crash|error)/) {
+                        add("fixed", line)
+                    } else if (lower ~ /(improve|faster|performance|speed)/) {
+                        add("improved", line)
+                    } else if (lower ~ /(add|new|support)/) {
+                        add("new", line)
+                    }
+                }
+
+                END {
+                    if (new_count > 0) {
+                        print "## New"
+                        print ""
+                        for (i = 1; i <= new_count; i++) {
+                            print new_items[i]
+                        }
+                        print ""
+                    }
+                    if (fixed_count > 0) {
+                        print "## Fixed"
+                        print ""
+                        for (i = 1; i <= fixed_count; i++) {
+                            print fixed[i]
+                        }
+                        print ""
+                    }
+                    if (improved_count > 0) {
+                        print "## Improved"
+                        print ""
+                        for (i = 1; i <= improved_count; i++) {
+                            print improved[i]
+                        }
+                        print ""
+                    }
+                }
+            ' || true
+    )"
+
+    if [[ -z "$changes" ]]; then
+        echo "Abbruch: keine kategorisierbaren Release-Note-Einträge seit $previous_beta_tag gefunden." >&2
         exit 1
     fi
 
-    echo "$subjects"
+    echo "$changes"
 }
 
 write_release_notes() {
     local notes_file="$1"
-    local version="$2"
-    local previous_beta_tag="$3"
+    local previous_beta_tag="$2"
     local changes
 
-    changes="$(release_change_list "$previous_beta_tag")"
+    changes="$(categorized_release_changes "$previous_beta_tag")"
 
     cat > "$notes_file" <<EOF
-Changes since $previous_beta_tag:
+This beta contains the latest AppAtlas fixes and improvements since $previous_beta_tag.
 
 $changes
+## Privacy
+
+AppAtlas starts without a personal catalog. Catalogs, local paths, license
+values, user-specific icons and backup files are not included in the source
+code or release package.
+
+Local catalogs, scan data, icons and caches remain in the local Application
+Support folder for the active build variant. License values remain in the
+macOS Keychain and are exported only after explicit user action.
 EOF
 }
 
@@ -193,12 +290,21 @@ zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
 release_notes_file="$backup_directory/AppAtlas-Beta-$version-release-notes.md"
 
-xcodebuild \
-    -project AppAtlas.xcodeproj \
-    -scheme "AppAtlas Beta" \
-    -configuration Beta \
-    -destination 'generic/platform=macOS' \
-    build
+if [[ "${APPATLAS_SKIP_XCODEBUILD:-}" != "YES" ]]; then
+    xcodebuild \
+        -project AppAtlas.xcodeproj \
+        -scheme "AppAtlas Beta" \
+        -configuration Beta \
+        -destination 'generic/platform=macOS' \
+        -derivedDataPath "$root_directory/.build/xcode-beta-derived-data" \
+        -clonedSourcePackagesDirPath "$root_directory/.build/xcode-beta-source-packages" \
+        -packageCachePath "$root_directory/.build/xcode-beta-package-cache" \
+        -disablePackageRepositoryCache \
+        -skipPackageUpdates \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
+        build
+fi
 
 APPATLAS_VERSION="$version" \
     APPATLAS_ALLOW_RELEASE_PACKAGE=YES \
@@ -220,7 +326,6 @@ git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
 write_release_notes \
     "$release_notes_file" \
-    "$version" \
     "$previous_beta_tag"
 create_github_release \
     "$version" \

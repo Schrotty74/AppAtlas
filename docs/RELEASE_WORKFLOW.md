@@ -49,6 +49,8 @@ Das Skript:
 6. erstellt aus dem aktuellen Dev-Arbeitsbaum einen Commit auf `beta`,
 7. pusht `beta` automatisch nach GitHub,
 8. schreibt englische Release Notes ohne technische Metadaten in eine Datei,
+   liest dafuer Commit-Bodies seit dem letzten Beta-Tag und sortiert die
+   Eintraege automatisch in `New`, `Fixed`, `Improved` und `Privacy`,
 9. erstellt den GitHub-Prerelease automatisch mit ZIP, DMG, SHA256-Dateien
    und den Release Notes.
 
