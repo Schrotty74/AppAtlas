@@ -1,5 +1,3 @@
-# AppAtlas 1.2.0-beta.3
-
 Changes since v1.2.0-beta.2:
 
 - Add badges to README
