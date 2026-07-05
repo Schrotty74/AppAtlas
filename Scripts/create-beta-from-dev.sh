@@ -90,11 +90,123 @@ create_beta_commit() {
     printf '%s\n' "$message" | git commit-tree "$tree" -p "$parent"
 }
 
+artifact_base_name() {
+    local version="$1"
+    if [[ "$version" == *beta* ]]; then
+        echo "AppAtlas-$version-macos"
+    else
+        echo "AppAtlas-Beta-$version-macos"
+    fi
+}
+
+require_release_artifacts() {
+    local artifact
+    for artifact in "$@"; do
+        if [[ ! -f "$artifact" ]]; then
+            echo "Abbruch: Release-Artefakt fehlt: $artifact" >&2
+            exit 1
+        fi
+    done
+}
+
+require_gh() {
+    if ! command -v gh >/dev/null 2>&1; then
+        echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2
+        exit 1
+    fi
+}
+
+release_change_list() {
+    local previous_beta="$1"
+    local changes
+
+    changes="$(git log --no-merges --pretty=format:'- %s (%h)' "$previous_beta"..HEAD || true)"
+    if [[ -z "$changes" ]]; then
+        echo "- Keine Commit-Zusammenfassung verfügbar."
+        return
+    fi
+
+    echo "$changes"
+}
+
+write_release_notes() {
+    local notes_file="$1"
+    local version="$2"
+    local dev_commit="$3"
+    local beta_commit="$4"
+    local previous_beta="$5"
+    local zip_checksum="$6"
+    local dmg_checksum="$7"
+    local changes
+
+    changes="$(release_change_list "$previous_beta")"
+
+    cat > "$notes_file" <<EOF
+# AppAtlas Beta $version
+
+## Deutsch
+
+Automatisch erstellte Beta aus dem aktuellen Dev-Stand.
+
+- Dev-Commit: \`$dev_commit\`
+- Beta-Commit: \`$(git rev-parse --short "$beta_commit")\`
+- ZIP SHA256: \`$zip_checksum\`
+- DMG SHA256: \`$dmg_checksum\`
+
+### Änderungen
+
+$changes
+
+## English
+
+Automatically created beta from the current dev state.
+
+- Dev commit: \`$dev_commit\`
+- Beta commit: \`$(git rev-parse --short "$beta_commit")\`
+- ZIP SHA256: \`$zip_checksum\`
+- DMG SHA256: \`$dmg_checksum\`
+
+### Changes
+
+$changes
+EOF
+}
+
+create_github_release() {
+    local version="$1"
+    local target_commit="$2"
+    local notes_file="$3"
+    local zip_file="$4"
+    local dmg_file="$5"
+    local zip_checksum_file="$6"
+    local dmg_checksum_file="$7"
+    local release_tag
+
+    release_tag="v$version"
+    GH_PROMPT_DISABLED=1 gh release create "$release_tag" \
+        "$zip_file" \
+        "$dmg_file" \
+        "$zip_checksum_file" \
+        "$dmg_checksum_file" \
+        --target "$target_commit" \
+        --title "AppAtlas Beta $version" \
+        --notes-file "$notes_file" \
+        --prerelease
+}
+
 require_dev_branch
 ensure_beta_ref
+require_gh
 
 version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
+artifact_base="$(artifact_base_name "$version")"
+backup_directory="$root_directory/Backup"
+zip_file="$backup_directory/$artifact_base.zip"
+dmg_file="$backup_directory/$artifact_base.dmg"
+zip_checksum_file="$zip_file.sha256"
+dmg_checksum_file="$dmg_file.sha256"
+release_notes_file="$backup_directory/AppAtlas-Beta-$version-release-notes.md"
 
 xcodebuild \
     -project AppAtlas.xcodeproj \
@@ -107,6 +219,12 @@ APPATLAS_VERSION="$version" \
     APPATLAS_ALLOW_RELEASE_PACKAGE=YES \
     ./Scripts/build-release-package.sh beta
 
+require_release_artifacts \
+    "$zip_file" \
+    "$dmg_file" \
+    "$zip_checksum_file" \
+    "$dmg_checksum_file"
+
 ./Scripts/privacy-check.sh
 
 tree="$(worktree_tree)"
@@ -115,10 +233,31 @@ beta_commit="$(create_beta_commit "$version" "$tree")"
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
+zip_checksum="$(awk '{print $1}' "$zip_checksum_file")"
+dmg_checksum="$(awk '{print $1}' "$dmg_checksum_file")"
+write_release_notes \
+    "$release_notes_file" \
+    "$version" \
+    "$dev_commit" \
+    "$beta_commit" \
+    "$beta_before" \
+    "$zip_checksum" \
+    "$dmg_checksum"
+create_github_release \
+    "$version" \
+    "$beta_commit" \
+    "$release_notes_file" \
+    "$zip_file" \
+    "$dmg_file" \
+    "$zip_checksum_file" \
+    "$dmg_checksum_file"
+
 echo "Beta wurde aus Dev erstellt."
 echo "Version: $version"
 echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
+echo "Release Notes: $release_notes_file"
 echo "Branch beta wurde zu origin gepusht."
+echo "GitHub Release wurde erstellt."
 echo "Dev-Commit: $dev_commit"
 echo "Beta-Commit: $(git rev-parse --short "$beta_commit")"
 echo "Aktueller Branch: $(git branch --show-current)"

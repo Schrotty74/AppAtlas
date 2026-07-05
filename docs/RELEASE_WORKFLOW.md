@@ -47,7 +47,10 @@ Das Skript:
 4. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
 5. speichert ZIP und DMG dauerhaft im Backup-Ordner,
 6. erstellt aus dem aktuellen Dev-Arbeitsbaum einen Commit auf `beta`,
-7. pusht `beta` automatisch nach GitHub.
+7. pusht `beta` automatisch nach GitHub,
+8. schreibt zweisprachige Release Notes in eine Datei,
+9. erstellt den GitHub-Prerelease automatisch mit ZIP, DMG, SHA256-Dateien
+   und den Release Notes.
 
 Die Beta-Version wird als Parameter uebergeben. Ohne Parameter verwendet das
 Skript die `MARKETING_VERSION` aus dem Projekt. Es wird keine lokale
