@@ -56,9 +56,9 @@ ensure_branch_exists() {
     fi
 }
 
-reset_final_application_support() {
-    local support_directory="$HOME/Library/Application Support/AppAtlas"
-    rm -rf "$support_directory"
+reset_final_container() {
+    local container_directory="$HOME/Library/Containers/at.schrotty.appatlas"
+    rm -rf "$container_directory"
 }
 
 require_release_artifacts() {
@@ -241,7 +241,7 @@ beta_commit="$(git rev-parse --short HEAD)"
 git switch main
 git merge --ff-only beta
 
-reset_final_application_support
+reset_final_container
 
 xcodebuild \
     -project AppAtlas.xcodeproj \

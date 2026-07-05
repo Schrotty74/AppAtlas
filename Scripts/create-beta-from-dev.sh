@@ -135,6 +135,11 @@ require_gh() {
     fi
 }
 
+reset_beta_container() {
+    local container_directory="$HOME/Library/Containers/at.schrotty.appatlas.beta"
+    rm -rf "$container_directory"
+}
+
 last_beta_tag() {
     local tag
 
@@ -292,6 +297,8 @@ dmg_file="$backup_directory/$artifact_base.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
 release_notes_file="$backup_directory/AppAtlas-Beta-$version-release-notes.md"
+
+reset_beta_container
 
 if [[ "${APPATLAS_SKIP_XCODEBUILD:-}" != "YES" ]]; then
     xcodebuild \
