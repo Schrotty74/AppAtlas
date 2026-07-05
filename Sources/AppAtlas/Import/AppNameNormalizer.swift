@@ -1,37 +1,6 @@
 import Foundation
 
 enum AppNameNormalizer {
-    private static let versionDetectionRegexes = [
-        #"(?i)(?:^|[\s_-])v?(\d+\.\d+(?:\.\d+){0,2}(?:[-._][a-z0-9]+)?)"#,
-        #"(?i)(?:^|[\s_-])(\d{4})(?:[\s_-]|$)"#
-    ].compiledRegularExpressions
-
-    private static let baseVersionAndPackagingRegexes = [
-        #"(?i)^\s*\d{1,3}[\s._-]+(?=[a-z])"#,
-        #"(?i)\s*\([^)]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^)]*\)\s*$"#,
-        #"(?i)\s*\[[^]]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^]]*\]\s*$"#,
-        #"(?i)(^|[\s._-]+)latest(?=$|[\s._-]+)"#,
-        #"(?i)[\s._-]+v$"#,
-        #"(?i)[\s._-]+versions?$"#,
-        #"(?i)[\s_-]+v?\d+\.\d+(?:\.\d+){0,2}.*$"#,
-        #"(?i)[\s_-]+\d{4}(?:[\s_-].*)?$"#,
-        #"(?i)[\s._-]+\d{6,}.*$"#,
-        #"(?i)[\s._-]+(?:aarch64|arm64|x86[\s._-]*64|x86|x64).*$"#,
-        #"(?i)(?<=[a-z])\d+(?:[\s._-]+[a-z]*\d+[a-z0-9]*)+$"#,
-        #"(?i)[\s._-]+[a-z]*\d+[a-z0-9]*(?:[\s._-]+[a-z]*\d+[a-z0-9]*)*$"#,
-        #"(?i)[\s._-]+(?:aio|setup|installer|install|release|macos|mac|osx|darwin|universal|aarch64|arm64|x86[\s._-]*64|x86|x64|apple[\s._-]*silicon).*$"#
-    ].compiledRegularExpressions
-
-    private static let versionAndPackagingRegexesDroppingAttachedYear =
-        baseVersionAndPackagingRegexes
-            + [
-                #"(?i)(?<=[a-z])(?:19|20)\d{2}$"#
-            ].compiledRegularExpressions
-
-    private static let trailingAppSuffixRegex = try? NSRegularExpression(
-        pattern: #"(?i)[\s._-]+app\s*$"#
-    )
-
     static func displayName(for fileName: String) -> String {
         displayName(for: fileName, preservingAttachedYear: false)
     }
@@ -87,8 +56,14 @@ enum AppNameNormalizer {
 
     static func detectVersion(in fileName: String) -> String? {
         let stem = (fileName as NSString).deletingPathExtension
-        for regex in versionDetectionRegexes {
-            guard let match = regex.firstMatch(
+        let patterns = [
+            #"(?i)(?:^|[\s_-])v?(\d+\.\d+(?:\.\d+){0,2}(?:[-._][a-z0-9]+)?)"#,
+            #"(?i)(?:^|[\s_-])(\d{4})(?:[\s_-]|$)"#
+        ]
+
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern),
+                  let match = regex.firstMatch(
                     in: stem,
                     range: NSRange(stem.startIndex..., in: stem)
                   ),
@@ -105,11 +80,30 @@ enum AppNameNormalizer {
         from value: String,
         preservingAttachedYear: Bool = false
     ) -> String {
-        let regexes = preservingAttachedYear
-            ? baseVersionAndPackagingRegexes
-            : versionAndPackagingRegexesDroppingAttachedYear
-        let stripped = regexes.reduce(value) { result, regex in
-            regex.stringByReplacingMatches(
+        var patterns = [
+            #"(?i)^\s*\d{1,3}[\s._-]+(?=[a-z])"#,
+            #"(?i)\s*\([^)]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^)]*\)\s*$"#,
+            #"(?i)\s*\[[^]]*(?:mac|macos|arm64|x64|intel|apple\s*silicon)[^]]*\]\s*$"#,
+            #"(?i)(^|[\s._-]+)latest(?=$|[\s._-]+)"#,
+            #"(?i)[\s._-]+v$"#,
+            #"(?i)[\s._-]+versions?$"#,
+            #"(?i)[\s_-]+v?\d+\.\d+(?:\.\d+){0,2}.*$"#,
+            #"(?i)[\s_-]+\d{4}(?:[\s_-].*)?$"#,
+            #"(?i)[\s._-]+\d{6,}.*$"#,
+            #"(?i)[\s._-]+(?:aarch64|arm64|x86[\s._-]*64|x86|x64).*$"#,
+            #"(?i)(?<=[a-z])\d+(?:[\s._-]+[a-z]*\d+[a-z0-9]*)+$"#,
+            #"(?i)[\s._-]+[a-z]*\d+[a-z0-9]*(?:[\s._-]+[a-z]*\d+[a-z0-9]*)*$"#,
+            #"(?i)[\s._-]+(?:aio|setup|installer|install|release|macos|mac|osx|darwin|universal|aarch64|arm64|x86[\s._-]*64|x86|x64|apple[\s._-]*silicon).*$"#
+        ]
+        if !preservingAttachedYear {
+            patterns.append(#"(?i)(?<=[a-z])(?:19|20)\d{2}$"#)
+        }
+
+        let stripped = patterns.reduce(value) { result, pattern in
+            guard let regex = try? NSRegularExpression(pattern: pattern) else {
+                return result
+            }
+            return regex.stringByReplacingMatches(
                 in: result,
                 range: NSRange(result.startIndex..., in: result),
                 withTemplate: ""
@@ -119,10 +113,12 @@ enum AppNameNormalizer {
     }
 
     private static func stripTrailingAppSuffix(from value: String) -> String {
-        guard let trailingAppSuffixRegex else {
+        guard let regex = try? NSRegularExpression(
+            pattern: #"(?i)[\s._-]+app\s*$"#
+        ) else {
             return value
         }
-        let stripped = trailingAppSuffixRegex.stringByReplacingMatches(
+        let stripped = regex.stringByReplacingMatches(
             in: value,
             range: NSRange(value.startIndex..., in: value),
             withTemplate: ""
@@ -146,13 +142,5 @@ enum AppNameNormalizer {
             result = (result as NSString).deletingPathExtension
         }
         return result
-    }
-}
-
-private extension Array where Element == String {
-    var compiledRegularExpressions: [NSRegularExpression] {
-        compactMap {
-            try? NSRegularExpression(pattern: $0)
-        }
     }
 }
