@@ -45,12 +45,24 @@ build_setting() {
         -project AppAtlas.xcodeproj \
         -scheme "$scheme" \
         -configuration "$configuration" \
+        -derivedDataPath "$root_directory/.build/xcode-$channel-derived-data" \
+        -clonedSourcePackagesDirPath "$root_directory/.build/xcode-$channel-source-packages" \
+        -packageCachePath "$root_directory/.build/xcode-$channel-package-cache" \
+        -disablePackageRepositoryCache \
+        -skipPackageUpdates \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
         -showBuildSettings 2>/dev/null \
         | awk -F' = ' -v setting="$name" '$1 ~ setting "$" { print $2; exit }'
 }
 
-marketing_version="$(build_setting MARKETING_VERSION)"
-build_number="${APPATLAS_BUILD_NUMBER:-$(build_setting CURRENT_PROJECT_VERSION)}"
+if [[ -n "${APPATLAS_VERSION:-}" ]]; then
+    marketing_version="$APPATLAS_VERSION"
+    build_number="${APPATLAS_BUILD_NUMBER:-1}"
+else
+    marketing_version="$(build_setting MARKETING_VERSION)"
+    build_number="${APPATLAS_BUILD_NUMBER:-$(build_setting CURRENT_PROJECT_VERSION)}"
+fi
 if [[ -z "$marketing_version" ]]; then
     marketing_version="1.0.0"
 fi
@@ -218,12 +230,20 @@ rm -rf "$dmg_staging_directory"
 mkdir -p "$dmg_staging_directory"
 cp -R "$app_bundle" "$dmg_staging_directory/$app_bundle_name"
 ln -s /Applications "$dmg_staging_directory/Applications"
-hdiutil create \
+if ! hdiutil create \
     -volname "$app_display_name $version" \
     -srcfolder "$dmg_staging_directory" \
     -ov \
     -format UDZO \
     "$dmg_file"
+then
+    rm -f "$dmg_file"
+    hdiutil makehybrid \
+        -hfs \
+        -hfs-volume-name "$app_display_name $version" \
+        -o "$dmg_file" \
+        "$dmg_staging_directory"
+fi
 (
     cd "$root_directory/Backup"
     shasum -a 256 "$(basename "$zip_file")" \
