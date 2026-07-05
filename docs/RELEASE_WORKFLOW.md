@@ -36,19 +36,25 @@ Arbeitsmodus.
 ## Beta aus Dev erstellen
 
 ```sh
-./Scripts/create-beta-from-dev.sh
+./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
 ```
 
 Das Skript:
 
-1. wechselt auf `dev`,
-2. sichert den aktuellen lokalen Dev-Stand temporaer, auch uncommitted Dateien,
-3. wechselt auf `beta`,
-4. uebernimmt committed Dev-Aenderungen per Fast-Forward,
-5. uebernimmt den lokalen Dev-Snapshot als neuen Beta-Commit,
-6. baut das Xcode-Scheme `AppAtlas Beta`,
-7. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
-8. stellt den lokalen Dev-Arbeitsstand wieder her.
+1. verlangt, dass der aktuelle Branch `dev` ist,
+2. bleibt auf `dev` und wechselt keine Branches,
+3. baut das Xcode-Scheme `AppAtlas Beta`,
+4. erzeugt ZIP, DMG und SHA256-Dateien fuer Beta,
+5. speichert ZIP und DMG dauerhaft im Backup-Ordner,
+6. erstellt aus dem aktuellen Dev-Arbeitsbaum einen Commit auf `beta`,
+7. pusht `beta` automatisch nach GitHub,
+8. schreibt englische Release Notes ohne technische Metadaten in eine Datei,
+9. erstellt den GitHub-Prerelease automatisch mit ZIP, DMG, SHA256-Dateien
+   und den Release Notes.
+
+Die Beta-Version wird als Parameter uebergeben. Ohne Parameter verwendet das
+Skript die `MARKETING_VERSION` aus dem Projekt. Es wird keine lokale
+`beta.local`-Version erzeugt.
 
 `dev` wird dabei nicht veraendert und nicht gepusht.
 
@@ -64,14 +70,19 @@ Das Skript:
 2. wechselt auf `beta`,
 3. übernimmt `beta` per Fast-Forward nach `main`,
 4. baut das Xcode-Scheme `AppAtlas Final`,
-5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final.
+5. erzeugt ZIP, DMG und SHA256-Dateien fuer Final,
+6. speichert ZIP und DMG dauerhaft im Backup-Ordner,
+7. pusht `main` automatisch nach GitHub.
 
 `beta` wird dabei nicht verändert.
 
 ## Schutzregel
 
-Beide Übernahme-Skripte verwenden `git merge --ff-only`. Wenn die Branches
-auseinanderlaufen, bricht das Skript ab, statt automatisch einen unsauberen
-Mischstand zu erzeugen.
+`create-beta-from-dev.sh` wechselt keine Branches und verwendet kein Stash oder
+Merge. Der Beta-Commit wird direkt aus dem aktuellen Dev-Arbeitsbaum erstellt.
+
+`publish-beta-as-final.sh` verwendet `git merge --ff-only`. Wenn `main` und
+`beta` auseinanderlaufen, bricht das Skript ab, statt automatisch einen
+unsauberen Mischstand zu erzeugen.
 
 Ignorierte private Dateien werden nicht in den Beta-Snapshot aufgenommen.
