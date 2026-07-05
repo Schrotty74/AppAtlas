@@ -49,7 +49,8 @@ Das Skript:
 6. erstellt aus dem aktuellen Dev-Arbeitsbaum einen Commit auf `beta`,
 7. pusht `beta` automatisch nach GitHub,
 8. schreibt englische Release Notes ohne technische Metadaten in eine Datei
-   und listet nur App-Änderungs-Commits aus den Source-Pfaden,
+   und verwendet dafuer den Body des letzten Commits, oder dessen Subject,
+   wenn der Body leer ist,
 9. erstellt den GitHub-Prerelease automatisch mit ZIP, DMG, SHA256-Dateien
    und den Release Notes.
 

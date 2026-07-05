@@ -116,36 +116,33 @@ require_gh() {
     fi
 }
 
-last_beta_tag() {
-    local tag
-
-    tag="$(git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true)"
-    if [[ -z "$tag" ]]; then
-        echo "Abbruch: kein letzter Beta-Tag gefunden." >&2
-        exit 1
-    fi
-
-    echo "$tag"
-}
-
 release_change_list() {
-    local previous_beta_tag="$1"
+    local body
+    local subject
     local subjects
 
-    subjects="$(
-        git log --reverse --no-merges --pretty=format:'%s' "$previous_beta_tag"..HEAD \
-            -- Sources AppMetadataKit/Sources \
-            | awk '
-                /^(Prepare|Fix|Improve|Update)( |:)/ || /^Add( |:)/ {
-                    subject = tolower($0)
-                    if (subject !~ /(readme|script|workflow|xcode|project|release|infrastructure|github|badge|documentation|docs|package|scheme)/) {
+    body="$(git log -1 --format=%B | tail -n +2 | sed '/^[[:space:]]*$/d')"
+    if [[ -n "$body" ]]; then
+        subjects="$(
+            printf '%s\n' "$body" \
+                | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' \
+                | awk '
+                    /^[*-][[:space:]]+/ {
+                        print $0
+                        next
+                    }
+                    length($0) > 0 {
                         print "- " $0
                     }
-                }
-            ' || true
-    )"
+                '
+        )"
+    else
+        subject="$(git log -1 --format=%s)"
+        subjects="- $subject"
+    fi
+
     if [[ -z "$subjects" ]]; then
-        echo "Abbruch: keine App-Änderungs-Commits seit $previous_beta_tag gefunden." >&2
+        echo "Abbruch: keine Changelog-Einträge aus dem letzten Commit gefunden." >&2
         exit 1
     fi
 
@@ -154,14 +151,12 @@ release_change_list() {
 
 write_release_notes() {
     local notes_file="$1"
-    local version="$2"
-    local previous_beta_tag="$3"
     local changes
 
-    changes="$(release_change_list "$previous_beta_tag")"
+    changes="$(release_change_list)"
 
     cat > "$notes_file" <<EOF
-Changes since $previous_beta_tag:
+Changes:
 
 $changes
 EOF
@@ -195,7 +190,6 @@ require_gh
 
 version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
-previous_beta_tag="$(last_beta_tag)"
 artifact_base="$(artifact_base_name "$version")"
 backup_directory="$root_directory/Backup"
 zip_file="$backup_directory/$artifact_base.zip"
@@ -230,9 +224,7 @@ git update-ref refs/heads/beta "$beta_commit" "$beta_before"
 git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
 write_release_notes \
-    "$release_notes_file" \
-    "$version" \
-    "$previous_beta_tag"
+    "$release_notes_file"
 create_github_release \
     "$version" \
     "$beta_commit" \
