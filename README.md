@@ -122,10 +122,10 @@ For a manually launchable development build without beta, ZIP or backup:
 The app is created at `dist/AppAtlas-Development/AppAtlas.app` and is not
 opened automatically.
 
-The release script may only be run after explicit approval:
+The Beta release workflow is handled by the release script:
 
 ```sh
-APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
+./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
 ```
 
 Build artifacts in `dist/` are not tracked by Git. Backups are created only on

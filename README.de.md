@@ -118,10 +118,10 @@ Für einen manuell startbaren Entwicklungsstand ohne Beta, ZIP oder Backup:
 Die App liegt anschließend unter `dist/AppAtlas-Development/AppAtlas.app` und
 wird nicht automatisch geöffnet.
 
-Das Release-Skript darf nur nach ausdrücklicher Freigabe ausgeführt werden:
+Der Beta-Release-Workflow läuft über das Release-Skript:
 
 ```sh
-APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
+./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
 ```
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
