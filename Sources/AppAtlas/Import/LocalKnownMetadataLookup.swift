@@ -34,11 +34,27 @@ enum LocalKnownMetadataLookup {
             homepage: URL(string: "https://www.adobe.com/products/photoshop.html"),
             downloadURL: URL(string: "https://www.adobe.com/products/photoshop.html")
         ),
+        "adobephotoshop2024": LocalKnownMetadata(
+            homepage: URL(string: "https://www.adobe.com/products/photoshop.html"),
+            downloadURL: URL(string: "https://www.adobe.com/products/photoshop.html")
+        ),
+        "adobephotoshop2025": LocalKnownMetadata(
+            homepage: URL(string: "https://www.adobe.com/products/photoshop.html"),
+            downloadURL: URL(string: "https://www.adobe.com/products/photoshop.html")
+        ),
+        "adobephotoshop2026": LocalKnownMetadata(
+            homepage: URL(string: "https://www.adobe.com/products/photoshop.html"),
+            downloadURL: URL(string: "https://www.adobe.com/products/photoshop.html")
+        ),
         "alfred": LocalKnownMetadata(
             homepage: URL(string: "https://www.alfredapp.com/"),
             downloadURL: URL(string: "https://www.alfredapp.com/")
         ),
         "affinity": LocalKnownMetadata(
+            homepage: URL(string: "https://affinity.serif.com/"),
+            downloadURL: URL(string: "https://affinity.serif.com/")
+        ),
+        "affinitysuite": LocalKnownMetadata(
             homepage: URL(string: "https://affinity.serif.com/"),
             downloadURL: URL(string: "https://affinity.serif.com/")
         ),
@@ -55,6 +71,10 @@ enum LocalKnownMetadataLookup {
             downloadURL: URL(string: "https://affinity.serif.com/publisher/")
         ),
         "anydesk": LocalKnownMetadata(
+            homepage: URL(string: "https://anydesk.com/"),
+            downloadURL: URL(string: "https://anydesk.com/downloads/mac-os")
+        ),
+        "anydeskmacos": LocalKnownMetadata(
             homepage: URL(string: "https://anydesk.com/"),
             downloadURL: URL(string: "https://anydesk.com/downloads/mac-os")
         ),
@@ -79,6 +99,10 @@ enum LocalKnownMetadataLookup {
             downloadURL: URL(string: "https://discord.com/download")
         ),
         "downie": LocalKnownMetadata(
+            homepage: URL(string: "https://software.charliemonroe.net/downie/"),
+            downloadURL: URL(string: "https://software.charliemonroe.net/downie/")
+        ),
+        "downie4": LocalKnownMetadata(
             homepage: URL(string: "https://software.charliemonroe.net/downie/"),
             downloadURL: URL(string: "https://software.charliemonroe.net/downie/")
         ),
@@ -124,6 +148,11 @@ enum LocalKnownMetadataLookup {
             downloadURL: URL(string: "https://obsproject.com/download")
         ),
         "pearcleaner": LocalKnownMetadata(
+            homepage: URL(string: "https://github.com/alienator88/Pearcleaner"),
+            downloadURL: URL(string: "https://github.com/alienator88/Pearcleaner/releases"),
+            githubURL: URL(string: "https://github.com/alienator88/Pearcleaner")
+        ),
+        "pearcleanerapp": LocalKnownMetadata(
             homepage: URL(string: "https://github.com/alienator88/Pearcleaner"),
             downloadURL: URL(string: "https://github.com/alienator88/Pearcleaner/releases"),
             githubURL: URL(string: "https://github.com/alienator88/Pearcleaner")

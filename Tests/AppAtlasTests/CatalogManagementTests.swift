@@ -942,6 +942,18 @@ struct CatalogManagementTests {
                 fileName: "VLC.app",
                 category: "Multimedia",
                 subcategory: "Video"
+            ),
+            knownScannedApp(
+                name: "Downie 4",
+                fileName: "Downie_4.9.11.dmg",
+                category: "Internet",
+                subcategory: "Downloads"
+            ),
+            knownScannedApp(
+                name: "AnyDesk macOS",
+                fileName: "AnyDesk_macOS.dmg",
+                category: "Netzwerk",
+                subcategory: "Fernwartung"
             )
         ])
 
@@ -959,6 +971,14 @@ struct CatalogManagementTests {
         #expect(
             apps["VLC"]?.downloadURL
                 == URL(string: "https://www.videolan.org/vlc/download-macosx.html")
+        )
+        #expect(
+            apps["Downie 4"]?.homepage
+                == URL(string: "https://software.charliemonroe.net/downie/")
+        )
+        #expect(
+            apps["AnyDesk macOS"]?.downloadURL
+                == URL(string: "https://anydesk.com/downloads/mac-os")
         )
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
@@ -2809,6 +2829,65 @@ struct CatalogManagementTests {
 
         #expect(store.apps.first?.homepage == URL(string: "https://example.com"))
         #expect(store.websitePromptExclusions.isEmpty)
+        try? FileManager.default.removeItem(
+            at: fileURL.deletingLastPathComponent()
+        )
+    }
+
+    @Test @MainActor
+    func confirmedWebsiteDerivesGitHubAndDownloadLinks() {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("catalog.json")
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: fileURL)
+        )
+        let githubApp = AppEntry(
+            name: "Pearcleaner",
+            category: "System",
+            subcategory: "Cleaner",
+            files: []
+        )
+        let installerApp = AppEntry(
+            name: "Direct Installer",
+            category: "System",
+            subcategory: "Tools",
+            files: []
+        )
+        store.add([githubApp, installerApp])
+
+        store.confirmWebsite(
+            "https://github.com/alienator88/Pearcleaner/releases/latest",
+            for: githubApp.id
+        )
+        store.confirmWebsite(
+            "https://downloads.example.com/DirectInstaller.dmg",
+            for: installerApp.id
+        )
+
+        let apps = Dictionary(uniqueKeysWithValues: store.apps.map {
+            ($0.name, $0)
+        })
+        #expect(
+            apps["Pearcleaner"]?.homepage
+                == URL(string: "https://github.com/alienator88/Pearcleaner")
+        )
+        #expect(
+            apps["Pearcleaner"]?.githubURL
+                == URL(string: "https://github.com/alienator88/Pearcleaner")
+        )
+        #expect(
+            apps["Pearcleaner"]?.downloadURL
+                == URL(string: "https://github.com/alienator88/Pearcleaner/releases/latest")
+        )
+        #expect(
+            apps["Direct Installer"]?.homepage
+                == URL(string: "https://downloads.example.com")
+        )
+        #expect(
+            apps["Direct Installer"]?.downloadURL
+                == URL(string: "https://downloads.example.com/DirectInstaller.dmg")
+        )
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )

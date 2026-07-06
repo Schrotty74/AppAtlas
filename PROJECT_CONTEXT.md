@@ -115,6 +115,11 @@ eines lokalen App-Katalogs.
   vorgeschlagen; schwächere Treffer werden verworfen.
 - Bestätigte Domains, GitHub-Repositories und Apple-Store-IDs werden nur lokal
   in den Benutzereinstellungen gelernt und niemals exportiert.
+- Bestätigte Website-URLs werden bei der Nachbearbeitung strukturiert
+  ausgewertet: GitHub-Release-URLs werden als Repository und Download-Link
+  getrennt gespeichert, direkte `.dmg`-/`.pkg`-/`.zip`-Links als Download mit
+  Hersteller-Host als Homepage. GitHub-Projekte können anschließend
+  Beschreibung, Icon, Homepage und Release-Link ergänzen.
 - Die Hauptansicht verwendet einen zentralen Zustand für Dialoge, Importe und
   Bestätigungen. Import-/Exportformate liegen in getrennten Diensten.
 - Sidebar-Ordner stammen aus den gespeicherten Quell-Unterordnern; Dateinamen

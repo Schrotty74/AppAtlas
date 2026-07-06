@@ -96,10 +96,9 @@
   praktisch prüfen.
 - Scanner-Erkennung als nächster Schwerpunkt:
   schneller Scan bleibt lokal und darf nicht durch Online-Abfragen blockieren.
-  Er soll aber deutlich mehr Apps über eine lokale Wissensdatenbank erkennen
-  können. Dafür bekannte App-Namen mit Homepage, Download, GitHub und
-  Icon-Quelle pflegen, zum Beispiel Pearcleaner, AnyDesk, Affinity, Photoshop,
-  Downie und VLC.
+  Er soll aber weiter über eine lokale Wissensdatenbank ausgebaut werden,
+  inklusive zusätzlicher bekannter App-Namen, Varianten und späterer
+  Icon-Quellen.
 - Die Trefferbewertung soll mit diesen Schwellen arbeiten:
   `automaticThreshold = 0.80`, `reviewThreshold = 0.65` und
   `minimumAutomaticMargin = 0.08`.
@@ -112,19 +111,8 @@
   MacUpdater-ähnliche Exportdaten nur gezielt und nach klarer Priorität nutzen:
   zuerst lokale und gecachte Quellen, danach Online-Quellen. Nicht blind pro App
   Websuche starten.
-- Installer-Dateien wie `.dmg`, `.pkg` und `.zip` anders bewerten als echte
-  `.app`-Bundles. Installer erhalten nur dann konkrete App-Metadaten, wenn die
-  Zuordnung über lokale Wissensdatenbank, bestätigte Quelle oder sichere
-  Online-Quelle eindeutig ist.
-- Sammeldialog für unklare Apps korrigieren: nicht alle Apps ohne Homepage
-  auflisten, sondern nur Apps, die nach allen aktivierten Erkennungsstufen
-  weiterhin nicht sicher erkannt wurden. Bei aktivierter erweiterter Suche darf
-  der Dialog erst nach Abschluss dieser erweiterten Suche erscheinen.
-- Nachbearbeitung unklarer Apps als Sammelliste führen: pro App eine URL
-  eintragen, danach automatisch Homepage, Download-Link, Icon, Beschreibung und
-  gegebenenfalls GitHub-Link aus dieser URL ableiten. Erledigte Apps fallen aus
-  der Liste heraus; dauerhaft übersprungene Apps werden bei späteren Scans nicht
-  erneut automatisch abgefragt.
+- Nachbearbeitung unklarer Apps weiter praktisch prüfen und bei Bedarf
+  verfeinern.
 
 ## Verbindliche Regeln
 
