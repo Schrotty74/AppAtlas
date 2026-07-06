@@ -119,7 +119,7 @@ For a manually launchable development build without beta, ZIP or backup:
 ./Scripts/build-development.sh
 ```
 
-The app is created at `dist/AppAtlas-Development/AppAtlas.app` and is not
+The app is created at `dist/local-test/AppAtlas-Development/AppAtlas.app` and is not
 opened automatically.
 
 The Beta release workflow is handled by the release script:

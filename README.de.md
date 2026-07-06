@@ -115,7 +115,7 @@ Für einen manuell startbaren Entwicklungsstand ohne Beta, ZIP oder Backup:
 ./Scripts/build-development.sh
 ```
 
-Die App liegt anschließend unter `dist/AppAtlas-Development/AppAtlas.app` und
+Die App liegt anschließend unter `dist/local-test/AppAtlas-Development/AppAtlas.app` und
 wird nicht automatisch geöffnet.
 
 Der Beta-Release-Workflow läuft über das Release-Skript:
