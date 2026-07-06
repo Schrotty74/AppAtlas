@@ -15,7 +15,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Release: `1.0.1`.
+- Aktueller offizieller Release: `1.2.0`.
 
 ## Datenschutz hat Vorrang
 
@@ -59,13 +59,18 @@ eines lokalen App-Katalogs.
   umfangreiches Datenschutzaudit und keinen neuen öffentlichen Prüfbericht.
 - Vor jeder finalen Veröffentlichung sind das umfangreiche Datenschutzaudit
   und ein ergänzender öffentlicher Prüfbericht verpflichtend.
+- Das erweiterte Datenschutzaudit bewertet bekannte ältere AppAtlas-DMG-/ZIP-
+  Artefakte unter früheren `Backup/releases/...`-Pfaden als öffentliche
+  Release-Artefakte. Private Kataloge, Scanlisten, Datenbanken,
+  Lizenzexporte, persönliche Pfade und Geheimnisse bleiben weiterhin
+  blockierende Audit-Funde.
 - Backups und iCloud-Kopien werden ausschließlich nach einer ausdrücklichen
   Anweisung des Benutzers erstellt.
 - Im festgelegten iCloud-Ordner bleiben höchstens zwei AppAtlas-Backups
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.0.1` bleiben als unveröffentlichter
+- Änderungen nach `1.2.0` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 

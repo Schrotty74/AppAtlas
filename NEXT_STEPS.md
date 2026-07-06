@@ -2,8 +2,8 @@
 
 ## Aktueller Stand
 
-- Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Release: `1.0.1`.
+- Aktuelle Release-Serie: `1.2`.
+- Aktueller offizieller Release: `1.2.0`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -91,10 +91,7 @@
 
 ## Offene Aufgaben
 
-- Release-Angaben prüfen und vereinheitlichen: In den Projektregeln steht
-  teils noch offizieller Release `1.0.1`, während README und HISTORY bereits
-  `1.1.1` nennen.
-- Rückmeldungen zu Version 1.0.1 sammeln und priorisieren.
+- Rückmeldungen zu Version 1.2.0 sammeln und priorisieren.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
 - Scanner-Erkennung als nächster Schwerpunkt:

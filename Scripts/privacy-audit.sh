@@ -10,6 +10,7 @@ cd "$root_directory"
 sensitive_paths="$(
     git rev-list --objects --all \
         | grep -Ei '\.(csv|tsv|db|sqlite|sqlite3|jsonl|zip|dmg|pkg|iso)$|(^|/)(catalog|katalog|export)[^/]*\.json$' \
+        | grep -Eiv '^[0-9a-f]+ Backup/releases/((Beta|Final|local-test)/AppAtlas(-Beta)?-[0-9][^/]*-macos\.(zip|dmg)|app-backups/AppAtlas-Backup-[^/]+\.zip)$' \
         || true
 )"
 if [[ -n "$sensitive_paths" ]]; then
