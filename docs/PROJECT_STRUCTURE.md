@@ -14,7 +14,12 @@ AppAtlas/
 │   ├── Store/          Lokaler Katalog, Icons, Export und Schlüsselbund
 │   ├── Theme/          Theme-Format und Darstellung
 │   └── Views/          SwiftUI-Oberfläche, Toolbar und Dialoge
+├── Sources/AppMetadataKit/
+│                         Internes SwiftPM-Modul für Metadatenmodelle und
+│                         wiederverwendbare Online-Metadatenhelfer
 ├── Tests/AppAtlasTests/ Automatisierte Tests
+├── Tests/AppMetadataKitTests/
+│                         Tests für das interne AppMetadataKit-Modul
 ├── Packaging/           App-Bundle-Konfiguration und Berechtigungen
 ├── Scripts/             Build-, Datenschutz- und Release-Helfer
 ├── docs/
@@ -36,6 +41,8 @@ blockiert.
 - `Sources/AppAtlas/AppAtlasApp.swift`: App- und Menüstart
 - `Sources/AppAtlas/Store/CatalogStore.swift`: zentraler Katalogzustand
 - `Sources/AppAtlas/Scanner/VolumeScanner.swift`: Ordnerscan
+- `Sources/AppMetadataKit/EnrichableApp.swift`: gemeinsame Schnittstelle für
+  Metadatenanreicherung
 - `Sources/AppAtlas/Theme/ThemeSystem.swift`: Theme-Format
 - `Sources/AppAtlas/Views/ContentView.swift`: Hauptoberfläche
 - `Sources/AppAtlas/Views/ContentToolbar.swift`: Toolbar und App-Aktionsmenü

@@ -13,15 +13,16 @@
   <img src="https://img.shields.io/github/v/release/Schrotty74/AppAtlas" alt="Release">
   <img src="https://img.shields.io/github/downloads/Schrotty74/AppAtlas/total" alt="Downloads">
   <img src="https://img.shields.io/badge/Privacy-Audited-brightgreen" alt="Privacy Audited">
+  <a href="https://discord.gg/RbsvqRCPQ"><img src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
 AppAtlas is a native, privacy-focused SwiftUI app for macOS. It organizes
 personal app collections from user-selected folders and manages icons,
 descriptions, links, tags, license information, and local catalog exports.
 
-> Current release: **AppAtlas 1.1.1**
+> Current release: **AppAtlas 1.2.0**
 
-[Download AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
+[Download AppAtlas 1.2.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
 
 ## Key Features
 
@@ -92,7 +93,7 @@ The screenshots below use demo data only.
 ## Build and Install
 
 Download the current release:
-[AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
+[AppAtlas 1.2.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
 
 When opening AppAtlas for the first time, macOS may display a warning because
 the app is not notarized with a paid Apple Developer account.
@@ -113,19 +114,24 @@ swift test
 swift build
 ```
 
+GitHub Actions runs the same everyday checks on every push and pull request:
+`swift build`, `swift test`, and `Scripts/privacy-check.sh`. The workflow does
+not publish releases, create tags, upload build artifacts, or run release
+scripts.
+
 For a manually launchable development build without beta, ZIP or backup:
 
 ```sh
 ./Scripts/build-development.sh
 ```
 
-The app is created at `dist/AppAtlas-Development/AppAtlas.app` and is not
+The app is created at `dist/local-test/AppAtlas-Development/AppAtlas.app` and is not
 opened automatically.
 
-The release script may only be run after explicit approval:
+The Beta release workflow is handled by the release script:
 
 ```sh
-APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
+./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
 ```
 
 Build artifacts in `dist/` are not tracked by Git. Backups are created only on
@@ -142,7 +148,7 @@ typical catalog, export and database files from being added.
 - [Project structure](docs/PROJECT_STRUCTURE.md)
 - [Release workflow](docs/RELEASE_WORKFLOW.md)
 - [Privacy details](docs/PRIVACY.md)
-- [Privacy audit for AppAtlas 1.1.1](docs/PRIVACY_AUDIT_2026-06-17.md)
+- [Privacy audit for AppAtlas 1.2.0](docs/PRIVACY_AUDIT_2026-07-06.md)
 
 ## Transparency
 
@@ -156,6 +162,9 @@ Bug reports and questions can be sent to
 [appatlas@mailbox.org](mailto:appatlas@mailbox.org). AppAtlas also includes a
 bug report dialog that creates a privacy-conscious report for email or for
 pasting into Codex.
+
+Community support and discussions are available on
+[Discord](https://discord.gg/RbsvqRCPQ).
 
 ## License
 

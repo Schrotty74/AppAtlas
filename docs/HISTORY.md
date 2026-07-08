@@ -1,5 +1,18 @@
 # Projekthistorie
 
+## 1.2.0 – Scanner- und Metadatenkorrekturen
+
+- Stabiler Release der 1.2.0-Reihe mit den aktuellen Korrekturen seit 1.1.1.
+- Schwerer Hänger beim lokalen Scan behoben: Regex-Muster in
+  `AppNameNormalizer` werden jetzt statisch gecacht.
+- Bestätigte Quellen-URLs werden gegen den tatsächlich vorgeschlagenen Wert
+  geprüft.
+- Regex-Caching wurde in beiden AppNameNormalizer-Implementierungen ergänzt;
+  technische Begriffe in `CatalogEntryFilter` werden ebenfalls gecacht.
+- Beta-/Release-Paketierung robuster gemacht, inklusive lokaler Xcode-Cache-
+  Pfade, DMG-Fallback, ignorierten Backup-Release-Notizen und strukturierten
+  Release Notes.
+
 ## 1.2.0-beta.2 – Metadaten- und Stabilitätskorrekturen
 
 - Zweite Beta der 1.2.0-Reihe mit den aktuellen Korrekturen für

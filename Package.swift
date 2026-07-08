@@ -9,12 +9,13 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "AppAtlas", targets: ["AppAtlas"])
-    ],
-    dependencies: [
-        .package(path: "../AppMetadataKit")
+        .executable(name: "AppAtlas", targets: ["AppAtlas"]),
+        .library(name: "AppMetadataKit", targets: ["AppMetadataKit"])
     ],
     targets: [
+        .target(
+            name: "AppMetadataKit"
+        ),
         .executableTarget(
             name: "AppAtlas",
             dependencies: [
@@ -33,6 +34,10 @@ let package = Package(
         .testTarget(
             name: "AppAtlasTests",
             dependencies: ["AppAtlas"]
+        ),
+        .testTarget(
+            name: "AppMetadataKitTests",
+            dependencies: ["AppMetadataKit"]
         )
     ]
 )

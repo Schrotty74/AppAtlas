@@ -19,7 +19,7 @@ build_setting() {
     local name="$1"
     xcodebuild \
         -project AppAtlas.xcodeproj \
-        -scheme "AppAtlas Beta" \
+        -target AppAtlas \
         -configuration Beta \
         -derivedDataPath "$root_directory/.build/xcode-beta-derived-data" \
         -clonedSourcePackagesDirPath "$root_directory/.build/xcode-beta-source-packages" \
@@ -73,10 +73,11 @@ ensure_beta_ref() {
 
 worktree_tree() {
     local changed_paths
+    local changed_path
 
     changed_paths=()
-    while IFS= read -r path; do
-        changed_paths+=("$path")
+    while IFS= read -r changed_path; do
+        changed_paths+=("$changed_path")
     done < <(
         {
             git diff --name-only HEAD --
@@ -118,6 +119,18 @@ artifact_base_name() {
     fi
 }
 
+backup_directory_for_version() {
+    local version="$1"
+    case "$version" in
+        *local*|*test*)
+            echo "$root_directory/Backup/local-test/$version"
+            ;;
+        *)
+            echo "$root_directory/Backup/releases/beta/$version"
+            ;;
+    esac
+}
+
 require_release_artifacts() {
     local artifact
     for artifact in "$@"; do
@@ -133,6 +146,11 @@ require_gh() {
         echo "Abbruch: GitHub CLI 'gh' wurde nicht gefunden." >&2
         exit 1
     fi
+}
+
+reset_beta_container() {
+    local container_directory="$HOME/Library/Containers/at.schrotty.appatlas.beta"
+    rm -rf "$container_directory"
 }
 
 last_beta_tag() {
@@ -152,7 +170,7 @@ categorized_release_changes() {
     local changes
 
     changes="$(
-        git log --reverse --no-merges --format='%b%x1e' "$previous_beta_tag"..HEAD \
+        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_beta_tag"..HEAD \
             | awk '
                 function trim(value) {
                     sub(/^[[:space:]]+/, "", value)
@@ -286,28 +304,14 @@ version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
 previous_beta_tag="$(last_beta_tag)"
 artifact_base="$(artifact_base_name "$version")"
-backup_directory="$root_directory/Backup"
+backup_directory="$(backup_directory_for_version "$version")"
 zip_file="$backup_directory/$artifact_base.zip"
 dmg_file="$backup_directory/$artifact_base.dmg"
 zip_checksum_file="$zip_file.sha256"
 dmg_checksum_file="$dmg_file.sha256"
 release_notes_file="$backup_directory/AppAtlas-Beta-$version-release-notes.md"
 
-if [[ "${APPATLAS_SKIP_XCODEBUILD:-}" != "YES" ]]; then
-    xcodebuild \
-        -project AppAtlas.xcodeproj \
-        -scheme "AppAtlas Beta" \
-        -configuration Beta \
-        -destination 'generic/platform=macOS' \
-        -derivedDataPath "$root_directory/.build/xcode-beta-derived-data" \
-        -clonedSourcePackagesDirPath "$root_directory/.build/xcode-beta-source-packages" \
-        -packageCachePath "$root_directory/.build/xcode-beta-package-cache" \
-        -disablePackageRepositoryCache \
-        -skipPackageUpdates \
-        -skipPackagePluginValidation \
-        -skipMacroValidation \
-        build
-fi
+reset_beta_container
 
 APPATLAS_VERSION="$version" \
     APPATLAS_ALLOW_RELEASE_PACKAGE=YES \
@@ -342,6 +346,7 @@ create_github_release \
 echo "Beta wurde aus Dev erstellt."
 echo "Version: $version"
 echo "ZIP, DMG und SHA256-Dateien wurden erzeugt."
+echo "Ausgabeordner: $backup_directory"
 echo "Release Notes: $release_notes_file"
 echo "Branch beta wurde zu origin gepusht."
 echo "GitHub Release wurde erstellt."

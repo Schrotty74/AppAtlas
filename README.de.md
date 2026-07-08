@@ -11,9 +11,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern und verwaltet
 Icons, Beschreibungen, Links, Tags, Lizenzinformationen und lokale
 Katalogexporte.
 
-> Aktueller Release: **AppAtlas 1.1.1**
+> Aktueller Release: **AppAtlas 1.2.0**
 
-[AppAtlas 1.1.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
+[AppAtlas 1.2.0 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
 
 ## Funktionen
 
@@ -87,7 +87,7 @@ Die folgenden Screenshots zeigen ausschließlich Demo-Daten.
 ## Build und Installation
 
 Aktuellen Release herunterladen:
-[AppAtlas 1.1.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.1.1/AppAtlas-1.1.1-macos.dmg)
+[AppAtlas 1.2.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
 
 Beim ersten Öffnen zeigt macOS möglicherweise eine Warnung, da AppAtlas nicht
 mit einem kostenpflichtigen Apple Developer Account notarisiert ist.
@@ -109,19 +109,24 @@ swift test
 swift build
 ```
 
+GitHub Actions führt dieselben Alltagsprüfungen bei jedem Push und Pull
+Request aus: `swift build`, `swift test` und `Scripts/privacy-check.sh`. Der
+Workflow veröffentlicht nichts, erzeugt keine Tags, lädt keine Build-Artefakte
+hoch und führt keine Release-Skripte aus.
+
 Für einen manuell startbaren Entwicklungsstand ohne Beta, ZIP oder Backup:
 
 ```sh
 ./Scripts/build-development.sh
 ```
 
-Die App liegt anschließend unter `dist/AppAtlas-Development/AppAtlas.app` und
+Die App liegt anschließend unter `dist/local-test/AppAtlas-Development/AppAtlas.app` und
 wird nicht automatisch geöffnet.
 
-Das Release-Skript darf nur nach ausdrücklicher Freigabe ausgeführt werden:
+Der Beta-Release-Workflow läuft über das Release-Skript:
 
 ```sh
-APPATLAS_ALLOW_RELEASE_PACKAGE=YES ./Scripts/build-beta.sh
+./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
 ```
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
@@ -138,7 +143,7 @@ Export- und Datenbankdateien.
 - [Beispieltheme Winterfest](docs/themes/example-winter-frost.json)
 - [Projektstruktur](docs/PROJECT_STRUCTURE.md)
 - [Details zum Datenschutz](docs/PRIVACY.md)
-- [Datenschutzaudit für AppAtlas 1.1.1](docs/PRIVACY_AUDIT_2026-06-17.md)
+- [Datenschutzaudit für AppAtlas 1.2.0](docs/PRIVACY_AUDIT_2026-07-06.md)
 
 ## Transparenz
 

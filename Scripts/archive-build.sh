@@ -11,9 +11,20 @@ fi
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 version="${APPATLAS_VERSION:-0.1.0-beta.3}"
 timestamp="${APPATLAS_BACKUP_TIMESTAMP:-$(date '+%Y-%m-%d_%H-%M-%S')}"
-local_backup_directory="$root_directory/Backup"
+case "$version" in
+    *local*|*test*)
+        artifact_directory="$root_directory/Backup/local-test/$version"
+        ;;
+    *beta*)
+        artifact_directory="$root_directory/Backup/releases/beta/$version"
+        ;;
+    *)
+        artifact_directory="$root_directory/Backup/releases/final/$version"
+        ;;
+esac
+local_backup_directory="$root_directory/Backup/app-backups"
 icloud_backup_directory="${APPATLAS_ICLOUD_BACKUP_DIRECTORY:-$HOME/Library/Mobile Documents/com~apple~CloudDocs/Backup/Apps/Codex}"
-build_zip="$root_directory/Backup/AppAtlas-$version-macos.zip"
+build_zip="$artifact_directory/AppAtlas-$version-macos.zip"
 checksum_file="$build_zip.sha256"
 changelog_file="$root_directory/docs/releases/$version.md"
 staging_directory="$root_directory/.build/backup/AppAtlas-$version"

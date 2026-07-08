@@ -4,7 +4,7 @@ set -euo pipefail
 
 root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 scratch_directory="$root_directory/.build/development"
-output_directory="$root_directory/dist/AppAtlas-Development"
+output_directory="$root_directory/dist/local-test/AppAtlas-Development"
 app_bundle="$output_directory/AppAtlas.app"
 version="1.0.0-development"
 build_number="1"

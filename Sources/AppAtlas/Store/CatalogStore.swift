@@ -1005,8 +1005,12 @@ final class CatalogStore: ObservableObject {
                 continue
             }
             if host == "github.com" || host.hasSuffix(".github.com") {
+                if Self.isGitHubReleaseURL(url), apps[index].downloadURL == nil {
+                    apps[index].downloadURL = url
+                    addSource("Bestätigte lokale Zuordnung", to: index)
+                }
                 if apps[index].githubURL == nil {
-                    apps[index].githubURL = url
+                    apps[index].githubURL = Self.repositoryURL(fromGitHubURL: url) ?? url
                     addSource("Bestätigte lokale Zuordnung", to: index)
                 }
             } else if host == "apps.apple.com" || host.hasSuffix(".apps.apple.com") {
@@ -1388,7 +1392,15 @@ final class CatalogStore: ObservableObject {
         guard let url else {
             return
         }
-        apps[index].homepage = url
+        apps[index].homepage = Self.homepageURL(fromConfirmedURL: url)
+        if Self.isGitHubURL(url) {
+            apps[index].githubURL = Self.repositoryURL(fromGitHubURL: url) ?? url
+            if Self.isGitHubReleaseURL(url), apps[index].downloadURL == nil {
+                apps[index].downloadURL = url
+            }
+        } else if Self.isAppStoreURL(url) || Self.isDirectDownloadURL(url) {
+            apps[index].downloadURL = url
+        }
         ConfirmedMetadataMatchStore.shared.confirm(
             appName: apps[index].name,
             url: url
@@ -1408,12 +1420,33 @@ final class CatalogStore: ObservableObject {
 
     private func enrichFromConfirmedWebsite(for appID: AppEntry.ID) async {
         guard let app = apps.first(where: { $0.id == appID }),
-              let homepage = app.homepage,
-              let metadata = await WebMetadataLookup.shared.metadata(
+              let homepage = app.homepage
+        else {
+            return
+        }
+        let needsIcon = !app.customizations.icon
+            && app.iconOrigin != .manual
+            && app.iconOrigin != .localBundle
+
+        if let githubURL = app.githubURL,
+           let githubMetadata = await GitHubRepositoryLookup.shared.metadata(
+                for: githubURL,
+                category: app.category,
+                subcategory: app.subcategory,
+                needsIcon: needsIcon
+           ),
+           let index = apps.firstIndex(where: { $0.id == appID })
+        {
+            applyConfirmedGitHubMetadata(
+                githubMetadata,
+                homepage: homepage,
+                to: index
+            )
+        }
+
+        guard let metadata = await WebMetadataLookup.shared.metadata(
                 for: homepage,
-                needsIcon: !app.customizations.icon
-                    && app.iconOrigin != .manual
-                    && app.iconOrigin != .localBundle
+                needsIcon: needsIcon
               ),
               let index = apps.firstIndex(where: { $0.id == appID })
         else {
@@ -1446,6 +1479,48 @@ final class CatalogStore: ObservableObject {
             )
         }
         persist()
+    }
+
+    private func applyConfirmedGitHubMetadata(
+        _ metadata: GitHubRepositoryLookup.Metadata,
+        homepage: URL,
+        to index: Int
+    ) {
+        if apps[index].githubURL == nil {
+            apps[index].githubURL = metadata.projectURL
+        }
+        if apps[index].downloadURL == nil {
+            apps[index].downloadURL = metadata.downloadURL
+        }
+        if let homepageURL = metadata.homepageURL,
+           apps[index].homepage == homepage {
+            apps[index].homepage = homepageURL
+        }
+        if let iconData = metadata.iconData,
+           !apps[index].customizations.icon,
+           apps[index].iconOrigin != .manual,
+           apps[index].iconOrigin != .localBundle,
+           isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
+        {
+            IconStore.shared.delete(fileName: apps[index].iconFileName)
+            apps[index].iconFileName = nil
+            apps[index].iconData = iconData
+            apps[index].iconOrigin = .website
+            apps[index] = migrateIcon(in: apps[index])
+        }
+        if let description = metadata.description,
+           !description.isEmpty,
+           AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
+           !apps[index].customizations.description
+        {
+            recordDescription(
+                description,
+                source: "Bestätigtes GitHub-Projekt",
+                sourceURL: metadata.projectURL,
+                for: apps[index].id
+            )
+        }
+        addSource("Bestätigtes GitHub-Projekt", to: index)
     }
 
     func dismissWebsitePrompt(for appID: AppEntry.ID) {
@@ -1608,6 +1683,64 @@ final class CatalogStore: ObservableObject {
         case .open, .running, .found, nil:
             return false
         }
+    }
+
+    private static func homepageURL(fromConfirmedURL url: URL) -> URL {
+        if let repositoryURL = repositoryURL(fromGitHubURL: url) {
+            return repositoryURL
+        }
+        if isDirectDownloadURL(url) || isAppStoreURL(url) {
+            return siteRootURL(for: url) ?? url
+        }
+        return url
+    }
+
+    private static func siteRootURL(for url: URL) -> URL? {
+        guard let scheme = url.scheme,
+              let host = url.host
+        else {
+            return nil
+        }
+        return URL(string: "\(scheme)://\(host)")
+    }
+
+    private static func isAppStoreURL(_ url: URL) -> Bool {
+        guard let host = url.host?.lowercased() else {
+            return false
+        }
+        return host == "apps.apple.com" || host.hasSuffix(".apps.apple.com")
+    }
+
+    private static func isGitHubURL(_ url: URL) -> Bool {
+        guard let host = url.host?.lowercased() else {
+            return false
+        }
+        return host == "github.com" || host.hasSuffix(".github.com")
+    }
+
+    private static func isGitHubReleaseURL(_ url: URL) -> Bool {
+        isGitHubURL(url)
+            && url.path
+                .split(separator: "/")
+                .map(String.init)
+                .contains("releases")
+    }
+
+    private static func repositoryURL(fromGitHubURL url: URL) -> URL? {
+        guard isGitHubURL(url) else {
+            return nil
+        }
+        let components = url.path
+            .split(separator: "/")
+            .map(String.init)
+        guard components.count >= 2 else {
+            return nil
+        }
+        return URL(string: "https://github.com/\(components[0])/\(components[1])")
+    }
+
+    private static func isDirectDownloadURL(_ url: URL) -> Bool {
+        ["dmg", "pkg", "zip"].contains(url.pathExtension.lowercased())
     }
 
     private func isLowValueInstallerMetadataPrompt(_ app: AppEntry) -> Bool {

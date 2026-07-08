@@ -2,8 +2,8 @@
 
 ## Aktueller Stand
 
-- Aktuelle Release-Serie: `1.0`.
-- Aktueller offizieller Release: `1.0.1`.
+- Aktuelle Release-Serie: `1.2`.
+- Aktueller offizieller Release: `1.2.0`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -88,21 +88,22 @@
 - Unter macOS 26 verwendet die Oberfläche für Sidebar-Auswahl, Kategorie-
   Elemente, Theme-Menü und App-Karten automatisch natives Liquid Glass.
   Ältere Systeme verwenden unverändert die bisherigen Theme-Flächen.
+- AppMetadataKit ist als internes SwiftPM-Target in AppAtlas integriert.
+  SwiftPM- und Xcode-Builds benötigen keinen benachbarten
+  `../AppMetadataKit`-Ordner mehr.
 
 ## Offene Aufgaben
 
-- Release-Angaben prüfen und vereinheitlichen: In den Projektregeln steht
-  teils noch offizieller Release `1.0.1`, während README und HISTORY bereits
-  `1.1.1` nennen.
-- Rückmeldungen zu Version 1.0.1 sammeln und priorisieren.
+- Rückmeldungen zu Version 1.2.0 sammeln und priorisieren.
+- Optionale CI-Prüfung für `swift test` und Datenschutzcheck bewerten, bevor
+  sie als GitHub Actions Workflow eingeführt wird.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
 - Scanner-Erkennung als nächster Schwerpunkt:
   schneller Scan bleibt lokal und darf nicht durch Online-Abfragen blockieren.
-  Er soll aber deutlich mehr Apps über eine lokale Wissensdatenbank erkennen
-  können. Dafür bekannte App-Namen mit Homepage, Download, GitHub und
-  Icon-Quelle pflegen, zum Beispiel Pearcleaner, AnyDesk, Affinity, Photoshop,
-  Downie und VLC.
+  Er soll aber weiter über eine lokale Wissensdatenbank ausgebaut werden,
+  inklusive zusätzlicher bekannter App-Namen, Varianten und späterer
+  Icon-Quellen.
 - Die Trefferbewertung soll mit diesen Schwellen arbeiten:
   `automaticThreshold = 0.80`, `reviewThreshold = 0.65` und
   `minimumAutomaticMargin = 0.08`.
@@ -115,19 +116,8 @@
   MacUpdater-ähnliche Exportdaten nur gezielt und nach klarer Priorität nutzen:
   zuerst lokale und gecachte Quellen, danach Online-Quellen. Nicht blind pro App
   Websuche starten.
-- Installer-Dateien wie `.dmg`, `.pkg` und `.zip` anders bewerten als echte
-  `.app`-Bundles. Installer erhalten nur dann konkrete App-Metadaten, wenn die
-  Zuordnung über lokale Wissensdatenbank, bestätigte Quelle oder sichere
-  Online-Quelle eindeutig ist.
-- Sammeldialog für unklare Apps korrigieren: nicht alle Apps ohne Homepage
-  auflisten, sondern nur Apps, die nach allen aktivierten Erkennungsstufen
-  weiterhin nicht sicher erkannt wurden. Bei aktivierter erweiterter Suche darf
-  der Dialog erst nach Abschluss dieser erweiterten Suche erscheinen.
-- Nachbearbeitung unklarer Apps als Sammelliste führen: pro App eine URL
-  eintragen, danach automatisch Homepage, Download-Link, Icon, Beschreibung und
-  gegebenenfalls GitHub-Link aus dieser URL ableiten. Erledigte Apps fallen aus
-  der Liste heraus; dauerhaft übersprungene Apps werden bei späteren Scans nicht
-  erneut automatisch abgefragt.
+- Nachbearbeitung unklarer Apps weiter praktisch prüfen und bei Bedarf
+  verfeinern.
 
 ## Verbindliche Regeln
 
