@@ -8,9 +8,13 @@ struct CatalogManagementTests {
     @Test
     func updateCheckerComparesGitHubTagsWithBundleVersions() {
         #expect(AppUpdateChecker.isNewerVersion("v1.2.1", than: "1.2.0"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.1-beta.1", than: "1.2.0"))
         #expect(AppUpdateChecker.isNewerVersion("1.2.0", than: "1.1.9"))
         #expect(AppUpdateChecker.isNewerVersion("v1.2.0-beta.2", than: "1.2.0-beta.1"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.0-beta.10", than: "1.2.0-beta.2"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.0", than: "1.2.0-beta.3"))
         #expect(!AppUpdateChecker.isNewerVersion("v1.2.0", than: "1.2.0"))
+        #expect(!AppUpdateChecker.isNewerVersion("v1.2.0-beta.3", than: "1.2.0"))
         #expect(!AppUpdateChecker.isNewerVersion("v1.1.1", than: "1.2.0"))
     }
 
