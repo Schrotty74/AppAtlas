@@ -73,10 +73,11 @@ ensure_beta_ref() {
 
 worktree_tree() {
     local changed_paths
+    local changed_path
 
     changed_paths=()
-    while IFS= read -r path; do
-        changed_paths+=("$path")
+    while IFS= read -r changed_path; do
+        changed_paths+=("$changed_path")
     done < <(
         {
             git diff --name-only HEAD --
@@ -169,7 +170,7 @@ categorized_release_changes() {
     local changes
 
     changes="$(
-        git log --reverse --no-merges --format='%b%x1e' "$previous_beta_tag"..HEAD \
+        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_beta_tag"..HEAD \
             | awk '
                 function trim(value) {
                     sub(/^[[:space:]]+/, "", value)
