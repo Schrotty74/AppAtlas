@@ -88,10 +88,15 @@
 - Unter macOS 26 verwendet die Oberfläche für Sidebar-Auswahl, Kategorie-
   Elemente, Theme-Menü und App-Karten automatisch natives Liquid Glass.
   Ältere Systeme verwenden unverändert die bisherigen Theme-Flächen.
+- AppMetadataKit ist als internes SwiftPM-Target in AppAtlas integriert.
+  SwiftPM- und Xcode-Builds benötigen keinen benachbarten
+  `../AppMetadataKit`-Ordner mehr.
 
 ## Offene Aufgaben
 
 - Rückmeldungen zu Version 1.2.0 sammeln und priorisieren.
+- Optionale CI-Prüfung für `swift test` und Datenschutzcheck bewerten, bevor
+  sie als GitHub Actions Workflow eingeführt wird.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
 - Scanner-Erkennung als nächster Schwerpunkt:

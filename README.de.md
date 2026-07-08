@@ -109,6 +109,11 @@ swift test
 swift build
 ```
 
+GitHub Actions führt dieselben Alltagsprüfungen bei jedem Push und Pull
+Request aus: `swift build`, `swift test` und `Scripts/privacy-check.sh`. Der
+Workflow veröffentlicht nichts, erzeugt keine Tags, lädt keine Build-Artefakte
+hoch und führt keine Release-Skripte aus.
+
 Für einen manuell startbaren Entwicklungsstand ohne Beta, ZIP oder Backup:
 
 ```sh

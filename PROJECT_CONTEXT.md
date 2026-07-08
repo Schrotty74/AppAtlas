@@ -3,6 +3,16 @@
 AppAtlas ist eine native SwiftUI-App für macOS zur persönlichen Verwaltung
 eines lokalen App-Katalogs.
 
+## Technische Struktur
+
+- AppAtlas ist ein Swift-Package mit Xcode-Projekt.
+- `AppMetadataKit` ist ein internes SwiftPM-Target im selben Repository.
+  Es gibt keine notwendige Abhängigkeit mehr auf einen benachbarten
+  `../AppMetadataKit`-Ordner.
+- Xcode bindet `AppMetadataKit` als lokales Paket aus dem AppAtlas-Repository
+  ein. `swift build`, `swift test` und Xcode-Builds müssen daher ohne
+  zusätzliches Schwester-Repository funktionieren.
+
 ## Scanner-Stand
 
 - Diese Scanner-Eigenschaften sind beabsichtigt und dürfen bei der weiteren

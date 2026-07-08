@@ -906,7 +906,7 @@
 		};
 		0E681C8851A44607A24BF530 /* XCLocalSwiftPackageReference "AppMetadataKit" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../AppMetadataKit;
+			relativePath = .;
 		};
 		0FC0FFFB76BE45449EA2EA39 /* AppMetadataKit */ = {
 			isa = XCSwiftPackageProductDependency;
