@@ -582,6 +582,16 @@
 			isa = PBXBuildFile;
 			fileRef = 9FF65CEB4129445A84ECA173 /* AppUpdateChecker.swift */;
 		};
+		6C7F0B22771A4D969A3E7F80 /* AppHelpLinks.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Sources/AppAtlas/Support/AppHelpLinks.swift;
+			sourceTree = SOURCE_ROOT;
+		};
+		29EA52322CBF4205A5720996 /* AppHelpLinks.swift in Sources */ = {
+			isa = PBXBuildFile;
+			fileRef = 6C7F0B22771A4D969A3E7F80 /* AppHelpLinks.swift */;
+		};
 		8941811FD69946B7AE3B442E /* ErrorReport.swift */ = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -862,6 +872,36 @@
 			isa = PBXBuildFile;
 			fileRef = ED1904A506454F35B236DD63 /* github-invertocat-white.svg */;
 		};
+		C79B4F8770A0492DA8680D4C /* ai-chatgpt-logo.jpg */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.jpeg;
+			path = Sources/AppAtlas/Resources/ai-chatgpt-logo.jpg;
+			sourceTree = SOURCE_ROOT;
+		};
+		86B1FFEF8C0D49C7A9A8E798 /* ai-chatgpt-logo.jpg in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = C79B4F8770A0492DA8680D4C /* ai-chatgpt-logo.jpg */;
+		};
+		8B0E29A30A134ECAB5E70D0C /* ai-gemini-logo.svg */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			path = Sources/AppAtlas/Resources/ai-gemini-logo.svg;
+			sourceTree = SOURCE_ROOT;
+		};
+		92561DE408AD4CF0A26495D3 /* ai-gemini-logo.svg in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = 8B0E29A30A134ECAB5E70D0C /* ai-gemini-logo.svg */;
+		};
+		C73940251C204677B0A54A21 /* ai-claude-logo.png */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.png;
+			path = Sources/AppAtlas/Resources/ai-claude-logo.png;
+			sourceTree = SOURCE_ROOT;
+		};
+		732FB7C1A45749C8BEB3C33F /* ai-claude-logo.png in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = C73940251C204677B0A54A21 /* ai-claude-logo.png */;
+		};
 		A5B7E14C60E144B9A7F779CC /* Localizable.strings */ = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
@@ -977,6 +1017,7 @@
 				0D781B9CBBEF446CA4BC750D,
 				1C837162E6C24B83B7B3D5C2,
 				9FF65CEB4129445A84ECA173,
+				6C7F0B22771A4D969A3E7F80,
 				8941811FD69946B7AE3B442E,
 				1F9730BCEA6E486E919FFBD3,
 				3B019932D1A946C787632752,
@@ -1012,6 +1053,9 @@
 				102D0A03B3A04E00B3898E74,
 				09E2DA7FF3CA4E5F83C4283E,
 				ED1904A506454F35B236DD63,
+				C79B4F8770A0492DA8680D4C,
+				8B0E29A30A134ECAB5E70D0C,
+				C73940251C204677B0A54A21,
 				A5B7E14C60E144B9A7F779CC,
 				527541EA908D4892B3C884D3,
 				AA43EC3BBE924EB6B962ADB1,
@@ -1107,6 +1151,7 @@
 				1660EADC290543FD9852AAA0,
 				4601BA4400FA4945A054437D,
 				D876BBC4FE98488D9ED50614,
+				29EA52322CBF4205A5720996,
 				A20CFAA12D1D411C83CD6729,
 				E62A85D9F72744EA89305451,
 				F1070C68F67B4E27BE85E710,
@@ -1142,6 +1187,9 @@
 				EB40FC01F2D74D31891DB4CE,
 				F1CEA192F2FF40A8AE2974D7,
 				AA7FF5AC33A24553839ADE9C,
+				86B1FFEF8C0D49C7A9A8E798,
+				92561DE408AD4CF0A26495D3,
+				732FB7C1A45749C8BEB3C33F,
 				AFE8E45CB2674E768F75D0CA,
 				1ACC1BA5C52C4C52863CE76C,
 				1DA01C5467AD448CA456A323,

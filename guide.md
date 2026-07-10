@@ -54,6 +54,15 @@ Der zuletzt gewählte Quellordner kann später erneut gescannt werden.
 
 Wichtig: Beim Import wird der vorhandene Katalog ersetzt.
 
+Auf dem leeren Startbildschirm kannst du außerdem das **Handbuch öffnen** oder
+ChatGPT, Google Gemini oder Claude wählen. Vor dem Öffnen weist AppAtlas darauf
+hin, dass eine vorbereitete AppAtlas-Frage samt öffentlichem Handbuch-Link in
+die Zwischenablage kopiert wird. Füge sie anschließend im gewählten KI-Dienst
+mit `⌘V` ein und sende sie mit Return. Dein Katalog, lokale Dateipfade und
+Lizenzdaten werden nicht in diese Frage eingefügt. AppAtlas fügt das
+Handbuch nicht in die Anfrage ein, sondern verweist am Ende lediglich auf den
+öffentlichen Link.
+
 ## 4. Apps verwalten
 
 Nach dem Scan kannst du deine Apps bearbeiten und ergänzen.
@@ -248,21 +257,34 @@ Wenn du AppAtlas zum ersten Mal nutzt, ist dieser Ablauf sinnvoll:
 
 ## 16. Hilfe mit KI
 
-Du kannst diese Anleitung auch in ChatGPT, Claude, Gemini oder eine andere KI einfügen und dir den Einstieg erklären lassen.
+Du kannst diese Anleitung über die Schaltflächen im leeren Startbildschirm in
+ChatGPT, Google Gemini oder Claude öffnen und dir den Einstieg erklären lassen.
 
 Beispiel-Prompt:
 
 ```text
-Ich nutze AppAtlas auf macOS. Bitte erkläre mir diese Anleitung kurz und praktisch.
+Ich habe AppAtlas gerade zum ersten Mal geöffnet und mein Katalog ist noch
+leer. Erkläre mir AppAtlas freundlich und in einfacher Sprache. Führe mich
+anschließend Schritt für Schritt durch meinen ersten Katalog:
 
-Hilf mir besonders bei:
-1. erster Einrichtung,
-2. Ordner-Scan,
-3. Online-Daten aktualisieren,
-4. Lizenzdaten,
-5. Katalogexport und Backup.
+1. „Ordner scannen“ auswählen.
+2. Einen Ordner mit Apps oder Installationsdateien auswählen.
+3. Das Scan-Ergebnis prüfen und unerwünschte Vorschläge abwählen.
+4. Die ausgewählten Apps mit „Katalog mit … Apps abgleichen“ übernehmen.
+5. Erklären, wie ich Apps suche, kategorisiere und bearbeite.
+6. Erklären, wann „Online-Daten aktualisieren“ sinnvoll ist und dass diese
+   Funktion bewusst gestartet werden muss.
+7. Unsichere Treffer unter „Zu prüfen“ kontrollieren.
+8. Zum Abschluss einen sicheren Katalogexport ohne Lizenzdaten erstellen.
 
-Antworte Schritt für Schritt und ohne Marketing-Sprache.
+Erkläre bei jedem Schritt genau, welche Schaltfläche ich anklicken muss, was
+danach erscheint und worauf ich achten sollte. Weise besonders darauf hin,
+dass ein erneuter vollständiger Scan nicht mehr vorhandene oder abgewählte
+lokale Einträge aus dem Katalog entfernen kann. Verwende kurze Abschnitte und
+frage mich am Ende, bei welchem Schritt ich Hilfe benötige.
+
+Verweise anschließend auf das offizielle Handbuch:
+https://github.com/Schrotty74/AppAtlas/blob/main/guide.md
 ```
 
 Gib einer externen KI keine Seriennummern, Lizenzschlüssel, persönlichen
