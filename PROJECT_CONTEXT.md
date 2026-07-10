@@ -142,6 +142,14 @@ eines lokalen App-Katalogs.
   Application Support. Der lokale Katalog enthält nur Icon-Referenzen;
   portable Exporte enthalten weiterhin die Originalicons.
 - Themes verwenden das Format `appatlas-theme`.
+- Der leere Erststart-Bildschirm bietet einen Link zum öffentlichen Handbuch.
+  Eine feste, datensparsame AppAtlas-Einführungsfrage kann in die
+  Zwischenablage kopiert und anschließend in ChatGPT, Google Gemini oder
+  Claude eingefügt werden. Die Schaltflächen verwenden lokal eingebundene
+  offizielle Dienstlogos. Die kurze Einführungsfrage verweist lediglich auf
+  das öffentliche Handbuch; dessen Inhalt wird nicht in den Prompt kopiert.
+  Persönliche Katalogdaten, lokale Pfade und Lizenzdaten werden nicht
+  übergeben.
 - AppAtlas steht unter GPLv3.
 - Backups werden nur auf ausdrückliche Anweisung erstellt.
 

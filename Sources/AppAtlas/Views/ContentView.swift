@@ -410,6 +410,7 @@ struct ContentView: View {
 
 private struct EmptyCatalogStartView: View {
     @Environment(\.appAtlasTheme) private var theme
+    @State private var pendingAIService: AIHelpService?
     let showScanner: () -> Void
     let showCatalogImporter: () -> Void
 
@@ -440,6 +441,36 @@ private struct EmptyCatalogStartView: View {
                 .buttonStyle(.bordered)
             }
 
+            HStack(spacing: 12) {
+                Button {
+                    NSWorkspace.shared.open(AppHelpLinks.guideURL)
+                } label: {
+                    Label("Handbuch öffnen", systemImage: "book")
+                }
+                .buttonStyle(.bordered)
+                .help("Das offizielle AppAtlas-Handbuch öffnen")
+
+                ForEach(AIHelpService.allCases) { service in
+                    Button {
+                        pendingAIService = service
+                    } label: {
+                        HStack(spacing: 7) {
+                            AIServiceLogo(service: service)
+                            Text(service.title)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .help(
+                        String(
+                            format: AppLocalization.text(
+                                "AppAtlas mit %@ erklären lassen"
+                            ),
+                            service.title
+                        )
+                    )
+                }
+            }
+
             VStack(alignment: .leading, spacing: 8) {
                 Label(
                     "Der lokale Scan verändert den ausgewählten Ordner nicht.",
@@ -461,5 +492,59 @@ private struct EmptyCatalogStartView: View {
         .padding(34)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppAtlasBackground())
+        .alert(item: $pendingAIService) { service in
+            Alert(
+                title: Text(
+                    String(
+                        format: AppLocalization.text("%@ öffnen"),
+                        service.title
+                    )
+                ),
+                message: Text(
+                    String(
+                        format: AppLocalization.text(
+                            "AppAtlas kopiert eine vorbereitete Frage und öffnet %@. Füge die Frage dort mit ⌘V ein und sende sie mit Return."
+                        ),
+                        service.title
+                    )
+                ),
+                primaryButton: .default(Text("Kopieren und öffnen")) {
+                    copyPromptAndOpen(service)
+                },
+                secondaryButton: .cancel(Text("Abbrechen"))
+            )
+        }
+    }
+
+    private func copyPromptAndOpen(_ service: AIHelpService) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(
+            AppHelpLinks.aiPrompt,
+            forType: .string
+        )
+        NSWorkspace.shared.open(service.url)
+    }
+}
+
+private struct AIServiceLogo: View {
+    let service: AIHelpService
+
+    var body: some View {
+        Image(nsImage: image)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 18, height: 18)
+            .accessibilityHidden(true)
+    }
+
+    private var image: NSImage {
+        let resource = service.logoResource
+        guard let url = AppResources.bundle.url(
+            forResource: resource.name,
+            withExtension: resource.extension
+        ) else {
+            return NSImage()
+        }
+        return NSImage(contentsOf: url) ?? NSImage()
     }
 }

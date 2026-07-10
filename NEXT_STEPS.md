@@ -91,6 +91,9 @@
 - AppMetadataKit ist als internes SwiftPM-Target in AppAtlas integriert.
   SwiftPM- und Xcode-Builds benötigen keinen benachbarten
   `../AppMetadataKit`-Ordner mehr.
+- Der leere Erststart-Bildschirm öffnet auf Wunsch das öffentliche Handbuch
+  oder kopiert eine vorbereitete, datensparsame AppAtlas-Frage und öffnet
+  ChatGPT, Google Gemini oder Claude zum Einfügen.
 
 ## Offene Aufgaben
 

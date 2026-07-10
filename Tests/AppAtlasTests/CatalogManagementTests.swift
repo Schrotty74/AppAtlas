@@ -6,11 +6,57 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
+    func helpLinksOpenThePublicGuideAndSupportedAIServices() throws {
+        #expect(
+            AppHelpLinks.guideURL.absoluteString
+                == "https://github.com/Schrotty74/AppAtlas/blob/main/guide.md"
+        )
+        #expect(
+            AIHelpService.allCases.map(\.url.host) == [
+                "chatgpt.com",
+                "gemini.google.com",
+                "claude.ai"
+            ]
+        )
+        #expect(AIHelpService.allCases.allSatisfy { $0.url.scheme == "https" })
+        #expect(
+            AppHelpLinks.aiPrompt.hasPrefix(
+                "Ich habe AppAtlas gerade zum ersten Mal geöffnet"
+            )
+        )
+        #expect(AppHelpLinks.aiPrompt.contains("„Ordner scannen“"))
+        #expect(AppHelpLinks.aiPrompt.contains("„Katalog mit … Apps abgleichen“"))
+        #expect(AppHelpLinks.aiPrompt.contains("ohne Lizenzdaten"))
+        #expect(
+            AppHelpLinks.aiPrompt.contains(
+                "[\(AppHelpLinks.guideURL.absoluteString)]"
+                    + "(\(AppHelpLinks.guideURL.absoluteString))"
+            )
+        )
+        #expect(!AppHelpLinks.aiPrompt.contains("BEGINN DES APPATLAS-HANDBUCHS"))
+
+        for service in AIHelpService.allCases {
+            let resource = service.logoResource
+            let url = try #require(
+                AppResources.bundle.url(
+                    forResource: resource.name,
+                    withExtension: resource.extension
+                )
+            )
+            #expect(NSImage(contentsOf: url) != nil)
+        }
+    }
+
+    @Test
     func updateCheckerComparesGitHubTagsWithBundleVersions() {
         #expect(AppUpdateChecker.isNewerVersion("v1.2.1", than: "1.2.0"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.1-beta.1", than: "1.2.0"))
         #expect(AppUpdateChecker.isNewerVersion("1.2.0", than: "1.1.9"))
         #expect(AppUpdateChecker.isNewerVersion("v1.2.0-beta.2", than: "1.2.0-beta.1"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.0-beta.10", than: "1.2.0-beta.2"))
+        #expect(AppUpdateChecker.isNewerVersion("v1.2.0", than: "1.2.0-beta.3"))
         #expect(!AppUpdateChecker.isNewerVersion("v1.2.0", than: "1.2.0"))
+        #expect(!AppUpdateChecker.isNewerVersion("v1.2.0-beta.3", than: "1.2.0"))
         #expect(!AppUpdateChecker.isNewerVersion("v1.1.1", than: "1.2.0"))
     }
 

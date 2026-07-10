@@ -21,8 +21,8 @@ final class AppUpdateChecker: ObservableObject {
         static let cacheKey = "appUpdateChecker.cachedResult"
         static let automaticDelay: UInt64 = 2_000_000_000
         static let cacheLifetime: TimeInterval = 24 * 60 * 60
-        static let releaseURL = URL(
-            string: "https://api.github.com/repos/Schrotty74/AppAtlas/releases/latest"
+        static let releasesURL = URL(
+            string: "https://api.github.com/repos/Schrotty74/AppAtlas/releases?per_page=20"
         )!
     }
 
@@ -115,7 +115,7 @@ final class AppUpdateChecker: ObservableObject {
     }
 
     private func fetchLatestRelease() async throws -> GitHubRelease {
-        var request = URLRequest(url: Constants.releaseURL)
+        var request = URLRequest(url: Constants.releasesURL)
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
@@ -125,7 +125,15 @@ final class AppUpdateChecker: ObservableObject {
               (200..<300).contains(httpResponse.statusCode) else {
             throw AppUpdateError.unexpectedResponse
         }
-        return try JSONDecoder().decode(GitHubRelease.self, from: data)
+        let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
+        guard let latestRelease = releases
+            .filter({ !$0.draft })
+            .max(by: { lhs, rhs in
+                Self.compareVersions(lhs.tagName, rhs.tagName) == .orderedAscending
+            }) else {
+            throw AppUpdateError.unexpectedResponse
+        }
+        return latestRelease
     }
 
     nonisolated static var currentVersion: String {
@@ -142,24 +150,49 @@ final class AppUpdateChecker: ObservableObject {
         _ candidate: String,
         than current: String
     ) -> Bool {
-        let candidateParts = versionParts(candidate)
-        let currentParts = versionParts(current)
-        let count = max(candidateParts.count, currentParts.count)
-        for index in 0..<count {
-            let candidatePart = index < candidateParts.count ? candidateParts[index] : 0
-            let currentPart = index < currentParts.count ? currentParts[index] : 0
-            if candidatePart != currentPart {
-                return candidatePart > currentPart
-            }
-        }
-        return false
+        compareVersions(candidate, current) == .orderedDescending
     }
 
-    private nonisolated static func versionParts(_ version: String) -> [Int] {
-        version
-            .trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
-            .split { !$0.isNumber }
-            .compactMap { Int($0) }
+    private nonisolated static func compareVersions(
+        _ lhs: String,
+        _ rhs: String
+    ) -> ComparisonResult {
+        let lhsVersion = ParsedVersion(lhs)
+        let rhsVersion = ParsedVersion(rhs)
+        let count = max(lhsVersion.baseParts.count, rhsVersion.baseParts.count)
+        for index in 0..<count {
+            let lhsPart = index < lhsVersion.baseParts.count
+                ? lhsVersion.baseParts[index]
+                : 0
+            let rhsPart = index < rhsVersion.baseParts.count
+                ? rhsVersion.baseParts[index]
+                : 0
+            if lhsPart != rhsPart {
+                return lhsPart > rhsPart ? .orderedDescending : .orderedAscending
+            }
+        }
+
+        if lhsVersion.isPrerelease != rhsVersion.isPrerelease {
+            return lhsVersion.isPrerelease ? .orderedAscending : .orderedDescending
+        }
+
+        let prereleaseCount = max(
+            lhsVersion.prereleaseParts.count,
+            rhsVersion.prereleaseParts.count
+        )
+        for index in 0..<prereleaseCount {
+            let lhsPart = index < lhsVersion.prereleaseParts.count
+                ? lhsVersion.prereleaseParts[index]
+                : 0
+            let rhsPart = index < rhsVersion.prereleaseParts.count
+                ? rhsVersion.prereleaseParts[index]
+                : 0
+            if lhsPart != rhsPart {
+                return lhsPart > rhsPart ? .orderedDescending : .orderedAscending
+            }
+        }
+
+        return .orderedSame
     }
 
     private static func cachedInfo(defaults: UserDefaults) -> AppUpdateInfo? {
@@ -185,10 +218,38 @@ private enum CheckResult {
 private struct GitHubRelease: Decodable {
     let tagName: String
     let htmlURL: URL
+    let draft: Bool
 
     enum CodingKeys: String, CodingKey {
         case tagName = "tag_name"
         case htmlURL = "html_url"
+        case draft
+    }
+}
+
+private struct ParsedVersion {
+    let baseParts: [Int]
+    let prereleaseParts: [Int]
+    let isPrerelease: Bool
+
+    init(_ version: String) {
+        let normalized = version.trimmingCharacters(
+            in: CharacterSet(charactersIn: "vV")
+        )
+        let pieces = normalized.split(separator: "-", maxSplits: 1)
+        baseParts = pieces
+            .first?
+            .split { !$0.isNumber }
+            .compactMap { Int($0) } ?? []
+        if pieces.count > 1 {
+            isPrerelease = true
+            prereleaseParts = pieces[1]
+                .split { !$0.isNumber }
+                .compactMap { Int($0) }
+        } else {
+            isPrerelease = false
+            prereleaseParts = []
+        }
     }
 }
 

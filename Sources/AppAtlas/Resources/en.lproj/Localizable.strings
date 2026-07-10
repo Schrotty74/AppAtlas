@@ -230,6 +230,12 @@
 "Noch nicht geprüft." = "Not checked yet.";
 "Updateprüfung läuft …" = "Checking for updates…";
 "AppAtlas ist aktuell." = "AppAtlas is up to date.";
+"Handbuch öffnen" = "Open guide";
+"Das offizielle AppAtlas-Handbuch öffnen" = "Open the official AppAtlas guide";
+"AppAtlas mit %@ erklären lassen" = "Have %@ explain AppAtlas";
+"%@ öffnen" = "Open %@";
+"Kopieren und öffnen" = "Copy and open";
+"AppAtlas kopiert eine vorbereitete Frage und öffnet %@. Füge die Frage dort mit ⌘V ein und sende sie mit Return." = "AppAtlas copies a prepared question and opens %@. Paste the question there with ⌘V and send it with Return.";
 "Neue Version verfügbar: %@" = "New version available: %@";
 "Updateprüfung fehlgeschlagen: %@" = "Update check failed: %@";
 "Browser" = "Browser";
