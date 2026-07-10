@@ -154,9 +154,12 @@ reset_beta_container() {
 }
 
 last_beta_tag() {
+    local version="$1"
+    local current_tag="v$version"
     local tag
 
-    tag="$(git describe --tags --match 'v*-beta*' --abbrev=0 HEAD 2>/dev/null || true)"
+    tag="$(git tag --list 'v*-beta*' --sort=-version:refname \
+        | awk -v current_tag="$current_tag" '$0 != current_tag { print; exit }')"
     if [[ -z "$tag" ]]; then
         echo "Abbruch: kein letzter Beta-Tag gefunden." >&2
         exit 1
@@ -165,12 +168,29 @@ last_beta_tag() {
     echo "$tag"
 }
 
-categorized_release_changes() {
+release_note_base_ref() {
     local previous_beta_tag="$1"
+    local target_ref="$2"
+    local previous_tree
+    local commit
+
+    previous_tree="$(git rev-parse "$previous_beta_tag^{tree}")"
+    while IFS= read -r commit; do
+        if [[ "$(git rev-parse "$commit^{tree}")" == "$previous_tree" ]]; then
+            echo "$commit"
+            return
+        fi
+    done < <(git rev-list "$target_ref")
+
+    echo "$previous_beta_tag"
+}
+
+categorized_release_changes() {
+    local previous_release_note_ref="$1"
     local changes
 
     changes="$(
-        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_beta_tag"..HEAD \
+        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_release_note_ref"..HEAD \
             | awk '
                 function trim(value) {
                     sub(/^[[:space:]]+/, "", value)
@@ -254,9 +274,10 @@ categorized_release_changes() {
 write_release_notes() {
     local notes_file="$1"
     local previous_beta_tag="$2"
+    local previous_release_note_ref="$3"
     local changes
 
-    changes="$(categorized_release_changes "$previous_beta_tag")"
+    changes="$(categorized_release_changes "$previous_release_note_ref")"
 
     cat > "$notes_file" <<EOF
 This beta contains the latest AppAtlas fixes and improvements since $previous_beta_tag.
@@ -302,7 +323,8 @@ require_gh
 
 version="$(release_version)"
 dev_commit="$(git rev-parse --short HEAD)"
-previous_beta_tag="$(last_beta_tag)"
+previous_beta_tag="$(last_beta_tag "$version")"
+previous_release_note_ref="$(release_note_base_ref "$previous_beta_tag" HEAD)"
 artifact_base="$(artifact_base_name "$version")"
 backup_directory="$(backup_directory_for_version "$version")"
 zip_file="$backup_directory/$artifact_base.zip"
@@ -333,7 +355,8 @@ git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
 write_release_notes \
     "$release_notes_file" \
-    "$previous_beta_tag"
+    "$previous_beta_tag" \
+    "$previous_release_note_ref"
 create_github_release \
     "$version" \
     "$beta_commit" \
