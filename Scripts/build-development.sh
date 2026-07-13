@@ -6,8 +6,21 @@ root_directory="$(cd "$(dirname "$0")/.." && pwd)"
 scratch_directory="$root_directory/.build/development"
 output_directory="$root_directory/dist/local-test/AppAtlas-Development"
 app_bundle="$output_directory/AppAtlas.app"
-version="1.0.0-development"
 build_number="1"
+
+marketing_version="$({
+    xcodebuild \
+        -project "$root_directory/AppAtlas.xcodeproj" \
+        -target AppAtlas \
+        -configuration Dev \
+        -showBuildSettings 2>/dev/null \
+        | awk -F' = ' '$1 ~ /MARKETING_VERSION$/ { print $2; exit }'
+} || true)"
+if [[ -z "$marketing_version" ]]; then
+    echo "Entwicklungs-Build abgebrochen: Dev-Version konnte nicht gelesen werden." >&2
+    exit 1
+fi
+version="$marketing_version-development"
 
 swift build \
     --package-path "$root_directory" \
@@ -64,7 +77,8 @@ BUILD_RESOURCE_PATH="$build_resource_path" perl -0pi -e '
 sed \
     -e "s/__VERSION__/$version/g" \
     -e "s/__BUILD_NUMBER__/$build_number/g" \
-    -e "s/at.schrotty.appatlas/at.schrotty.appatlas.dev/g" \
+    -e "s/__APP_DISPLAY_NAME__/AppAtlas Development/g" \
+    -e "s/__BUNDLE_IDENTIFIER__/at.schrotty.appatlas.dev/g" \
     "$root_directory/Packaging/Info.plist" \
     > "$app_bundle/Contents/Info.plist"
 
