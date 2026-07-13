@@ -107,7 +107,7 @@ categorized_release_changes() {
     local changes
 
     changes="$(
-        git log --reverse --no-merges --format='%b%x1e' "$previous_final_tag"..HEAD \
+        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_final_tag"..HEAD \
             | awk '
                 function trim(value) {
                     sub(/^[[:space:]]+/, "", value)
