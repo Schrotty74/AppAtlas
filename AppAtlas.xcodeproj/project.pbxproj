@@ -1273,7 +1273,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Packaging/XcodeInfo.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = at.schrotty.appatlas.dev;
 				PRODUCT_NAME = "AppAtlas Dev";
 				SWIFT_VERSION = 6.0;
@@ -1347,7 +1347,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Packaging/XcodeInfo.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = at.schrotty.appatlas.beta;
 				PRODUCT_NAME = "AppAtlas Beta";
 				SWIFT_VERSION = 6.0;
