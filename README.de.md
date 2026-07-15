@@ -136,8 +136,6 @@ Export- und Datenbankdateien.
 
 ## Dokumentation
 
-- [AppAtlas-Handbuch (Deutsch, PDF)](docs/output/pdf/AppAtlas-Handbuch-DE.pdf)
-- [AppAtlas User Manual (English, PDF)](docs/output/pdf/AppAtlas-User-Manual-EN.pdf)
 - [Theme-Dokumentation](docs/themes/README.md)
 - [Vorlage für eigene Themes](docs/themes/appatlas-theme-template.json)
 - [Vollständiges Beispieltheme](docs/themes/example-custom-theme.json)

@@ -140,8 +140,6 @@ typical catalog, export and database files from being added.
 
 ## Documentation
 
-- [AppAtlas User Manual (English, PDF)](docs/output/pdf/AppAtlas-User-Manual-EN.pdf)
-- [AppAtlas-Handbuch (Deutsch, PDF)](docs/output/pdf/AppAtlas-Handbuch-DE.pdf)
 - [Theme documentation](docs/themes/README.md)
 - [Template for custom themes](docs/themes/appatlas-theme-template.json)
 - [Complete example theme](docs/themes/example-custom-theme.json)
