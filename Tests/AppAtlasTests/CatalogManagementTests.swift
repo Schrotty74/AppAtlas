@@ -6,10 +6,17 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
-    func helpLinksOpenThePublicGuideAndSupportedAIServices() throws {
+    func helpLinksOpenThePublicManualAndSupportedAIServices() throws {
         #expect(
-            AppHelpLinks.guideURL.absoluteString
-                == "https://github.com/Schrotty74/AppAtlas/blob/main/guide.md"
+            AppHelpLinks.manualURL.absoluteString.hasPrefix(
+                "https://github.com/Schrotty74/AppAtlas/blob/main/docs/output/pdf/"
+            )
+        )
+        #expect(
+            [
+                "AppAtlas-Handbuch-DE.pdf",
+                "AppAtlas-User-Manual-EN.pdf",
+            ].contains { AppHelpLinks.manualURL.absoluteString.hasSuffix($0) }
         )
         #expect(
             AIHelpService.allCases.map(\.url.host) == [
@@ -29,8 +36,7 @@ struct CatalogManagementTests {
         #expect(AppHelpLinks.aiPrompt.contains("ohne Lizenzdaten"))
         #expect(
             AppHelpLinks.aiPrompt.contains(
-                "[\(AppHelpLinks.guideURL.absoluteString)]"
-                    + "(\(AppHelpLinks.guideURL.absoluteString))"
+                AppHelpLinks.manualURL.absoluteString
             )
         )
         #expect(!AppHelpLinks.aiPrompt.contains("BEGINN DES APPATLAS-HANDBUCHS"))

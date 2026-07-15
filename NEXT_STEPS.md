@@ -19,6 +19,9 @@
 - Theme-System, mehrere Layouts, Icons und lokale Suche.
 - Deutsche und englische Oberfläche mit manueller Sprachwahl. Die automatische
   Auswahl verwendet Deutsch für DACH und Englisch für alle anderen Regionen.
+- Zweisprachige PDF-Handbücher für Deutsch und Englisch. Neue Funktionen und
+  sichtbare Verhaltensänderungen müssen vor ihrem Commit in beiden Handbüchern
+  erklärt und als PDFs neu erzeugt werden.
 - Bereits gespeicherte automatisch bezogene Beschreibungen werden nach einem
   bewussten Sprachwechsel für die lokale Apple-Übersetzung eingeplant,
   sofern sie nicht der gewählten Sprache entsprechen. Deutsch ist die

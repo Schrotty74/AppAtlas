@@ -143,6 +143,10 @@ eines lokalen App-Katalogs.
   portable Exporte enthalten weiterhin die Originalicons.
 - Themes verwenden das Format `appatlas-theme`.
 - Der leere Erststart-Bildschirm bietet einen Link zum öffentlichen Handbuch.
+  Dieser öffnet je nach eingestellter App-Sprache das deutsche oder englische
+  PDF-Handbuch auf GitHub. Bei jeder neuen Funktion oder sichtbaren
+  Verhaltensänderung müssen beide Handbücher vor dem zugehörigen Commit
+  aktualisiert und erneut als PDFs erzeugt werden.
   Eine feste, datensparsame AppAtlas-Einführungsfrage kann in die
   Zwischenablage kopiert und anschließend in ChatGPT, Google Gemini oder
   Claude eingefügt werden. Die Schaltflächen verwenden lokal eingebundene
