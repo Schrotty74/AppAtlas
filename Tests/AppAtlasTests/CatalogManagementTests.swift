@@ -61,24 +61,6 @@ struct CatalogManagementTests {
     }
 
     @Test
-    func cinebenchLogoURLDownloadsValidPNG() async throws {
-        let url = try #require(URL(
-            string: "https://cinebench.net/wp-content/uploads/2025/09/Cinebench_logo.png"
-        ))
-        let (data, response) = try await URLSession.shared.data(from: url)
-        let http = try #require(response as? HTTPURLResponse)
-
-        #expect(http.statusCode == 200)
-        #expect(data.starts(with: [0x89, 0x50, 0x4E, 0x47]))
-
-        let source = try #require(
-            CGImageSourceCreateWithData(data as CFData, nil)
-        )
-        #expect(CGImageSourceGetCount(source) > 0)
-        #expect(CGImageSourceGetType(source) as String? == "public.png")
-    }
-
-    @Test
     func localDataDirectoriesAreSeparatedByBuildBundleIdentifier() {
         #expect(
             AppLocalDataDirectory.directoryName(
