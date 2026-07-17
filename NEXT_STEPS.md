@@ -3,7 +3,7 @@
 ## Aktueller Stand
 
 - Aktuelle Release-Serie: `1.2`.
-- Aktueller offizieller Release: `1.2.0`.
+- Aktueller offizieller Release: `1.2.1`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -13,6 +13,9 @@
 - Bewusst ausgelöste Online-Anreicherung für fehlende Icons, Beschreibungen
   und Links über iTunes, GitHub, Reddit r/macapps, eine Suche nach offiziellen
   Herstellerseiten sowie bereits gespeicherte Homepages.
+- Der Homebrew-Cask-Katalog wird bei einer bewusst ausgelösten
+  Online-Aktualisierung lokal aktualisiert und danach ohne Netzwerkzugriff
+  für schnelle Scan-Zuordnungen verwendet.
 - Review-Bereich für unsichere Treffer, Quellenangaben, bestätigte URLs und
   lokale Übersetzung fremdsprachiger Beschreibungen.
 - Private Lizenzdaten ausschließlich im macOS-Schlüsselbund.
@@ -97,7 +100,7 @@
 
 ## Offene Aufgaben
 
-- Rückmeldungen zu Version 1.2.0 sammeln und priorisieren.
+- Rückmeldungen zu Version 1.2.1 sammeln und priorisieren.
 - Optionale CI-Prüfung für `swift test` und Datenschutzcheck bewerten, bevor
   sie als GitHub Actions Workflow eingeführt wird.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
@@ -110,11 +113,6 @@
 - Die Trefferbewertung soll mit diesen Schwellen arbeiten:
   `automaticThreshold = 0.80`, `reviewThreshold = 0.65` und
   `minimumAutomaticMargin = 0.08`.
-- Homebrew-Cask-Katalog nicht live im schnellen Scan abfragen, sondern bei
-  bewusster Online-Aktualisierung herunterladen, lokal cachen und danach als
-  schnelle strukturierte Wissensquelle verwenden. Der Cache wird beim
-  bewussten Online-Lauf aktualisiert und danach lokal beim schnellen Abgleich
-  genutzt.
 - Weitere strukturierte Quellen wie Setapp, GitHub, App Store und gegebenenfalls
   MacUpdater-ähnliche Exportdaten nur gezielt und nach klarer Priorität nutzen:
   zuerst lokale und gecachte Quellen, danach Online-Quellen. Nicht blind pro App

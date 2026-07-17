@@ -11,9 +11,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern und verwaltet
 Icons, Beschreibungen, Links, Tags, Lizenzinformationen und lokale
 Katalogexporte.
 
-> Aktueller Release: **AppAtlas 1.2.0**
+> Aktueller Release: **AppAtlas 1.2.1**
 
-[AppAtlas 1.2.0 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
+[AppAtlas 1.2.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
 
 ## Funktionen
 
@@ -87,7 +87,7 @@ Die folgenden Screenshots zeigen ausschließlich Demo-Daten.
 ## Build und Installation
 
 Aktuellen Release herunterladen:
-[AppAtlas 1.2.0](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.0/AppAtlas-1.2.0-macos.dmg)
+[AppAtlas 1.2.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
 
 Beim ersten Öffnen zeigt macOS möglicherweise eine Warnung, da AppAtlas nicht
 mit einem kostenpflichtigen Apple Developer Account notarisiert ist.

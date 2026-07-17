@@ -25,7 +25,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Release: `1.2.0`.
+- Aktueller offizieller Release: `1.2.1`.
 
 ## Datenschutz hat Vorrang
 
@@ -80,7 +80,7 @@ eines lokalen App-Katalogs.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.2.0` bleiben als unveröffentlichter
+- Änderungen nach `1.2.1` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 
@@ -123,6 +123,10 @@ eines lokalen App-Katalogs.
   Automatische Übernahmen benötigen mindestens `0,80` sowie `0,08` Abstand
   zum zweitbesten Treffer. Werte ab `0,65` werden ausschließlich zur Prüfung
   vorgeschlagen; schwächere Treffer werden verworfen.
+- Der Homebrew-Cask-Katalog wird nur bei einer bewusst ausgelösten
+  Online-Aktualisierung geladen und lokal zwischengespeichert. Schnelle Scans
+  verwenden ausschließlich diesen lokalen Cache und starten keine
+  Homebrew-Netzwerkanfrage.
 - Bestätigte Domains, GitHub-Repositories und Apple-Store-IDs werden nur lokal
   in den Benutzereinstellungen gelernt und niemals exportiert.
 - Bestätigte Website-URLs werden bei der Nachbearbeitung strukturiert
