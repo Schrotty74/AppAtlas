@@ -443,7 +443,7 @@ private struct EmptyCatalogStartView: View {
 
             HStack(spacing: 12) {
                 Button {
-                    NSWorkspace.shared.open(AppHelpLinks.guideURL)
+                    NSWorkspace.shared.open(AppHelpLinks.manualURL)
                 } label: {
                     Label("Handbuch öffnen", systemImage: "book")
                 }

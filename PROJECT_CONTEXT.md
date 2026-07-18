@@ -25,7 +25,7 @@ eines lokalen App-Katalogs.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Release: `1.2.1`.
+- Aktueller offizieller Release: `1.2.2`.
 
 ## Datenschutz hat Vorrang
 
@@ -80,7 +80,7 @@ eines lokalen App-Katalogs.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.2.1` bleiben als unveröffentlichter
+- Änderungen nach `1.2.2` bleiben als unveröffentlichter
   Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
   freigegeben wird.
 
@@ -94,6 +94,12 @@ eines lokalen App-Katalogs.
 - Quelldateien werden nicht verändert.
 - Online-Anreicherung läuft ausschließlich nach einem bewussten Klick auf
   „Katalog aktualisieren“ und überschreibt keine vorhandenen Metadaten.
+- Der Homebrew-Cask- und der Setapp-Katalog werden ausschließlich bei dieser
+  bewussten Aktualisierung abgerufen und danach getrennt lokal gespeichert.
+  Der schnelle Scan nutzt nur diese lokalen Caches und startet keine
+  Netzwerkabfrage. Setapp ergänzt bei eindeutigem Mac-App-Treffer eine
+  Kurzbeschreibung und bei fehlendem Download-Link die Setapp-Appseite; die
+  offizielle Hersteller-Homepage bleibt unverändert.
 - Katalogimport und -export verwenden versionierte JSON-Formate. Der
   Standardexport enthält keine Lizenzdaten; geschützte Lizenzexporte
   verwenden PBKDF2-HMAC-SHA256 und AES-256-GCM.
@@ -147,6 +153,10 @@ eines lokalen App-Katalogs.
   portable Exporte enthalten weiterhin die Originalicons.
 - Themes verwenden das Format `appatlas-theme`.
 - Der leere Erststart-Bildschirm bietet einen Link zum öffentlichen Handbuch.
+  Dieser öffnet je nach eingestellter App-Sprache das deutsche oder englische
+  PDF-Handbuch auf GitHub. Bei jeder neuen Funktion oder sichtbaren
+  Verhaltensänderung müssen beide Handbücher vor dem zugehörigen Commit
+  aktualisiert und erneut als PDFs erzeugt werden.
   Eine feste, datensparsame AppAtlas-Einführungsfrage kann in die
   Zwischenablage kopiert und anschließend in ChatGPT, Google Gemini oder
   Claude eingefügt werden. Die Schaltflächen verwenden lokal eingebundene

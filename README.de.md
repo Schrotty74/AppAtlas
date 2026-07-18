@@ -11,9 +11,9 @@ ordnet persönliche App-Sammlungen aus frei wählbaren Ordnern und verwaltet
 Icons, Beschreibungen, Links, Tags, Lizenzinformationen und lokale
 Katalogexporte.
 
-> Aktueller Release: **AppAtlas 1.2.1**
+> Aktueller Release: **AppAtlas 1.2.2**
 
-[AppAtlas 1.2.1 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
+[AppAtlas 1.2.2 herunterladen](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.2/AppAtlas-1.2.2-macos.dmg)
 
 ## Funktionen
 
@@ -29,6 +29,8 @@ Katalogexporte.
   legen.
 - Beschreibungen, Links und hochwertige Icons verwalten.
 - Fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen.
+- Homebrew- und Setapp-Kataloge nach einer bewussten Online-Aktualisierung lokal
+  verwenden; normale Scans kontaktieren beide Dienste nicht.
 - Unsichere Treffer mit Quellenangabe unter „Zu prüfen“ bestätigen oder
   verwerfen.
 - Online-Abfragen, Parallelität und erweiterte Suche lokal konfigurieren.
@@ -87,7 +89,7 @@ Die folgenden Screenshots zeigen ausschließlich Demo-Daten.
 ## Build und Installation
 
 Aktuellen Release herunterladen:
-[AppAtlas 1.2.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
+[AppAtlas 1.2.2](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.2/AppAtlas-1.2.2-macos.dmg)
 
 Beim ersten Öffnen zeigt macOS möglicherweise eine Warnung, da AppAtlas nicht
 mit einem kostenpflichtigen Apple Developer Account notarisiert ist.
@@ -126,7 +128,7 @@ wird nicht automatisch geöffnet.
 Der Beta-Release-Workflow läuft über das Release-Skript:
 
 ```sh
-./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
+./Scripts/create-beta-from-dev.sh <version>-beta.1
 ```
 
 Build-Artefakte unter `dist/` werden nicht von Git verfolgt. Backups werden
@@ -136,6 +138,8 @@ Export- und Datenbankdateien.
 
 ## Dokumentation
 
+- [AppAtlas-Handbuch (Deutsch, PDF)](docs/output/pdf/AppAtlas-Handbuch-DE.pdf)
+- [AppAtlas User Manual (English, PDF)](docs/output/pdf/AppAtlas-User-Manual-EN.pdf)
 - [Theme-Dokumentation](docs/themes/README.md)
 - [Vorlage für eigene Themes](docs/themes/appatlas-theme-template.json)
 - [Vollständiges Beispieltheme](docs/themes/example-custom-theme.json)

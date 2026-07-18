@@ -56,7 +56,7 @@ Wichtig: Beim Import wird der vorhandene Katalog ersetzt.
 
 Auf dem leeren Startbildschirm kannst du außerdem das **Handbuch öffnen** oder
 ChatGPT, Google Gemini oder Claude wählen. Vor dem Öffnen weist AppAtlas darauf
-hin, dass eine vorbereitete AppAtlas-Frage samt öffentlichem Handbuch-Link in
+hin, dass eine vorbereitete AppAtlas-Frage samt öffentlichem PDF-Handbuch-Link in
 die Zwischenablage kopiert wird. Füge sie anschließend im gewählten KI-Dienst
 mit `⌘V` ein und sende sie mit Return. Dein Katalog, lokale Dateipfade und
 Lizenzdaten werden nicht in diese Frage eingefügt. AppAtlas fügt das
@@ -109,7 +109,17 @@ Das bloße Scannen oder Anzeigen deines Katalogs startet keine Online-Abfrage.
 Eine laufende Aktualisierung kann pausiert, fortgesetzt oder abgebrochen
 werden. Vorhandene manuelle Angaben werden nicht einfach überschrieben.
 
-Bei Online-Abfragen können Suchbegriffe wie der normalisierte App-Name und ein allgemeiner Kategoriehinweis an Dienste wie iTunes, GitHub, Reddit r/macapps oder DuckDuckGo gesendet werden. Lokale Dateipfade, Katalogstruktur und Lizenzdaten werden dabei nicht übertragen.
+Bei der bewussten Aktualisierung lädt AppAtlas außerdem die öffentlichen
+Kataloglisten von Homebrew und Setapp in getrennte lokale Caches. Der schnelle
+Scan verwendet anschließend nur diese gespeicherten Daten. Für eindeutig
+passende Setapp-Mac-Apps ergänzt AppAtlas eine Kurzbeschreibung und bei
+fehlendem Download-Link die Setapp-Appseite; die Hersteller-Homepage wird
+dadurch nicht ersetzt.
+
+Bei weiteren Online-Abfragen können Suchbegriffe wie der normalisierte App-Name
+und ein allgemeiner Kategoriehinweis an Dienste wie iTunes, GitHub, Reddit
+r/macapps oder DuckDuckGo gesendet werden. Lokale Dateipfade,
+Katalogstruktur und Lizenzdaten werden dabei nicht übertragen.
 
 Wenn keine eindeutige Website gefunden wurde, kannst du selbst eine URL
 ergänzen. AppAtlas kann daraus je nach Adresse Homepage, Download-Link,
@@ -284,7 +294,7 @@ lokale Einträge aus dem Katalog entfernen kann. Verwende kurze Abschnitte und
 frage mich am Ende, bei welchem Schritt ich Hilfe benötige.
 
 Verweise anschließend auf das offizielle Handbuch:
-https://github.com/Schrotty74/AppAtlas/blob/main/guide.md
+https://github.com/Schrotty74/AppAtlas/blob/main/docs/output/pdf/AppAtlas-Handbuch-DE.pdf
 ```
 
 Gib einer externen KI keine Seriennummern, Lizenzschlüssel, persönlichen
@@ -292,6 +302,8 @@ Dateipfade oder ungeschützten Katalogexporte.
 
 ## 17. Weitere Dokumentation
 
+- [AppAtlas-Handbuch (Deutsch, PDF)](docs/output/pdf/AppAtlas-Handbuch-DE.pdf)
+- [AppAtlas User Manual (English, PDF)](docs/output/pdf/AppAtlas-User-Manual-EN.pdf)
 - [README](README.de.md)
 - [Theme-Dokumentation](docs/themes/README.md)
 - [Projektstruktur](docs/PROJECT_STRUCTURE.md)

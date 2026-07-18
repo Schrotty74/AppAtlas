@@ -2,8 +2,8 @@
 
 ## Aktueller Stand
 
-- Aktuelle Release-Serie: `1.2`.
-- Aktueller offizieller Release: `1.2.1`.
+- Aktuelle Release-Serie: `1.2.2`.
+- Aktueller offizieller Release: `1.2.2`.
 - Native SwiftUI-App mit leerem Erststart.
 - Lokaler Katalog, freie Ordnerauswahl, manuelle Bearbeitung und Löschung.
 - Scanner mit Ausschlussregeln für technische Daten und Backup-Archive sowie
@@ -12,16 +12,17 @@
   mit Lizenzdaten oder passwortgeschützt mit Lizenzdaten.
 - Bewusst ausgelöste Online-Anreicherung für fehlende Icons, Beschreibungen
   und Links über iTunes, GitHub, Reddit r/macapps, eine Suche nach offiziellen
-  Herstellerseiten sowie bereits gespeicherte Homepages.
-- Der Homebrew-Cask-Katalog wird bei einer bewusst ausgelösten
-  Online-Aktualisierung lokal aktualisiert und danach ohne Netzwerkzugriff
-  für schnelle Scan-Zuordnungen verwendet.
+  Herstellerseiten sowie lokal zwischengespeicherte Homebrew- und
+  Setapp-Kataloge.
 - Review-Bereich für unsichere Treffer, Quellenangaben, bestätigte URLs und
   lokale Übersetzung fremdsprachiger Beschreibungen.
 - Private Lizenzdaten ausschließlich im macOS-Schlüsselbund.
 - Theme-System, mehrere Layouts, Icons und lokale Suche.
 - Deutsche und englische Oberfläche mit manueller Sprachwahl. Die automatische
   Auswahl verwendet Deutsch für DACH und Englisch für alle anderen Regionen.
+- Zweisprachige PDF-Handbücher für Deutsch und Englisch. Neue Funktionen und
+  sichtbare Verhaltensänderungen müssen vor ihrem Commit in beiden Handbüchern
+  erklärt und als PDFs neu erzeugt werden.
 - Bereits gespeicherte automatisch bezogene Beschreibungen werden nach einem
   bewussten Sprachwechsel für die lokale Apple-Übersetzung eingeplant,
   sofern sie nicht der gewählten Sprache entsprechen. Deutsch ist die
@@ -100,9 +101,7 @@
 
 ## Offene Aufgaben
 
-- Rückmeldungen zu Version 1.2.1 sammeln und priorisieren.
-- Optionale CI-Prüfung für `swift test` und Datenschutzcheck bewerten, bevor
-  sie als GitHub Actions Workflow eingeführt wird.
+- Rückmeldungen zu Version 1.2.2 sammeln und priorisieren.
 - Metadaten-Zuordnungen mit unterschiedlich und ähnlich benannten Apps weiter
   praktisch prüfen.
 - Scanner-Erkennung als nächster Schwerpunkt:
@@ -113,7 +112,10 @@
 - Die Trefferbewertung soll mit diesen Schwellen arbeiten:
   `automaticThreshold = 0.80`, `reviewThreshold = 0.65` und
   `minimumAutomaticMargin = 0.08`.
-- Weitere strukturierte Quellen wie Setapp, GitHub, App Store und gegebenenfalls
+- Homebrew-Cask- und Setapp-Kataloge bei der bewussten Online-Aktualisierung
+  abrufen, lokal cachen und danach als schnelle strukturierte Wissensquellen
+  verwenden. Der schnelle Abgleich darf dafür keine Netzwerkabfrage starten.
+- Weitere strukturierte Quellen wie GitHub, App Store und gegebenenfalls
   MacUpdater-ähnliche Exportdaten nur gezielt und nach klarer Priorität nutzen:
   zuerst lokale und gecachte Quellen, danach Online-Quellen. Nicht blind pro App
   Websuche starten.

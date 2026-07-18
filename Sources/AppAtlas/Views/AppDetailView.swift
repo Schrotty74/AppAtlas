@@ -251,7 +251,7 @@ struct AppDetailView: View {
             if let downloadURL = displayedDownloadURL,
                !isDuplicate(downloadURL, of: [displayedApp.githubURL])
             {
-                Link("Download öffnen", destination: downloadURL)
+                Link(downloadLinkTitle(for: downloadURL), destination: downloadURL)
             } else {
                 missingLink("Download-Link fehlt")
             }
@@ -284,6 +284,15 @@ struct AppDetailView: View {
         others.contains {
             URLRedirectResolver.equivalent(url, $0)
         }
+    }
+
+    private func downloadLinkTitle(for url: URL) -> String {
+        guard url.host?.lowercased() == "setapp.com",
+              displayedApp.metadataSources?.contains("Setapp-Katalog") == true
+        else {
+            return "Download öffnen"
+        }
+        return "In Setapp öffnen"
     }
 
     private func missingLink(_ title: String) -> some View {

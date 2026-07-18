@@ -22,6 +22,7 @@ final class CatalogStore: ObservableObject {
     private let targetLanguageProvider: @Sendable () -> String
     private let licenseStorage: any LicenseStorage
     private let homebrewCaskMetadataCache: HomebrewCaskMetadataCache
+    private let setappCatalogMetadataCache: SetappCatalogMetadataCache
     private var enrichmentTask: Task<Void, Never>?
     private var lastEnrichmentPersistDate: Date?
     private var promptedWebsiteAppIDs: Set<AppEntry.ID> = []
@@ -42,6 +43,7 @@ final class CatalogStore: ObservableObject {
         persistence: CatalogPersistence = CatalogPersistence(),
         licenseStorage: any LicenseStorage = LicenseKeychainStore.shared,
         homebrewCaskMetadataCache: HomebrewCaskMetadataCache = .shared,
+        setappCatalogMetadataCache: SetappCatalogMetadataCache = .shared,
         targetLanguageProvider: @escaping @Sendable () -> String = {
             AppLanguageChoice.current.resolvedLanguage()
         }
@@ -49,6 +51,7 @@ final class CatalogStore: ObservableObject {
         self.persistence = persistence
         self.licenseStorage = licenseStorage
         self.homebrewCaskMetadataCache = homebrewCaskMetadataCache
+        self.setappCatalogMetadataCache = setappCatalogMetadataCache
         self.targetLanguageProvider = targetLanguageProvider
         loadInitialCatalogSnapshot()
     }
@@ -605,6 +608,7 @@ final class CatalogStore: ObservableObject {
 
         prepareForOnlineRefresh(appID)
         try? await homebrewCaskMetadataCache.refresh()
+        try? await setappCatalogMetadataCache.refresh()
         applyLocalFastScanMetadata(to: appID)
         persist()
 
@@ -709,6 +713,8 @@ final class CatalogStore: ObservableObject {
         removeDuplicateAutomaticOnlineIcons()
         enrichmentProgress = "Homebrew-Cask-Katalog wird aktualisiert"
         try? await homebrewCaskMetadataCache.refresh()
+        enrichmentProgress = "Setapp-Katalog wird aktualisiert"
+        try? await setappCatalogMetadataCache.refresh()
         applyLocalFastScanMetadata()
         persist()
         let validIconIDs = await Self.validIconIDs(for: apps)
@@ -987,6 +993,7 @@ final class CatalogStore: ObservableObject {
         applyConfirmedURLs(to: index)
         applyKnownLocalMetadata(to: index)
         applyHomebrewCaskMetadata(to: index)
+        applySetappCatalogMetadata(to: index)
     }
 
     private func applyConfirmedURLs(to index: Int) {
@@ -1070,6 +1077,29 @@ final class CatalogStore: ObservableObject {
             recordDescription(
                 description,
                 source: "Homebrew-Cask-Katalog",
+                for: apps[index].id
+            )
+        }
+    }
+
+    private func applySetappCatalogMetadata(to index: Int) {
+        guard let metadata = setappCatalogMetadataCache.metadata(
+            for: apps[index]
+        ) else {
+            return
+        }
+        if apps[index].downloadURL == nil {
+            apps[index].downloadURL = metadata.catalogURL
+            addSource("Setapp-Katalog", to: index)
+        }
+        if let description = metadata.description,
+           !description.isEmpty,
+           AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
+           !apps[index].customizations.description
+        {
+            recordDescription(
+                description,
+                source: "Setapp-Katalog",
                 for: apps[index].id
             )
         }

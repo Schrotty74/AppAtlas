@@ -42,11 +42,18 @@ enum AIHelpService: String, CaseIterable, Identifiable {
 }
 
 enum AppHelpLinks {
-    static let guideURL = URL(
-        string: "https://github.com/Schrotty74/AppAtlas/blob/main/guide.md"
-    )!
+    static var manualURL: URL {
+        let filename = AppLanguageChoice.current.resolvedLanguage() == "de"
+            ? "AppAtlas-Handbuch-DE.pdf"
+            : "AppAtlas-User-Manual-EN.pdf"
+        return URL(
+            string: "https://github.com/Schrotty74/AppAtlas/blob/main/"
+                + "docs/output/pdf/\(filename)"
+        )!
+    }
 
-    static let aiPrompt = """
+    static var aiPrompt: String {
+        """
     Ich habe AppAtlas gerade zum ersten Mal geöffnet und mein Katalog ist noch \
     leer. Erkläre mir AppAtlas freundlich und in einfacher Sprache. Führe mich \
     anschließend Schritt für Schritt durch meinen ersten Katalog:
@@ -68,6 +75,7 @@ enum AppHelpLinks {
     Abschnitte und frage mich am Ende, bei welchem Schritt ich Hilfe benötige.
 
     Verweise anschließend auf das offizielle Handbuch: \
-    [https://github.com/Schrotty74/AppAtlas/blob/main/guide.md](https://github.com/Schrotty74/AppAtlas/blob/main/guide.md)
+    \(manualURL.absoluteString)
     """
+    }
 }

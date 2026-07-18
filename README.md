@@ -20,9 +20,9 @@ AppAtlas is a native, privacy-focused SwiftUI app for macOS. It organizes
 personal app collections from user-selected folders and manages icons,
 descriptions, links, tags, license information, and local catalog exports.
 
-> Current release: **AppAtlas 1.2.1**
+> Current release: **AppAtlas 1.2.2**
 
-[Download AppAtlas 1.2.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
+[Download AppAtlas 1.2.2](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.2/AppAtlas-1.2.2-macos.dmg)
 
 ## Key Features
 
@@ -35,6 +35,8 @@ descriptions, links, tags, license information, and local catalog exports.
 - Move local app files to the Trash only after explicit confirmation.
 - Manage descriptions, links and high-quality icons.
 - Update missing metadata manually through "Update Catalog".
+- Use locally cached Homebrew and Setapp catalogs after an explicit online update;
+  normal scans do not contact either service.
 - Review uncertain matches with source labels before accepting or rejecting
   them.
 - Configure online lookups, parallel processing and extended search locally.
@@ -93,7 +95,7 @@ The screenshots below use demo data only.
 ## Build and Install
 
 Download the current release:
-[AppAtlas 1.2.1](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.1/AppAtlas-1.2.1-macos.dmg)
+[AppAtlas 1.2.2](https://github.com/Schrotty74/AppAtlas/releases/download/v1.2.2/AppAtlas-1.2.2-macos.dmg)
 
 When opening AppAtlas for the first time, macOS may display a warning because
 the app is not notarized with a paid Apple Developer account.
@@ -131,7 +133,7 @@ opened automatically.
 The Beta release workflow is handled by the release script:
 
 ```sh
-./Scripts/create-beta-from-dev.sh 1.2.0-beta.3
+./Scripts/create-beta-from-dev.sh <version>-beta.1
 ```
 
 Build artifacts in `dist/` are not tracked by Git. Backups are created only on
@@ -140,6 +142,8 @@ typical catalog, export and database files from being added.
 
 ## Documentation
 
+- [AppAtlas User Manual (English, PDF)](docs/output/pdf/AppAtlas-User-Manual-EN.pdf)
+- [AppAtlas-Handbuch (Deutsch, PDF)](docs/output/pdf/AppAtlas-Handbuch-DE.pdf)
 - [Theme documentation](docs/themes/README.md)
 - [Template for custom themes](docs/themes/appatlas-theme-template.json)
 - [Complete example theme](docs/themes/example-custom-theme.json)
