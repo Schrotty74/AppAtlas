@@ -868,9 +868,19 @@
 			path = Sources/AppAtlas/Resources/github-invertocat-white.svg;
 			sourceTree = SOURCE_ROOT;
 		};
+		B7D4A9E23FCB4E8EAA19F140 /* discord-mark-white.svg */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			path = Sources/AppAtlas/Resources/discord-mark-white.svg;
+			sourceTree = SOURCE_ROOT;
+		};
 		AA7FF5AC33A24553839ADE9C /* github-invertocat-white.svg in Resources */ = {
 			isa = PBXBuildFile;
 			fileRef = ED1904A506454F35B236DD63 /* github-invertocat-white.svg */;
+		};
+		E12C8F9906134B5A91D2A310 /* discord-mark-white.svg in Resources */ = {
+			isa = PBXBuildFile;
+			fileRef = B7D4A9E23FCB4E8EAA19F140 /* discord-mark-white.svg */;
 		};
 		C79B4F8770A0492DA8680D4C /* ai-chatgpt-logo.jpg */ = {
 			isa = PBXFileReference;
@@ -1053,6 +1063,7 @@
 				102D0A03B3A04E00B3898E74,
 				09E2DA7FF3CA4E5F83C4283E,
 				ED1904A506454F35B236DD63,
+				B7D4A9E23FCB4E8EAA19F140,
 				C79B4F8770A0492DA8680D4C,
 				8B0E29A30A134ECAB5E70D0C,
 				C73940251C204677B0A54A21,
@@ -1187,6 +1198,7 @@
 				EB40FC01F2D74D31891DB4CE,
 				F1CEA192F2FF40A8AE2974D7,
 				AA7FF5AC33A24553839ADE9C,
+				E12C8F9906134B5A91D2A310,
 				86B1FFEF8C0D49C7A9A8E798,
 				92561DE408AD4CF0A26495D3,
 				732FB7C1A45749C8BEB3C33F,
@@ -1273,7 +1285,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Packaging/XcodeInfo.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = at.schrotty.appatlas.dev;
 				PRODUCT_NAME = "AppAtlas Dev";
 				SWIFT_VERSION = 6.0;
@@ -1347,7 +1359,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Packaging/XcodeInfo.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = at.schrotty.appatlas.beta;
 				PRODUCT_NAME = "AppAtlas Beta";
 				SWIFT_VERSION = 6.0;
@@ -1421,7 +1433,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Packaging/XcodeInfo.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = at.schrotty.appatlas;
 				PRODUCT_NAME = AppAtlas;
 				SWIFT_VERSION = 6.0;

@@ -210,7 +210,7 @@ private struct ContentNavigationToolbar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            AppAtlasMark(size: 34)
+            DiscordMark(size: 34)
             GitHubMark(size: 34)
 
             Button {

@@ -85,6 +85,45 @@ struct GitHubMark: View {
     }
 }
 
+struct DiscordMark: View {
+    let size: CGFloat
+
+    var body: some View {
+        Button {
+            NSWorkspace.shared.open(
+                URL(string: "https://discord.gg/RbsvqRCPQ")!
+            )
+        } label: {
+            ZStack {
+                RoundedRectangle(
+                    cornerRadius: size * 0.22,
+                    style: .continuous
+                )
+                .fill(Color(red: 0.35, green: 0.40, blue: 0.95))
+
+                Image(nsImage: discordImage)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(size * 0.14)
+            }
+            .frame(width: size, height: size)
+        }
+        .buttonStyle(.plain)
+        .help("AppAtlas-Community auf Discord")
+        .accessibilityLabel("AppAtlas-Community auf Discord")
+    }
+
+    private var discordImage: NSImage {
+        guard let url = AppResources.bundle.url(
+            forResource: "discord-mark-white",
+            withExtension: "svg"
+        ) else {
+            return NSImage()
+        }
+        return NSImage(contentsOf: url) ?? NSImage()
+    }
+}
+
 struct ThemeMenu: View {
     @Environment(\.appAtlasTheme) private var theme
     @Binding var selectedThemeID: String

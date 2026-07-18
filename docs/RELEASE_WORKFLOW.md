@@ -17,6 +17,11 @@ die Release-Skripte:
 - `create-beta-from-dev.sh` baut und veroeffentlicht Beta
 - `publish-beta-as-final.sh` baut und veroeffentlicht Final
 
+Nach einem Final-Release bleibt `Final` auf der veroeffentlichten Version. `Dev`
+und `Beta` werden auf die naechste geplante Version erhoeht. Der eigenstaendige
+Dev-Build ergaenzt diese Versionsnummer um `-development`; die erste Beta nutzt
+`-beta.1` und das Final dieselbe Versionsnummer ohne Zusatz.
+
 Die Varianten haben getrennte Bundle Identifier und dadurch getrennte
 macOS-Container, Einstellungen und AppAtlas-Datenordner:
 
