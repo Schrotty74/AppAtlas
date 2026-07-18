@@ -6,10 +6,17 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
-    func helpLinksOpenThePublicGuideAndSupportedAIServices() throws {
+    func helpLinksOpenThePublicManualAndSupportedAIServices() throws {
         #expect(
-            AppHelpLinks.guideURL.absoluteString
-                == "https://github.com/Schrotty74/AppAtlas/blob/main/guide.md"
+            AppHelpLinks.manualURL.absoluteString.hasPrefix(
+                "https://github.com/Schrotty74/AppAtlas/blob/main/docs/output/pdf/"
+            )
+        )
+        #expect(
+            [
+                "AppAtlas-Handbuch-DE.pdf",
+                "AppAtlas-User-Manual-EN.pdf",
+            ].contains { AppHelpLinks.manualURL.absoluteString.hasSuffix($0) }
         )
         #expect(
             AIHelpService.allCases.map(\.url.host) == [
@@ -29,8 +36,7 @@ struct CatalogManagementTests {
         #expect(AppHelpLinks.aiPrompt.contains("ohne Lizenzdaten"))
         #expect(
             AppHelpLinks.aiPrompt.contains(
-                "[\(AppHelpLinks.guideURL.absoluteString)]"
-                    + "(\(AppHelpLinks.guideURL.absoluteString))"
+                AppHelpLinks.manualURL.absoluteString
             )
         )
         #expect(!AppHelpLinks.aiPrompt.contains("BEGINN DES APPATLAS-HANDBUCHS"))
@@ -1062,6 +1068,70 @@ struct CatalogManagementTests {
         #expect(store.pendingTranslation == nil)
         #expect(app.metadataSources?.contains("Homebrew-Cask-Katalog") == true)
         try? FileManager.default.removeItem(at: directory)
+    }
+
+    @Test @MainActor
+    func fastScanUsesCachedSetappCatalogMetadata() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let catalogURL = directory.appendingPathComponent("catalog.json")
+        let setappURL = directory.appendingPathComponent("setapp-catalog.json")
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        try Data(
+            """
+            {"entries":[
+              {
+                "name":"Setapp Demo",
+                "description":"A sample app from the Setapp catalog.",
+                "platform":"mac",
+                "platforms":["mac"],
+                "slug":"setapp-demo"
+              }
+            ]}
+            """.utf8
+        ).write(to: setappURL)
+        let store = makeCatalogStore(
+            persistence: CatalogPersistence(fileURL: catalogURL),
+            setappCatalogMetadataCache: SetappCatalogMetadataCache(
+                fileURL: setappURL
+            )
+        )
+
+        store.mergeScannedApps([
+            knownScannedApp(
+                name: "Setapp Demo",
+                fileName: "Setapp-Demo-1.0.dmg",
+                category: "Productivity",
+                subcategory: "Screenshots"
+            )
+        ])
+
+        let app = try #require(store.apps.first)
+        #expect(
+            app.downloadURL == URL(string: "https://setapp.com/apps/setapp-demo")
+        )
+        #expect(
+            app.suggestions.first?.value == "A sample app from the Setapp catalog."
+        )
+        #expect(app.metadataSources?.contains("Setapp-Katalog") == true)
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    @Test
+    func setappCatalogParserReadsPublicMacAppEntries() throws {
+        let html = """
+        <script>self.__next_f.push([1,"6:{\\"applications\\":[{\\"name\\":\\"CleanShot X\\",\\"description\\":\\"Capture screenshots\\",\\"platform\\":\\"mac\\",\\"platforms\\":[\\"mac\\"],\\"slug\\":\\"cleanshot-x\\"},{\\"name\\":\\"Web Tool\\",\\"description\\":\\"Browser only\\",\\"platform\\":\\"web\\",\\"platforms\\":[\\"web\\"],\\"slug\\":\\"web-tool\\"}],\\"pagination\\":{}}"]) </script>
+        """
+
+        let catalog = try SetappCatalogMetadataCache.parseCatalog(from: html)
+
+        #expect(catalog.entries.count == 2)
+        #expect(catalog.entries.first?.catalogURL == URL(string: "https://setapp.com/apps/cleanshot-x"))
+        #expect(catalog.entries.first?.isMacApp == true)
+        #expect(catalog.entries.last?.isMacApp == false)
     }
 
     @Test
@@ -3752,6 +3822,7 @@ struct CatalogManagementTests {
         persistence: CatalogPersistence = CatalogPersistence(),
         licenseStorage: any LicenseStorage = InMemoryLicenseStorage(),
         homebrewCaskMetadataCache: HomebrewCaskMetadataCache = .shared,
+        setappCatalogMetadataCache: SetappCatalogMetadataCache = .shared,
         targetLanguageProvider: @escaping @Sendable () -> String = {
             AppLanguageChoice.current.resolvedLanguage()
         }
@@ -3760,6 +3831,7 @@ struct CatalogManagementTests {
             persistence: persistence,
             licenseStorage: licenseStorage,
             homebrewCaskMetadataCache: homebrewCaskMetadataCache,
+            setappCatalogMetadataCache: setappCatalogMetadataCache,
             targetLanguageProvider: targetLanguageProvider
         )
     }

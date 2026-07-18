@@ -14,6 +14,7 @@ durchgeführt, nicht bei Betas. Jeder neue Final-Bericht ergänzt die bestehende
 chronologische Audit-Historie; frühere Berichte bleiben erhalten. Die
 chronologische Audit-Historie enthält:
 
+- [Datenschutzaudit für AppAtlas 1.2.2 vom 18. Juli 2026](PRIVACY_AUDIT_2026-07-18.md)
 - [Datenschutzaudit für AppAtlas 1.2.0 vom 6. Juli 2026](PRIVACY_AUDIT_2026-07-06.md)
 - [Datenschutzaudit für AppAtlas 1.1.1 vom 17. Juni 2026](PRIVACY_AUDIT_2026-06-17.md)
 - [Datenschutzaudit für AppAtlas 1.1.0 vom 16. Juni 2026](PRIVACY_AUDIT_2026-06-16.md)
@@ -69,6 +70,13 @@ Lokale Dateipfade, die Katalogstruktur und Lizenzdaten werden dabei nicht
 direkt abgerufen werden, um deren Metadaten zu prüfen. Wie bei jedem
 Webseitenaufruf erhält der jeweilige Server dabei technisch notwendige
 Verbindungsdaten wie die IP-Adresse.
+
+Bei derselben bewussten Aktualisierung lädt AppAtlas außerdem die öffentlichen
+Kataloglisten von Homebrew und Setapp. Beide Kataloge werden anschließend nur
+lokal zwischengespeichert und beim normalen schnellen Scan ohne Netzwerkzugriff
+verwendet. An Setapp werden dafür keine Katalogdaten, Dateipfade oder
+Lizenzdaten übertragen; der Abruf beschränkt sich auf die öffentliche
+Katalogseite.
 
 Unsichere Funde werden als lokale Vorschläge mit Quellenangabe gespeichert und
 nicht ungeprüft übernommen. Fremdsprachige Beschreibungen werden ab macOS 15
