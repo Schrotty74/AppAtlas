@@ -1,6 +1,7 @@
 # App-Assistent
 
-Stand: 2026-06-08
+Hinweis: Dieses Dokument beschreibt nur die App-Funktion. Fuer den aktuellen
+Projektstand zuerst `PROJECT_CONTEXT.md` und `NEXT_STEPS.md` lesen.
 
 ## Ziel
 
@@ -39,17 +40,8 @@ Der Assistent beantwortet Fragen zum eigenen Katalog, zum Beispiel:
   Apple Intelligence.
 - Eine allgemeine Websuche über weitere Anbieter ist noch nicht integriert.
 
-## Release-Workflow für Codex
+## Weiterer Projektkontext
 
-- Dev bleibt lokal. Nicht jede Dev-Version committen oder pushen.
-- Erst wenn der Benutzer schreibt „Erstelle Beta aus Dev“, wird der aktuelle
-  lokale Dev-Stand als Beta übernommen und als Git-Commit auf `beta`
-  gespeichert.
-- Erst `beta` und `main` werden in Git/GitHub übernommen.
-- Wenn der Benutzer schreibt „Erstelle Beta aus Dev“, führe
-  `./Scripts/create-beta-from-dev.sh` aus.
-- Wenn der Benutzer schreibt „Veröffentliche Beta als Final“, führe
-  `./Scripts/publish-beta-as-final.sh` aus.
-- Wenn auf einem der Branches `dev`, `beta` oder `main` gebaut werden soll,
-  kann `./Scripts/build-current-branch.sh` verwendet werden.
-- Vor einem Push bleibt die ausdrückliche Benutzerfreigabe erforderlich.
+Der verbindliche Build- und Release-Ablauf steht ausschliesslich in
+`docs/RELEASE_WORKFLOW.md`. Datenschutz- und Veroeffentlichungsregeln stehen
+in `docs/PRIVACY.md` und `PROJECT_CONTEXT.md`.

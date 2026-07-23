@@ -6,9 +6,9 @@ AppAtlas verwendet drei Stufen:
 - `beta`: stabiler Teststand in Git
 - `main`: veroeffentlichter Final-Stand in Git
 
-Wichtig: `dev` bleibt lokal. Nicht jede Dev-Version wird committed oder
-gepusht. Erst wenn aus dem aktuellen lokalen Dev-Stand eine Beta erstellt
-wird, wird daraus ein Git-Commit auf `beta`.
+Wichtig: Nicht jede Dev-Aenderung wird committed oder gepusht. Erst wenn aus
+dem aktuellen Dev-Stand eine Beta erstellt wird, wird daraus ein Git-Commit
+auf `beta`.
 
 Xcode wird fuer die taegliche Dev-Arbeit verwendet. Beta und Final laufen ueber
 die Release-Skripte:
@@ -70,7 +70,7 @@ Skript die `MARKETING_VERSION` aus dem Projekt. Es wird keine lokale
 ## Beta als Final veröffentlichen
 
 ```sh
-./Scripts/publish-beta-as-final.sh
+./Scripts/publish-beta-as-final.sh <final-version>
 ```
 
 Das Skript:
@@ -85,6 +85,10 @@ Das Skript:
 7. pusht `main` automatisch nach GitHub.
 
 `beta` wird dabei nicht verändert.
+
+Die Final-Version immer explizit uebergeben. Dadurch bleibt das Final-Paket
+unabhaengig davon korrekt, ob die Xcode-Konfiguration fuer Final noch die
+zuletzt veroeffentlichte Version anzeigt.
 
 ## Schutzregel
 
