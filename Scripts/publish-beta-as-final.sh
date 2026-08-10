@@ -102,12 +102,30 @@ last_final_tag() {
     echo "$tag"
 }
 
+dev_commit_for_beta_tree() {
+    local beta_commit="$1"
+    local beta_tree
+    local dev_commit
+
+    beta_tree="$(git rev-parse "$beta_commit^{tree}")"
+    while IFS= read -r dev_commit; do
+        if [[ "$(git rev-parse "$dev_commit^{tree}")" == "$beta_tree" ]]; then
+            echo "$dev_commit"
+            return
+        fi
+    done < <(git rev-list dev)
+
+    echo "Abbruch: Der Beta-Stand konnte keinem Dev-Commit zugeordnet werden." >&2
+    exit 1
+}
+
 categorized_release_changes() {
     local previous_final_tag="$1"
+    local source_ref="$2"
     local changes
 
     changes="$(
-        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_final_tag"..HEAD \
+        git log --reverse --no-merges --format='%s%n%b%x1e' "$previous_final_tag".."$source_ref" \
             | awk '
                 function trim(value) {
                     sub(/^[[:space:]]+/, "", value)
@@ -191,9 +209,10 @@ categorized_release_changes() {
 write_release_notes() {
     local notes_file="$1"
     local previous_final_tag="$2"
+    local source_ref="$3"
     local changes
 
-    changes="$(categorized_release_changes "$previous_final_tag")"
+    changes="$(categorized_release_changes "$previous_final_tag" "$source_ref")"
 
     cat > "$notes_file" <<EOF
 This stable release contains the latest AppAtlas changes since $previous_final_tag.
@@ -249,6 +268,7 @@ release_notes_file="$backup_directory/AppAtlas-$version-release-notes.md"
 
 git switch beta
 beta_commit="$(git rev-parse --short HEAD)"
+release_note_source_ref="$(dev_commit_for_beta_tree "$beta_commit")"
 
 git switch main
 git merge --ff-only beta
@@ -267,7 +287,7 @@ require_release_artifacts \
 
 APPATLAS_ALLOW_PUSH=YES git push --set-upstream origin main
 
-write_release_notes "$release_notes_file" "$previous_final_tag"
+write_release_notes "$release_notes_file" "$previous_final_tag" "$release_note_source_ref"
 create_github_release \
     "$version" \
     "$(git rev-parse HEAD)" \
