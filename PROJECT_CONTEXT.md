@@ -3,6 +3,22 @@
 AppAtlas ist eine native SwiftUI-App für macOS zur persönlichen Verwaltung
 eines lokalen App-Katalogs.
 
+## Start in einem neuen Chat
+
+Diese Datei ist die zentrale Wissensquelle. Danach in dieser Reihenfolge lesen:
+
+1. `NEXT_STEPS.md` fuer den tatsaechlich offenen Arbeitsstand.
+2. `CHAT_TEMPLATE.md` fuer die Schutzregeln eines neuen Codex-Chats.
+3. Bei einer fachlichen Aenderung `docs/PROJECT_STRUCTURE.md` und die
+   betroffene Dokumentation unter `docs/`.
+4. Nur bei Build-, Beta- oder Final-Arbeit `docs/RELEASE_WORKFLOW.md`.
+5. Bei Datenverarbeitung, Online-Zugriffen oder Veroeffentlichungen
+   `docs/PRIVACY.md`; die Audit-Dateien sind historische Nachweise.
+
+`AI_ASSISTANT.md` beschreibt ausschliesslich die Assistent-Funktion. Die
+Release-Historie unter `docs/releases/`, `docs/HISTORY.md` und die alte
+Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
+
 ## Technische Struktur
 
 - AppAtlas ist ein Swift-Package mit Xcode-Projekt.
@@ -12,6 +28,32 @@ eines lokalen App-Katalogs.
 - Xcode bindet `AppMetadataKit` als lokales Paket aus dem AppAtlas-Repository
   ein. `swift build`, `swift test` und Xcode-Builds müssen daher ohne
   zusätzliches Schwester-Repository funktionieren.
+- Wichtige Ordner: `Sources/AppAtlas/` fuer App-Code,
+  `Sources/AppMetadataKit/` fuer das interne Modul, `Tests/` fuer Tests,
+  `Packaging/` fuer Bundle-Konfiguration, `Scripts/` fuer Build- und
+  Release-Helfer sowie `docs/` fuer oeffentliche Fach- und
+  Veroeffentlichungsdokumentation. Details stehen in
+  `docs/PROJECT_STRUCTURE.md`.
+- Katalogimport und -export verwenden versionierte JSON-Formate; Themes
+  verwenden `appatlas-theme`. Lokale Kataloge, Icons und Einstellungen sind
+  keine Repository-Dateien.
+
+## Build, Test und Release
+
+- Fuer normale Entwicklungspruefungen ausschliesslich `swift build` und
+  `swift test` verwenden. Sie erzeugen keine Release-Pakete und oeffnen die
+  App nicht.
+- Xcode und `Scripts/build-current-branch.sh` sind fuer den lokalen
+  Dev-Build. Beta und Final werden ausschliesslich mit den bestehenden
+  Release-Skripten erstellt.
+- Eine Beta startet mit `Scripts/create-beta-from-dev.sh <beta-version>` auf
+  `dev`. Ein Final startet mit
+  `Scripts/publish-beta-as-final.sh <final-version>` aus dem sauberen
+  Arbeitsstand. Die genaue, vor jedem Release zu lesende Anleitung steht in
+  `docs/RELEASE_WORKFLOW.md`.
+- Jeder Release, Push, Tag, jede Beta und jedes Backup braucht weiterhin eine
+  ausdrueckliche Benutzeranweisung. Vor einem Final sind Datenschutzcheck,
+  erweitertes Audit und ein neuer oeffentlicher Audit-Bericht Pflicht.
 
 ## Scanner-Stand
 
@@ -26,6 +68,21 @@ eines lokalen App-Katalogs.
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
 - Aktueller offizieller Release: `1.2.2`.
+- Die lokale Homebrew-Katalogzuordnung verwendet für die Suche zusätzlich eine
+  vorsichtige Namensvariante ohne rein numerischen Anhang, etwa
+  `ExampleTool2` zu `ExampleTool`. Der sichtbare Katalogname bleibt dabei
+  unveraendert.
+- Fuer dieselbe lokale Suche werden zusammengezogene Dateinamen und reine
+  Verpackungszusätze wie `Installer` oder `App` aufgetrennt beziehungsweise
+  ignoriert. Das erweitert nur den Abgleich mit einem bereits gespeicherten
+  Katalog und erzeugt keine Netzabfrage.
+- Bei einer bewusst gestarteten Online-Aktualisierung fragt die App fuer echte
+  App-Bundles zuerst den Mac App Store per lokaler Bundle-ID ab. Erst ohne
+  exakten Treffer folgt die bestehende Namenssuche.
+- Bereits bekannte GitHub-Projektadressen werden bei derselben normalen
+  Online-Aktualisierung direkt verwendet. Die Suche nach unbekannten
+  GitHub-Projekten bleibt wegen der öffentlichen GitHub-Suchgrenzen in der
+  erweiterten Suche.
 
 ## Datenschutz hat Vorrang
 
@@ -91,6 +148,11 @@ eines lokalen App-Katalogs.
   Backup-Archive. Echte Backup-Anwendungen bleiben als App-Vorschläge erhalten.
 - Scanvorschläge werden vor der Aufnahme einzeln ausgewählt; kein Vorschlag
   wird außerhalb der vollständigen Prüfliste ungefragt importiert.
+- Bei `.app`-Bundles wird neben Bundle-ID und Hersteller auch der offizielle
+  App-Name aus dem Bundle gelesen. Dieser hat fuer die lokale Erkennung Vorrang
+  vor einem ungenauen Ordner- oder Dateinamen. Produkteditionen wie `Pro`,
+  `Lite`, `Plus`, `HD` und `Air` bleiben voneinander getrennt; ein unklarer
+  Treffer wird nicht automatisch als Grundversion uebernommen.
 - Quelldateien werden nicht verändert.
 - Online-Anreicherung läuft ausschließlich nach einem bewussten Klick auf
   „Katalog aktualisieren“ und überschreibt keine vorhandenen Metadaten.
@@ -194,3 +256,12 @@ eines lokalen App-Katalogs.
 - Soweit sinnvoll möglich testen, ob die Änderung funktioniert.
 - Am Ende kurz in normaler Sprache erklären, was geändert wurde und ob noch
   etwas offen ist.
+
+## Bekannte Grenzen
+
+- Metadaten und Icons koennen bei seltenen oder aehnlich benannten Apps weiter
+  eine manuelle Pruefung benoetigen.
+- Der schnelle Scan bleibt absichtlich offline; neue Online-Quellen duerfen
+  ihn nicht blockieren.
+- Die optionale lokale Apple-Intelligence-Unterstuetzung braucht kompatible
+  Hardware, macOS 26 und eine aktivierte Apple-Intelligence-Installation.

@@ -4,50 +4,32 @@ Kopiere diesen Text in einen neuen Codex-Chat, wenn die Arbeit an AppAtlas
 fortgesetzt werden soll.
 
 ```text
-Arbeite ausschließlich im Projektordner:
-[LOKALEN_APPATLAS_PROJEKTPFAD_EINFUEGEN]
+Arbeite ausschliesslich im ausgewaehlten AppAtlas-Projektordner.
 
 Lies zuerst:
 - PROJECT_CONTEXT.md
 - NEXT_STEPS.md
 
-Diese Dateien sind die primäre Wissensquelle für den Projektstand. Wenn sie
-veraltet wirken, weise kurz darauf hin und frage, ob sie aktualisiert werden
-sollen.
+Danach bei Bedarf:
+- docs/PROJECT_STRUCTURE.md fuer Architektur und Einstiegspunkte
+- docs/RELEASE_WORKFLOW.md nur fuer Beta- oder Final-Arbeit
+- docs/PRIVACY.md bei Datenverarbeitung, Online-Zugriffen oder Veroeffentlichungen
 
-Pflege im Projektordner weiterhin die Dateien PROJECT_CONTEXT.md und
-NEXT_STEPS.md.
-
-PROJECT_CONTEXT.md soll stets den aktuellen Projektstand enthalten:
-- Projektziel und Zweck
-- Architektur und technische Entscheidungen
-- Dateistruktur
-- umgesetzte Funktionen
-- wichtige Designentscheidungen
-- Build-/Release-Workflow
-- Datenschutzregeln
-- bekannte Einschränkungen oder Probleme
-
-NEXT_STEPS.md soll enthalten:
-- offene Aufgaben
-- Bugs
-- geplante Verbesserungen
-- Prioritäten
-- Ideen für zukünftige Entwicklungen
-
-Bei größeren Änderungen, neuen Funktionen, Refactorings,
-Release-/Build-Workflow-Änderungen oder wichtigen Entscheidungen aktualisiere
-diese Dateien automatisch, bevor die Aufgabe als abgeschlossen betrachtet wird.
+PROJECT_CONTEXT.md ist die Haupt-Wissensquelle. NEXT_STEPS.md enthaelt nur
+tatsaechlich offene Punkte. Bei wichtigen Aenderungen an Funktionen,
+Architektur, Datenschutz, Build- oder Release-Ablauf beide Dateien vor dem
+Abschluss aktualisieren. Sichtbare Funktionsaenderungen brauchen auch die
+deutschen und englischen PDF-Handbuecher.
 
 Wichtig:
 - In diesem Chat nur AppAtlas bearbeiten.
 - Bei reinen Fragen nichts bauen und nichts ändern.
 - Nur bauen, wenn ausdrücklich ein Build verlangt wird.
-- Beta und Final laufen über die bestehenden Skripte, nicht über sichtbare
-  Xcode-Schemes.
+- Beta und Final laufen ausschliesslich ueber die bestehenden Skripte, nicht
+  ueber Xcode-Schemes.
 - Keine Release-Artefakte, privaten Kataloge, Scanlisten, Lizenzdaten oder
   lokalen Benutzerpfade in Git übernehmen.
 - Keine Pushes, Tags oder GitHub-Releases ohne ausdrückliche Anweisung.
-- Wenn der Chat groß oder unübersichtlich wird, eine kurze
-  Übergabe-Zusammenfassung für einen neuen Chat erstellen.
+- Keine Zugangsdaten, Tokens, privaten Testdaten oder Backups dokumentieren.
+- Wenn Informationen fehlen, sie als unbekannt markieren statt sie zu erfinden.
 ```

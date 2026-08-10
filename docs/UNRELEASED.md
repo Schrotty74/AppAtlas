@@ -1,6 +1,8 @@
-# Unveröffentlichte Änderungen seit AppAtlas 1.1.1
+# Unveröffentlichte Änderungen seit AppAtlas 1.2.2
 
-Derzeit keine.
+- Die Projekt-Einstiegsdokumentation wurde auf einen klaren aktuellen Stand
+  und eine sichere Chat-Fortsetzung ausgerichtet. Es gibt keine neue
+  App-Funktion.
 
 ## Datenschutz
 

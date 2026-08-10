@@ -18,6 +18,14 @@ import AppMetadataKit
     )
 
     #expect(AppNameNormalizer.displayName(for: app.name) == "Cinebench")
+    #expect(AppNameMatcher.similarity("Example Pro", "Example") < 0.80)
+    #expect(AppNameMatcher.searchName("ExampleTool2") == "ExampleTool")
+    #expect(
+        AppleArtworkLookup.isExactBundleIdentifierMatch(
+            localBundleIdentifiers: ["com.example.Product"],
+            candidateBundleIdentifier: "com.example.product"
+        )
+    )
     #expect(
         MetadataMatchScorer.score(app: app, candidate: candidate) >= 0.80
     )

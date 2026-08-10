@@ -6,6 +6,22 @@ import Testing
 
 struct CatalogManagementTests {
     @Test
+    func appleLookupRecognizesExactBundleIdentifiers() {
+        #expect(
+            AppleArtworkLookup.isExactBundleIdentifierMatch(
+                localBundleIdentifiers: ["com.example.Product"],
+                candidateBundleIdentifier: "com.example.product"
+            )
+        )
+        #expect(
+            !AppleArtworkLookup.isExactBundleIdentifierMatch(
+                localBundleIdentifiers: ["com.example.Product"],
+                candidateBundleIdentifier: "com.example.Other"
+            )
+        )
+    }
+
+    @Test
     func helpLinksOpenThePublicManualAndSupportedAIServices() throws {
         #expect(
             AppHelpLinks.manualURL.absoluteString.hasPrefix(
@@ -1169,6 +1185,30 @@ struct CatalogManagementTests {
                 "desc": "App update tracker.",
                 "homepage": "https://max.codes/latest",
                 "url": "https://max.codes/latest/0.11.zip"
+              },
+              {
+                "token": "exampletool",
+                "full_token": "exampletool",
+                "name": ["ExampleTool"],
+                "desc": "Example utility.",
+                "homepage": "https://example.com/exampletool",
+                "url": "https://example.com/exampletool.dmg"
+              },
+              {
+                "token": "example-browser",
+                "full_token": "example-browser",
+                "name": ["Example Browser"],
+                "desc": "Example browser.",
+                "homepage": "https://example.com/browser",
+                "url": "https://example.com/browser.dmg"
+              },
+              {
+                "token": "example-options+",
+                "full_token": "example-options+",
+                "name": ["Example Options+"],
+                "desc": "Example device settings.",
+                "homepage": "https://example.com/options",
+                "url": "https://example.com/options.dmg"
               }
             ]
             """.utf8
@@ -1210,10 +1250,46 @@ struct CatalogManagementTests {
                 )
             ]
         )
+        let numberedTool = AppEntry(
+            name: "ExampleTool2",
+            category: "Download",
+            subcategory: "",
+            files: [
+                localFile(
+                    named: "ExampleTool2.app",
+                    category: "Download"
+                )
+            ]
+        )
+        let installer = AppEntry(
+            name: "ExampleBrowserInstaller",
+            category: "Browser",
+            subcategory: "",
+            files: [
+                localFile(
+                    named: "ExampleBrowserInstaller.dmg",
+                    category: "Browser"
+                )
+            ]
+        )
+        let plusEdition = AppEntry(
+            name: "exampleoptionsplus",
+            category: "Hardware",
+            subcategory: "",
+            files: [
+                localFile(
+                    named: "exampleoptionsplus_installer.app",
+                    category: "Hardware"
+                )
+            ]
+        )
 
         #expect(cache.metadata(for: iina)?.homepage == URL(string: "https://iina.io/"))
         #expect(cache.metadata(for: mos)?.homepage == URL(string: "https://mos.caldis.me/"))
         #expect(cache.metadata(for: latest)?.homepage == URL(string: "https://max.codes/latest"))
+        #expect(cache.metadata(for: numberedTool)?.homepage == URL(string: "https://example.com/exampletool"))
+        #expect(cache.metadata(for: installer)?.homepage == URL(string: "https://example.com/browser"))
+        #expect(cache.metadata(for: plusEdition)?.homepage == URL(string: "https://example.com/options"))
         try? FileManager.default.removeItem(at: directory)
     }
 
@@ -1944,13 +2020,35 @@ struct CatalogManagementTests {
     @Test
     func nameMatcherHandlesVersionedAndSuffixedNames() {
         #expect(AppNameMatcher.similarity("Example", "Example 8") == 1)
-        #expect(AppNameMatcher.similarity("Example Pro", "Example") == 1)
+        #expect(AppNameMatcher.similarity("Example Pro", "Example") < 0.8)
         #expect(AppNameMatcher.similarity("Tool: Mac Edition", "Tool") == 1)
         #expect(AppNameMatcher.searchName("Example darwin") == "Example")
         #expect(AppNameMatcher.similarity("Example darwin", "example") == 1)
         #expect(AppNameMatcher.similarity("Example", "Example Track") < 0.8)
         #expect(AppNameMatcher.searchName("Example Apple Silicon") == "Example")
         #expect(AppNameMatcher.similarity("Unrelated", "Example") < 0.8)
+    }
+
+    @Test
+    func metadataScorerKeepsProductEditionsSeparate() {
+        let app = AppEntry(
+            name: "Example Pro",
+            category: "Grafik",
+            subcategory: "",
+            files: []
+        )
+        let genericCandidate = MetadataMatchCandidate(
+            name: "Example",
+            contextText: "Professional graphics editor",
+            developer: nil,
+            url: nil,
+            bundleIdentifier: nil,
+            sourceReliability: 0.95
+        )
+
+        #expect(
+            MetadataMatchScorer.score(app: app, candidate: genericCandidate) == 0
+        )
     }
 
     @Test
@@ -3658,6 +3756,7 @@ struct CatalogManagementTests {
         let info: [String: Any] = [
             "CFBundleIconFile": "ExampleIcon.png",
             "CFBundleIdentifier": "com.example.app",
+            "CFBundleDisplayName": "Example Workspace",
             "NSHumanReadableCopyright":
                 "Copyright © 2026 Example Software. All rights reserved."
         ]
@@ -3681,6 +3780,39 @@ struct CatalogManagementTests {
         #expect(iconData?.isEmpty == false)
         #expect(metadata.bundleIdentifier == "com.example.app")
         #expect(metadata.developer == "Example Software")
+        #expect(metadata.displayName == "Example Workspace")
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test
+    func scannerUsesBundleDisplayNameForAppRecognition() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let category = root.appendingPathComponent("Grafik", isDirectory: true)
+        let appURL = category.appendingPathComponent(
+            "Generic Wrapper.app",
+            isDirectory: true
+        )
+        let contents = appURL.appendingPathComponent("Contents", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: contents,
+            withIntermediateDirectories: true
+        )
+        let info: [String: Any] = [
+            "CFBundleIdentifier": "com.example.pixelforge",
+            "CFBundleDisplayName": "PixelForge"
+        ]
+        let infoData = try PropertyListSerialization.data(
+            fromPropertyList: info,
+            format: .xml,
+            options: 0
+        )
+        try infoData.write(to: contents.appendingPathComponent("Info.plist"))
+
+        let result = try VolumeScanner().scan(root)
+
+        #expect(result.files.first?.bundleDisplayName == "PixelForge")
+        #expect(result.apps.map(\.name) == ["PixelForge"])
         try? FileManager.default.removeItem(at: root)
     }
 

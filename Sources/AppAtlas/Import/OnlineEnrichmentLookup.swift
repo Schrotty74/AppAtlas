@@ -4,6 +4,7 @@ struct FastOnlineResult: Sendable {
     let appID: AppEntry.ID
     let apple: AppleArtworkLookup.Metadata?
     let appleIconData: Data?
+    let github: GitHubRepositoryLookup.Metadata?
     let website: WebMetadataLookup.Metadata?
 }
 
@@ -20,6 +21,17 @@ enum OnlineEnrichmentLookup {
         await withTimeout(seconds: 8) {
             let needsIcon = !hasValidIcon(app)
             async let apple = AppleArtworkLookup.shared.metadata(for: app)
+            async let github: GitHubRepositoryLookup.Metadata? = {
+                guard let sourceURL = app.githubURL else {
+                    return nil
+                }
+                return await GitHubRepositoryLookup.shared.metadata(
+                    for: sourceURL,
+                    category: app.category,
+                    subcategory: app.subcategory,
+                    needsIcon: needsIcon
+                )
+            }()
             async let website: WebMetadataLookup.Metadata? = {
                 guard let metadataURL = metadataSourceURL(for: app),
                       needsIcon
@@ -49,12 +61,14 @@ enum OnlineEnrichmentLookup {
                 appID: app.id,
                 apple: appleMetadata,
                 appleIconData: appleIconData,
+                github: await github,
                 website: await website
             )
         } ?? FastOnlineResult(
             appID: app.id,
             apple: nil,
             appleIconData: nil,
+            github: nil,
             website: nil
         )
     }

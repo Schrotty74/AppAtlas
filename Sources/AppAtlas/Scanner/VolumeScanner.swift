@@ -95,7 +95,8 @@ struct VolumeScanner: Sendable {
                 ? LocalAppMetadataExtractor().metadata(for: url)
                 : LocalAppMetadata(
                     bundleIdentifier: nil,
-                    developer: nil
+                    developer: nil,
+                    displayName: nil
                 )
 
             files.append(
@@ -114,7 +115,8 @@ struct VolumeScanner: Sendable {
                         ? LocalAppIconExtractor().iconData(for: url)
                         : nil,
                     bundleIdentifier: localMetadata.bundleIdentifier,
-                    bundleDeveloper: localMetadata.developer
+                    bundleDeveloper: localMetadata.developer,
+                    bundleDisplayName: localMetadata.displayName
                 )
             )
         }

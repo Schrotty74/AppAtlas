@@ -228,12 +228,17 @@ enum MetadataMatchScorer {
             "indesign",
             "acrobat",
             "after",
-            "effects"
+            "effects",
+            "pro",
+            "lite",
+            "plus",
+            "hd",
+            "air"
         ])
-        let extraQualifiers = candidateTokens
-            .subtracting(appTokens)
+        let differingQualifiers = appTokens
+            .symmetricDifference(candidateTokens)
             .intersection(conflictingQualifiers)
-        return !extraQualifiers.isEmpty
+        return !differingQualifiers.isEmpty
     }
 
     static func hasConflictingProductQualifier(
@@ -281,11 +286,6 @@ enum MetadataMatchScorer {
                     "mac",
                     "macos",
                     "ios",
-                    "pro",
-                    "lite",
-                    "plus",
-                    "hd",
-                    "air",
                     "product",
                     "products",
                     "whats",
