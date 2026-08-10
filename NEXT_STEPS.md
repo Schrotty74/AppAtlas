@@ -4,7 +4,7 @@
 
 Stand: 10. August 2026.
 
-- Der oeffentliche Final-Stand ist `1.2.2`.
+- Der oeffentliche Final-Stand ist `1.2.3`.
 - Die aktuelle App-Funktionalitaet, Architektur und verbindlichen Regeln
   stehen in `PROJECT_CONTEXT.md`; diese Datei wiederholt sie bewusst nicht.
 - Homebrew-Cask, Setapp, App-Store-Links und die CI-Pruefung sind bereits
@@ -24,17 +24,9 @@ Stand: 10. August 2026.
 
 ## Offene Aufgaben
 
-- **Prioritaet 1:** Rueckmeldungen zum aktuellen Final sammeln und nur
-  nachvollziehbare Probleme priorisieren.
-- **Prioritaet 2:** Metadaten-Zuordnungen bei unterschiedlich oder aehnlich
-  benannten Apps mit realen, datensparsam beschriebenen Problemfaellen
-  praktisch pruefen und unklare Treffer im Review-Bereich verfeinern.
-- **Prioritaet 3:** Die lokale Scanner-Erkennung mit weiteren bekannten
-  App-Namen und Varianten ausbauen, ohne den schnellen Offline-Scan durch
-  Netzwerkzugriffe zu blockieren.
-- **Prioritaet 4:** Die bestehende Vertrauensbewertung praktisch pruefen:
-  automatische Uebernahme ab `0.80`, Review ab `0.65` und Mindestabstand
-  `0.08` zum zweitbesten Treffer.
+Zurzeit keine. AppAtlas `1.2.3` ist der abgeschlossene Final-Stand.
+Neue Aufgaben entstehen erst durch eine ausdrückliche weitere Anweisung oder
+einen nachvollziehbar gemeldeten Fehler.
 
 Bei groesseren Aenderungen diese Liste aktualisieren. Unbestaetigte Ideen
 werden nicht als offene Aufgabe aufgenommen.

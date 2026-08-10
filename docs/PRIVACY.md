@@ -14,6 +14,7 @@ durchgeführt, nicht bei Betas. Jeder neue Final-Bericht ergänzt die bestehende
 chronologische Audit-Historie; frühere Berichte bleiben erhalten. Die
 chronologische Audit-Historie enthält:
 
+- [Datenschutzaudit für AppAtlas 1.2.3 vom 10. August 2026](PRIVACY_AUDIT_2026-08-10.md)
 - [Datenschutzaudit für AppAtlas 1.2.2 vom 18. Juli 2026](PRIVACY_AUDIT_2026-07-18.md)
 - [Datenschutzaudit für AppAtlas 1.2.0 vom 6. Juli 2026](PRIVACY_AUDIT_2026-07-06.md)
 - [Datenschutzaudit für AppAtlas 1.1.1 vom 17. Juni 2026](PRIVACY_AUDIT_2026-06-17.md)

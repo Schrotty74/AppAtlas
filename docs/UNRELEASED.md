@@ -1,8 +1,12 @@
-# Unveröffentlichte Änderungen seit AppAtlas 1.2.2
+# Unveröffentlichte Änderungen seit AppAtlas 1.2.3
 
-- Die Projekt-Einstiegsdokumentation wurde auf einen klaren aktuellen Stand
-  und eine sichere Chat-Fortsetzung ausgerichtet. Es gibt keine neue
-  App-Funktion.
+- Das Beta-Skript übergibt die erforderliche Push-Freigabe an seinen eigenen
+  GitHub-Push.
+- Das Final-Skript erstellt seine Release Notes aus dem passenden Dev-Stand
+  des Beta-Snapshots.
+- Die Projekt- und Datenschutzdokumentation wurde auf den abgeschlossenen
+  Final-Stand `1.2.3` aktualisiert.
+- Es gibt keine unveröffentlichte App-Funktion.
 
 ## Datenschutz
 
