@@ -351,7 +351,7 @@ tree="$(worktree_tree)"
 beta_before="$(git rev-parse refs/heads/beta)"
 beta_commit="$(create_beta_commit "$version" "$tree")"
 git update-ref refs/heads/beta "$beta_commit" "$beta_before"
-git push --set-upstream origin refs/heads/beta:refs/heads/beta
+APPATLAS_ALLOW_PUSH=YES git push --set-upstream origin refs/heads/beta:refs/heads/beta
 
 write_release_notes \
     "$release_notes_file" \
