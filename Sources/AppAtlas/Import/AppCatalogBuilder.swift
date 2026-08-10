@@ -5,7 +5,7 @@ struct AppCatalogBuilder: Sendable {
         let appFiles = files.filter(CatalogEntryFilter().shouldInclude)
         let grouped = Dictionary(grouping: appFiles) {
             AppNameNormalizer.catalogIdentityKey(
-                name: $0.fileName,
+                name: recognitionName(for: $0),
                 category: $0.sourceCategory,
                 subcategory: $0.sourceSubcategory,
                 preservesAttachedYear: true
@@ -23,7 +23,7 @@ struct AppCatalogBuilder: Sendable {
         }
         let representative = sortedFiles[0]
         let name = AppNameNormalizer.localCatalogDisplayName(
-            for: representative.fileName
+            for: recognitionName(for: representative)
         )
         let category = representative.sourceCategory
         let subcategory = representative.sourceSubcategory
@@ -54,5 +54,15 @@ struct AppCatalogBuilder: Sendable {
                 ? .localBundle
                 : nil
         ))
+    }
+
+    private func recognitionName(for file: LocalAppFile) -> String {
+        guard let bundleDisplayName = file.bundleDisplayName?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              bundleDisplayName.count >= 2
+        else {
+            return file.fileName
+        }
+        return bundleDisplayName
     }
 }

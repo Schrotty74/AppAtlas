@@ -1116,6 +1116,9 @@ final class CatalogStore: ObservableObject {
                 shouldPersist: false
             )
         }
+        if let metadata = result.github {
+            applyGitHubMetadata(metadata, to: result.appID)
+        }
         let savedITunesIcon = apps.first(where: { $0.id == result.appID })?
             .iconOrigin == .iTunes
         guard let index = apps.firstIndex(where: { $0.id == result.appID }),
@@ -1199,73 +1202,7 @@ final class CatalogStore: ObservableObject {
             }
         }
         if let metadata = result.github {
-            if metadata.match.decision == .automatic,
-               !apps[index].customizations.links
-            {
-                apps[index].githubURL = metadata.projectURL
-                apps[index].homepage = metadata.homepageURL ?? apps[index].homepage
-                apps[index].downloadURL = metadata.downloadURL
-            }
-            if let iconData = metadata.iconData,
-               metadata.match.decision == .automatic,
-               shouldReplaceIcon(in: apps[index]),
-               isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
-            {
-                apps[index].iconData = iconData
-                apps[index].iconOrigin = .github
-                apps[index] = migrateIcon(in: apps[index])
-            }
-            if let description = metadata.description,
-               metadata.match.decision == .automatic
-            {
-                recordDescription(
-                    description,
-                    source: "GitHub-Repository",
-                    sourceURL: metadata.projectURL,
-                    for: result.appID
-                )
-            }
-            if metadata.match.decision == .automatic {
-                addSource("GitHub-Repository", to: index)
-            } else {
-                addSuggestion(
-                    CatalogSuggestion(
-                        kind: .github,
-                        value: metadata.projectURL.absoluteString,
-                        sourceLabel: matchLabel(
-                            "GitHub",
-                            match: metadata.match
-                        ),
-                        sourceURL: metadata.projectURL
-                    ),
-                    to: index
-                )
-                if let homepageURL = metadata.homepageURL {
-                    addSuggestion(
-                        CatalogSuggestion(
-                            kind: .homepage,
-                            value: homepageURL.absoluteString,
-                            sourceLabel: matchLabel(
-                                "GitHub · mögliche Herstellerseite",
-                                match: metadata.match
-                            ),
-                            sourceURL: metadata.projectURL
-                        ),
-                        to: index
-                    )
-                }
-                if let description = metadata.description {
-                    addDescriptionSuggestion(
-                        description,
-                        source: matchLabel(
-                            "GitHub",
-                            match: metadata.match
-                        ),
-                        sourceURL: metadata.projectURL,
-                        to: index
-                    )
-                }
-            }
+            applyGitHubMetadata(metadata, to: result.appID)
         }
         if let reddit = result.reddit,
            AppMetadataEnricher.needsDescriptionExpansion(apps[index].details),
@@ -1279,6 +1216,76 @@ final class CatalogStore: ObservableObject {
             )
         }
         return hasAppChanged(result.appID, comparedTo: before)
+    }
+
+    private func applyGitHubMetadata(
+        _ metadata: GitHubRepositoryLookup.Metadata,
+        to appID: AppEntry.ID
+    ) {
+        guard let index = apps.firstIndex(where: { $0.id == appID }) else {
+            return
+        }
+        if metadata.match.decision == .automatic,
+           !apps[index].customizations.links
+        {
+            apps[index].githubURL = metadata.projectURL
+            apps[index].homepage = metadata.homepageURL ?? apps[index].homepage
+            apps[index].downloadURL = metadata.downloadURL
+        }
+        if let iconData = metadata.iconData,
+           metadata.match.decision == .automatic,
+           shouldReplaceIcon(in: apps[index]),
+           isAcceptableAutomaticOnlineIcon(iconData, for: apps[index])
+        {
+            apps[index].iconData = iconData
+            apps[index].iconOrigin = .github
+            apps[index] = migrateIcon(in: apps[index])
+        }
+        if let description = metadata.description,
+           metadata.match.decision == .automatic
+        {
+            recordDescription(
+                description,
+                source: "GitHub-Repository",
+                sourceURL: metadata.projectURL,
+                for: appID
+            )
+        }
+        if metadata.match.decision == .automatic {
+            addSource("GitHub-Repository", to: index)
+        } else {
+            addSuggestion(
+                CatalogSuggestion(
+                    kind: .github,
+                    value: metadata.projectURL.absoluteString,
+                    sourceLabel: matchLabel("GitHub", match: metadata.match),
+                    sourceURL: metadata.projectURL
+                ),
+                to: index
+            )
+            if let homepageURL = metadata.homepageURL {
+                addSuggestion(
+                    CatalogSuggestion(
+                        kind: .homepage,
+                        value: homepageURL.absoluteString,
+                        sourceLabel: matchLabel(
+                            "GitHub · mögliche Herstellerseite",
+                            match: metadata.match
+                        ),
+                        sourceURL: metadata.projectURL
+                    ),
+                    to: index
+                )
+            }
+            if let description = metadata.description {
+                addDescriptionSuggestion(
+                    description,
+                    source: matchLabel("GitHub", match: metadata.match),
+                    sourceURL: metadata.projectURL,
+                    to: index
+                )
+            }
+        }
     }
 
     private func hasAppChanged(

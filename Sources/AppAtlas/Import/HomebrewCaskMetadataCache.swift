@@ -102,6 +102,7 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
         return Array(Set(names.flatMap {
             [
                 AppNameMatcher.normalized($0),
+                AppNameMatcher.normalized(AppNameMatcher.searchName($0)),
                 Self.homebrewLookupKey($0)
             ]
         })).filter { !$0.isEmpty }
@@ -178,6 +179,11 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
 
     private static func homebrewLookupKey(_ value: String) -> String {
         var result = (value as NSString).deletingPathExtension
+            .replacingOccurrences(
+                of: #"(?<=[a-z])(?=[A-Z])"#,
+                with: " ",
+                options: .regularExpression
+            )
             .folding(
                 options: [.caseInsensitive, .diacriticInsensitive],
                 locale: .current
@@ -186,9 +192,9 @@ final class HomebrewCaskMetadataCache: @unchecked Sendable {
             .replacingOccurrences(of: "_", with: " ")
             .replacingOccurrences(of: "-", with: " ")
             .replacingOccurrences(of: ".", with: " ")
-            .replacingOccurrences(of: "+", with: " ")
+            .replacingOccurrences(of: "+", with: " plus ")
             .replacingOccurrences(
-                of: #"\b(?:versions?|installer|setup|webinstall)\b"#,
+                of: #"\b(?:app|versions?|installer|setup|webinstall)\b"#,
                 with: " ",
                 options: .regularExpression
             )

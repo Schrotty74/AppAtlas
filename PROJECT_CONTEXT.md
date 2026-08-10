@@ -68,6 +68,21 @@ Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
 - Aktueller offizieller Release: `1.2.2`.
+- Die lokale Homebrew-Katalogzuordnung verwendet für die Suche zusätzlich eine
+  vorsichtige Namensvariante ohne rein numerischen Anhang, etwa
+  `ExampleTool2` zu `ExampleTool`. Der sichtbare Katalogname bleibt dabei
+  unveraendert.
+- Fuer dieselbe lokale Suche werden zusammengezogene Dateinamen und reine
+  Verpackungszusätze wie `Installer` oder `App` aufgetrennt beziehungsweise
+  ignoriert. Das erweitert nur den Abgleich mit einem bereits gespeicherten
+  Katalog und erzeugt keine Netzabfrage.
+- Bei einer bewusst gestarteten Online-Aktualisierung fragt die App fuer echte
+  App-Bundles zuerst den Mac App Store per lokaler Bundle-ID ab. Erst ohne
+  exakten Treffer folgt die bestehende Namenssuche.
+- Bereits bekannte GitHub-Projektadressen werden bei derselben normalen
+  Online-Aktualisierung direkt verwendet. Die Suche nach unbekannten
+  GitHub-Projekten bleibt wegen der öffentlichen GitHub-Suchgrenzen in der
+  erweiterten Suche.
 
 ## Datenschutz hat Vorrang
 
@@ -133,6 +148,11 @@ Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
   Backup-Archive. Echte Backup-Anwendungen bleiben als App-Vorschläge erhalten.
 - Scanvorschläge werden vor der Aufnahme einzeln ausgewählt; kein Vorschlag
   wird außerhalb der vollständigen Prüfliste ungefragt importiert.
+- Bei `.app`-Bundles wird neben Bundle-ID und Hersteller auch der offizielle
+  App-Name aus dem Bundle gelesen. Dieser hat fuer die lokale Erkennung Vorrang
+  vor einem ungenauen Ordner- oder Dateinamen. Produkteditionen wie `Pro`,
+  `Lite`, `Plus`, `HD` und `Air` bleiben voneinander getrennt; ein unklarer
+  Treffer wird nicht automatisch als Grundversion uebernommen.
 - Quelldateien werden nicht verändert.
 - Online-Anreicherung läuft ausschließlich nach einem bewussten Klick auf
   „Katalog aktualisieren“ und überschreibt keine vorhandenen Metadaten.

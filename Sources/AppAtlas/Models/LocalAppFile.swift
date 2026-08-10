@@ -13,6 +13,7 @@ struct LocalAppFile: Identifiable, Hashable, Codable, Sendable {
     let iconData: Data?
     let bundleIdentifier: String?
     let bundleDeveloper: String?
+    let bundleDisplayName: String?
 
     init(
         id: UUID = UUID(),
@@ -26,7 +27,8 @@ struct LocalAppFile: Identifiable, Hashable, Codable, Sendable {
         detectedVersion: String?,
         iconData: Data? = nil,
         bundleIdentifier: String? = nil,
-        bundleDeveloper: String? = nil
+        bundleDeveloper: String? = nil,
+        bundleDisplayName: String? = nil
     ) {
         self.id = id
         self.fileName = fileName
@@ -40,6 +42,7 @@ struct LocalAppFile: Identifiable, Hashable, Codable, Sendable {
         self.iconData = iconData
         self.bundleIdentifier = bundleIdentifier
         self.bundleDeveloper = bundleDeveloper
+        self.bundleDisplayName = bundleDisplayName
     }
 
     func removingIconData() -> LocalAppFile {
@@ -54,7 +57,8 @@ struct LocalAppFile: Identifiable, Hashable, Codable, Sendable {
             modifiedAt: modifiedAt,
             detectedVersion: detectedVersion,
             bundleIdentifier: bundleIdentifier,
-            bundleDeveloper: bundleDeveloper
+            bundleDeveloper: bundleDeveloper,
+            bundleDisplayName: bundleDisplayName
         )
     }
 }

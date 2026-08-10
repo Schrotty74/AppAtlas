@@ -3,6 +3,7 @@ import Foundation
 struct LocalAppMetadata: Sendable {
     let bundleIdentifier: String?
     let developer: String?
+    let displayName: String?
 }
 
 struct LocalAppMetadataExtractor: Sendable {
@@ -10,7 +11,8 @@ struct LocalAppMetadataExtractor: Sendable {
         guard appURL.pathExtension.lowercased() == "app" else {
             return LocalAppMetadata(
                 bundleIdentifier: nil,
-                developer: nil
+                developer: nil,
+                displayName: nil
             )
         }
         let infoURL = appURL
@@ -21,13 +23,31 @@ struct LocalAppMetadataExtractor: Sendable {
         else {
             return LocalAppMetadata(
                 bundleIdentifier: nil,
-                developer: nil
+                developer: nil,
+                displayName: nil
             )
         }
         return LocalAppMetadata(
             bundleIdentifier: info["CFBundleIdentifier"] as? String,
-            developer: developer(from: info)
+            developer: developer(from: info),
+            displayName: displayName(from: info)
         )
+    }
+
+    private func displayName(from info: [String: Any]) -> String? {
+        for key in ["CFBundleDisplayName", "CFBundleName"] {
+            guard let value = info[key] as? String else {
+                continue
+            }
+            let cleaned = value.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+            guard !cleaned.isEmpty, !cleaned.contains("$(") else {
+                continue
+            }
+            return cleaned
+        }
+        return nil
     }
 
     private func developer(from info: [String: Any]) -> String? {

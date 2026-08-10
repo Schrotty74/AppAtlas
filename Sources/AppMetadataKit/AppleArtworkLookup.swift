@@ -64,6 +64,14 @@ public actor AppleArtworkLookup {
             return nil
         }
 
+        if let metadata = await metadataForBundleIdentifiers(
+            app.bundleIdentifiers,
+            appName: app.name
+        ) {
+            cache[key] = metadata
+            return metadata
+        }
+
         guard var components = URLComponents(
             string: "https://itunes.apple.com/search"
         ) else {
@@ -212,6 +220,76 @@ public actor AppleArtworkLookup {
                 category: ""
             )
         )?.artworkURL
+    }
+
+    private func metadataForBundleIdentifiers(
+        _ bundleIdentifiers: [String],
+        appName: String
+    ) async -> Metadata? {
+        for bundleIdentifier in Set(bundleIdentifiers) {
+            guard var components = URLComponents(
+                string: "https://itunes.apple.com/lookup"
+            ) else {
+                continue
+            }
+            components.queryItems = [
+                URLQueryItem(name: "bundleId", value: bundleIdentifier),
+                URLQueryItem(name: "entity", value: "macSoftware")
+            ]
+            guard let url = components.url else {
+                continue
+            }
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 30
+            guard let (data, response) = try? await URLSession.shared.data(
+                for: request
+            ),
+                  let http = response as? HTTPURLResponse,
+                  http.statusCode == 200,
+                  let result = try? JSONDecoder().decode(
+                    SearchResult.self,
+                    from: data
+                  ),
+                  let match = result.results.first(where: {
+                      Self.isExactBundleIdentifierMatch(
+                          localBundleIdentifiers: [bundleIdentifier],
+                          candidateBundleIdentifier: $0.bundleId
+                      )
+                  }),
+                  !confirmationProvider.isRejected(
+                      appName: appName,
+                      appleTrackID: match.trackId
+                  )
+            else {
+                continue
+            }
+            return makeMetadata(
+                from: match,
+                match: MetadataMatchScore(
+                    value: 1,
+                    margin: 1,
+                    decision: .automatic
+                )
+            )
+        }
+        return nil
+    }
+
+    public nonisolated static func isExactBundleIdentifierMatch(
+        localBundleIdentifiers: [String],
+        candidateBundleIdentifier: String?
+    ) -> Bool {
+        guard let candidate = candidateBundleIdentifier?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+              !candidate.isEmpty
+        else {
+            return false
+        }
+        return localBundleIdentifiers.contains {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased() == candidate
+        }
     }
 
     private func makeMetadata(

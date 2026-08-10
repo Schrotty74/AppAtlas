@@ -2,16 +2,7 @@ import Foundation
 
 public enum AppNameMatcher {
     public static func normalized(_ value: String) -> String {
-        let displayName = AppNameNormalizer.displayName(for: value)
-        let base = displayName
-            .components(separatedBy: CharacterSet(charactersIn: "–:"))
-            .first ?? displayName
-        return base
-            .replacingOccurrences(
-                of: #"\s+(?:pro|lite|plus|hd|air|\d+)\s*$"#,
-                with: "",
-                options: [.regularExpression, .caseInsensitive]
-            )
+        normalizedBaseName(value)
             .folding(
                 options: [.caseInsensitive, .diacriticInsensitive],
                 locale: .current
@@ -21,15 +12,13 @@ public enum AppNameMatcher {
     }
 
     public static func searchName(_ value: String) -> String {
-        AppNameNormalizer.displayName(for: value)
-            .components(separatedBy: CharacterSet(charactersIn: "–:"))
-            .first?
+        normalizedBaseName(value)
             .replacingOccurrences(
-                of: #"\s+(?:pro|lite|plus|hd|air|\d+)\s*$"#,
+                of: #"(?:\s+|(?<=[a-z]))\d+\s*$"#,
                 with: "",
                 options: [.regularExpression, .caseInsensitive]
             )
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     public static func similarity(_ lhs: String, _ rhs: String) -> Double {
@@ -152,5 +141,12 @@ public enum AppNameMatcher {
         }
         return 1 - Double(previous[right.count])
             / Double(max(left.count, right.count))
+    }
+
+    private static func normalizedBaseName(_ value: String) -> String {
+        let displayName = AppNameNormalizer.displayName(for: value)
+        return displayName
+            .components(separatedBy: CharacterSet(charactersIn: "–:"))
+            .first ?? displayName
     }
 }

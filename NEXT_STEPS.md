@@ -2,21 +2,33 @@
 
 ## Aktueller Stand
 
-Stand: 23. Juli 2026.
+Stand: 10. August 2026.
 
 - Der oeffentliche Final-Stand ist `1.2.2`.
 - Die aktuelle App-Funktionalitaet, Architektur und verbindlichen Regeln
   stehen in `PROJECT_CONTEXT.md`; diese Datei wiederholt sie bewusst nicht.
 - Homebrew-Cask, Setapp, App-Store-Links und die CI-Pruefung sind bereits
   umgesetzt und keine offenen Aufgaben.
+- Die lokale Erkennung liest bei `.app`-Bundles den offiziellen Bundle-Namen;
+  Produkteditionen bleiben getrennt und werden nicht mehr stillschweigend als
+  Grundversion behandelt.
+- Lokale Homebrew-Katalogtreffer erkennen nun auch harmlose numerische
+  Namensanhaenge.
+- Der lokale Katalogabgleich behandelt zusammengezogene Namen sowie
+  Installationszusätze als Suchvariante, ohne den sichtbaren App-Namen zu
+  veraendern.
+- Die normale Online-Aktualisierung nutzt fuer App-Bundles nun eine exakte
+  Bundle-ID-Abfrage beim Mac App Store vor der Namenssuche.
+- Bereits bekannte GitHub-Projekte werden in der normalen Online-Aktualisierung
+  ergänzt; unbekannte Projekte bleiben der erweiterten Suche vorbehalten.
 
 ## Offene Aufgaben
 
 - **Prioritaet 1:** Rueckmeldungen zum aktuellen Final sammeln und nur
   nachvollziehbare Probleme priorisieren.
 - **Prioritaet 2:** Metadaten-Zuordnungen bei unterschiedlich oder aehnlich
-  benannten Apps praktisch pruefen und unklare Treffer im Review-Bereich
-  verfeinern.
+  benannten Apps mit realen, datensparsam beschriebenen Problemfaellen
+  praktisch pruefen und unklare Treffer im Review-Bereich verfeinern.
 - **Prioritaet 3:** Die lokale Scanner-Erkennung mit weiteren bekannten
   App-Namen und Varianten ausbauen, ohne den schnellen Offline-Scan durch
   Netzwerkzugriffe zu blockieren.
