@@ -67,7 +67,7 @@ Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
   - Scanvorschläge können einzeln sowie über „Alle“ und „Keine“ ausgewählt
     werden.
   - Nur ausgewählte Vorschläge werden in den Katalog aufgenommen.
-- Aktueller offizieller Release: `1.2.2`.
+- Aktueller offizieller Release: `1.2.3`.
 - Die lokale Homebrew-Katalogzuordnung verwendet für die Suche zusätzlich eine
   vorsichtige Namensvariante ohne rein numerischen Anhang, etwa
   `ExampleTool2` zu `ExampleTool`. Der sichtbare Katalogname bleibt dabei
@@ -137,9 +137,9 @@ Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
   und Sicherungen anderer Projekte bleiben unverändert.
-- Änderungen nach `1.2.2` bleiben als unveröffentlichter
-  Entwicklungsstand erhalten, bis ihre Veröffentlichung ausdrücklich
-  freigegeben wird.
+- Die beiden Release-Skriptkorrekturen nach `1.2.3` liegen nur auf `dev` und
+  sind nicht Bestandteil des veröffentlichten Final-Standes. Sie werden erst
+  mit einer ausdrücklich freigegebenen nächsten Version veröffentlicht.
 
 ## Produktregeln
 
