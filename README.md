@@ -168,6 +168,10 @@ pasting into Codex.
 Community support and discussions are available on
 [Discord](https://discord.gg/RbsvqRCPQ).
 
+## Repo activity
+
+![Repobeats analytics image](https://repobeats.axiom.co/api/embed/a62a19766e062217bd19acfb3e481180f8459990.svg "Repobeats analytics image")
+
 ## License
 
 AppAtlas is licensed under the GNU General Public License Version 3.
