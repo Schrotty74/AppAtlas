@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Schrotty74/AppAtlas/actions/workflows/ci.yml"><img src="https://github.com/Schrotty74/AppAtlas/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Swift-6.0-orange?logo=swift" alt="Swift 6.0">
   <img src="https://img.shields.io/badge/macOS-14%2B-blue?logo=apple" alt="macOS 14+">
   <img src="https://img.shields.io/badge/License-GPL--3.0-green" alt="GPL-3.0">
