@@ -1,35 +1,39 @@
-# AppAtlas Chat-Vorlage
+# Chat-Startvorlage – AppAtlas
 
-Kopiere diesen Text in einen neuen Codex-Chat, wenn die Arbeit an AppAtlas
-fortgesetzt werden soll.
+Ich arbeite am Projekt **AppAtlas**.
 
-```text
-Arbeite ausschliesslich im ausgewaehlten AppAtlas-Projektordner.
+Projekt-Root:
+`Repository-Root`
 
-Lies zuerst:
-- PROJECT_CONTEXT.md
-- NEXT_STEPS.md
+Repository:
+https://github.com/Schrotty74/AppAtlas
+
+Bitte lies vor Beginn:
+
+1. `AGENTS.md`
+2. `PROJECT_CONTEXT.md`
+3. `NEXT_STEPS.md`
 
 Danach bei Bedarf:
-- docs/PROJECT_STRUCTURE.md fuer Architektur und Einstiegspunkte
-- docs/RELEASE_WORKFLOW.md nur fuer Beta- oder Final-Arbeit
-- docs/PRIVACY.md bei Datenverarbeitung, Online-Zugriffen oder Veroeffentlichungen
 
-PROJECT_CONTEXT.md ist die Haupt-Wissensquelle. NEXT_STEPS.md enthaelt nur
-tatsaechlich offene Punkte. Bei wichtigen Aenderungen an Funktionen,
-Architektur, Datenschutz, Build- oder Release-Ablauf beide Dateien vor dem
-Abschluss aktualisieren. Sichtbare Funktionsaenderungen brauchen auch die
-deutschen und englischen PDF-Handbuecher.
+- `docs/PROJECT_STRUCTURE.md` für Architektur und Einstiegspunkte
+- `docs/RELEASE_WORKFLOW.md` nur für Beta- oder Final-Arbeit
+- `docs/PRIVACY.md` bei Datenverarbeitung, Online-Zugriffen oder Veröffentlichungen
 
-Wichtig:
+Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand. Halte den Auftrag eng begrenzt und aktualisiere bei relevanten Änderungen die vorgesehenen Kontextdateien im selben Auftrag.
+
+Wichtige Regeln:
+
 - In diesem Chat nur AppAtlas bearbeiten.
 - Bei reinen Fragen nichts bauen und nichts ändern.
 - Nur bauen, wenn ausdrücklich ein Build verlangt wird.
-- Beta und Final laufen ausschliesslich ueber die bestehenden Skripte, nicht
-  ueber Xcode-Schemes.
-- Keine Release-Artefakte, privaten Kataloge, Scanlisten, Lizenzdaten oder
-  lokalen Benutzerpfade in Git übernehmen.
+- Beta und Final laufen ausschließlich über die bestehenden Skripte, nicht über Xcode-Schemes.
+- Keine Release-Artefakte, privaten Kataloge, Scanlisten, Lizenzdaten oder lokalen Benutzerpfade in Git übernehmen.
 - Keine Pushes, Tags oder GitHub-Releases ohne ausdrückliche Anweisung.
 - Keine Zugangsdaten, Tokens, privaten Testdaten oder Backups dokumentieren.
 - Wenn Informationen fehlen, sie als unbekannt markieren statt sie zu erfinden.
-```
+- Sichtbare Funktionsänderungen benötigen weiterhin die deutschen und englischen PDF-Handbücher nach den vorhandenen Projektregeln.
+
+Aktueller Auftrag:
+
+<Aktueller Auftrag>
