@@ -3,22 +3,6 @@
 AppAtlas ist eine native SwiftUI-App für macOS zur persönlichen Verwaltung
 eines lokalen App-Katalogs.
 
-## Start in einem neuen Chat
-
-Diese Datei ist die zentrale Wissensquelle. Danach in dieser Reihenfolge lesen:
-
-1. `NEXT_STEPS.md` fuer den tatsaechlich offenen Arbeitsstand.
-2. `CHAT_TEMPLATE.md` fuer die Schutzregeln eines neuen Codex-Chats.
-3. Bei einer fachlichen Aenderung `docs/PROJECT_STRUCTURE.md` und die
-   betroffene Dokumentation unter `docs/`.
-4. Nur bei Build-, Beta- oder Final-Arbeit `docs/RELEASE_WORKFLOW.md`.
-5. Bei Datenverarbeitung, Online-Zugriffen oder Veroeffentlichungen
-   `docs/PRIVACY.md`; die Audit-Dateien sind historische Nachweise.
-
-`AI_ASSISTANT.md` beschreibt ausschliesslich die Assistent-Funktion. Die
-Release-Historie unter `docs/releases/`, `docs/HISTORY.md` und die alte
-Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
-
 ## Technische Struktur
 
 - AppAtlas ist ein Swift-Package mit Xcode-Projekt.
@@ -247,9 +231,6 @@ Chat-Uebergabe sind historische Unterlagen, keine Quelle fuer offene Aufgaben.
   fragen und genau erklären, wo geklickt oder was kopiert werden soll.
 - Möglichst fokussiert arbeiten und die kleinste sinnvolle Änderung umsetzen.
   Keine unnötigen Umbauten, Designänderungen oder neuen Funktionen.
-- Wenn der Chat oder Kontext zu schwer oder alt wird, soll Codex darauf
-  hinweisen, dass ein neuer Chat sinnvoll wäre, und dafür eine kurze
-  Übergabe-Zusammenfassung geben.
 - Wenn mehrere Lösungen möglich sind, soll Codex die einfache und robuste
   Variante wählen. Wenn etwas riskant wird oder größere Änderungen nötig
   wären, soll Codex vorher kurz Bescheid sagen.
