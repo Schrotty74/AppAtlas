@@ -43,5 +43,6 @@ Der Assistent beantwortet Fragen zum eigenen Katalog, zum Beispiel:
 ## Weiterer Projektkontext
 
 Der verbindliche Build- und Release-Ablauf steht ausschliesslich in
-`docs/RELEASE_WORKFLOW.md`. Datenschutz- und Veroeffentlichungsregeln stehen
-in `docs/PRIVACY.md` und `PROJECT_CONTEXT.md`.
+`docs/RELEASE_WORKFLOW.md`. Der App-spezifische Datenschutz steht in
+`docs/PRIVACY.md` und `PROJECT_CONTEXT.md`; die allgemeinen Arbeits-,
+Veroeffentlichungs- und Repository-Datenschutzregeln stehen in `AGENTS.md`.
