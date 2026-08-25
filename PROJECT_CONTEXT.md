@@ -3,6 +3,8 @@
 AppAtlas ist eine native SwiftUI-App für macOS zur persönlichen Verwaltung
 eines lokalen App-Katalogs.
 
+Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzregeln stehen verbindlich in `AGENTS.md`. Diese Datei enthält den projektspezifischen technischen und funktionalen Kontext.
+
 ## Technische Struktur
 
 - AppAtlas ist ein Swift-Package mit Xcode-Projekt.
@@ -35,9 +37,8 @@ eines lokalen App-Katalogs.
   `Scripts/publish-beta-as-final.sh <final-version>` aus dem sauberen
   Arbeitsstand. Die genaue, vor jedem Release zu lesende Anleitung steht in
   `docs/RELEASE_WORKFLOW.md`.
-- Jeder Release, Push, Tag, jede Beta und jedes Backup braucht weiterhin eine
-  ausdrueckliche Benutzeranweisung. Vor einem Final sind Datenschutzcheck,
-  erweitertes Audit und ein neuer oeffentlicher Audit-Bericht Pflicht.
+- Vor einem Final sind Datenschutzcheck, erweitertes Audit und ein neuer
+  oeffentlicher Audit-Bericht Pflicht.
 
 ## Scanner-Stand
 
@@ -68,10 +69,8 @@ eines lokalen App-Katalogs.
   GitHub-Projekten bleibt wegen der öffentlichen GitHub-Suchgrenzen in der
   erweiterten Suche.
 
-## Datenschutz hat Vorrang
+## Projektspezifischer Datenschutz
 
-- Das Git-Repository und öffentliche Builds enthalten niemals persönliche
-  Kataloge, Scanlisten, App-Namen, Lizenzdaten oder lokale Benutzerpfade.
 - Neue Benutzer starten mit einem leeren Katalog.
 - Persönliche Katalogdaten liegen ausschließlich im lokalen
   Application-Support-Verzeichnis.
@@ -80,7 +79,7 @@ eines lokalen App-Katalogs.
   oder passwortgeschützt exportiert.
 - Bei jeder neuen Funktion mit Datenschutzwirkung muss diese Wirkung vor der
   Umsetzung genannt und eine datensparsame Alternative vorgeschlagen werden.
-- Vor jedem Commit, Push und Release muss ein Datenschutzcheck erfolgen.
+- Vor Commit, Push und Release ist der vorhandene Datenschutzcheck auszuführen.
 - Das umfangreiche Datenschutzaudit einschließlich Prüfung der Git-Historie,
   Release-Dateien und Netzwerkzugriffe wird ausschließlich bei jeder finalen
   Version durchgeführt, nicht bei Betas.
@@ -88,24 +87,13 @@ eines lokalen App-Katalogs.
   um einen neuen chronologischen Prüfbericht ergänzt. Frühere Berichte bleiben
   erhalten und werden nicht ersetzt.
 
-## Veröffentlichungs- und Backup-Regeln
+## Veröffentlichungs- und Backup-Besonderheiten
 
 - Normale Entwicklungsprüfungen verwenden ausschließlich `swift build` und
   `swift test`. Dabei werden weder AppAtlas geöffnet noch ZIP-Dateien,
   Prüfsummen, Backups oder iCloud-Kopien erzeugt.
 - AppAtlas wird bei Änderungen und Tests niemals automatisch geöffnet,
   aktiviert oder in den Vordergrund gebracht.
-- Lokale Release-Pakete und ZIP-Dateien werden ausschließlich nach einer
-  ausdrücklichen Benutzeranweisung erstellt.
-- Lokale Benutzerpfade, Volume-Pfade, Kataloge, App-Namen, Lizenzdaten und
-  andere Nutzerdaten dürfen weder in Quellcode noch in Binärdateien,
-  Release-Pakete, Backups oder GitHub gelangen.
-
-- Änderungen dürfen lokal umgesetzt, getestet und dokumentiert werden.
-- Git-Pushes, GitHub-Releases, Tags und andere Veröffentlichungen erfolgen
-  ausschließlich nach einer ausdrücklichen Anweisung des Benutzers.
-- Neue Beta-Builds oder Beta-Versionsnummern werden ausschließlich nach einer
-  ausdrücklichen Anweisung des Benutzers erstellt.
 - Beta-Veröffentlichungen benötigen den normalen Datenschutzcheck, aber kein
   umfangreiches Datenschutzaudit und keinen neuen öffentlichen Prüfbericht.
 - Vor jeder finalen Veröffentlichung sind das umfangreiche Datenschutzaudit
@@ -115,8 +103,6 @@ eines lokalen App-Katalogs.
   Release-Artefakte. Private Kataloge, Scanlisten, Datenbanken,
   Lizenzexporte, persönliche Pfade und Geheimnisse bleiben weiterhin
   blockierende Audit-Funde.
-- Backups und iCloud-Kopien werden ausschließlich nach einer ausdrücklichen
-  Anweisung des Benutzers erstellt.
 - Im festgelegten iCloud-Ordner bleiben höchstens zwei AppAtlas-Backups
   erhalten. Nach einer erfolgreich geprüften neuen Kopie wird dort
   ausschließlich das älteste `AppAtlas-Backup-*.zip` entfernt. Lokale Backups
@@ -211,32 +197,10 @@ eines lokalen App-Katalogs.
   Persönliche Katalogdaten, lokale Pfade und Lizenzdaten werden nicht
   übergeben.
 - AppAtlas steht unter GPLv3.
-- Backups werden nur auf ausdrückliche Anweisung erstellt.
 
-## Zusätzliche Zusammenarbeit
+## Arbeitsregeln
 
-- Der Nutzer kann nicht coden und kennt sich mit technischen
-  Fehlermeldungen, Logs und Build-Ausgaben nicht aus.
-- Harte Auslöse-Regel: Eine Frage des Nutzers ist nur als Frage zu
-  beantworten. Bei Fragen darf Codex keine Dateien ändern, keine Tests
-  ausführen, keinen Build starten und keine App öffnen.
-- Codeänderungen, Tests, Builds oder App-Starts sind nur erlaubt, wenn der
-  Nutzer eindeutig einen Arbeitsbefehl gibt, z. B. `fix das`, `setz das um`,
-  `teste das`, `mach dev build` oder `baue das`.
-- Bei gemischten oder unklaren Nachrichten muss Codex zuerst fragen, ob nur
-  erklärt oder tatsächlich umgesetzt werden soll.
-- Bei Problemen soll Codex die technische Analyse und Umsetzung selbst
-  übernehmen, soweit Zugriff darauf besteht.
-- Wenn Informationen vom Nutzer nötig sind, soll Codex in einfachen Worten
-  fragen und genau erklären, wo geklickt oder was kopiert werden soll.
-- Möglichst fokussiert arbeiten und die kleinste sinnvolle Änderung umsetzen.
-  Keine unnötigen Umbauten, Designänderungen oder neuen Funktionen.
-- Wenn mehrere Lösungen möglich sind, soll Codex die einfache und robuste
-  Variante wählen. Wenn etwas riskant wird oder größere Änderungen nötig
-  wären, soll Codex vorher kurz Bescheid sagen.
-- Soweit sinnvoll möglich testen, ob die Änderung funktioniert.
-- Am Ende kurz in normaler Sprache erklären, was geändert wurde und ob noch
-  etwas offen ist.
+Die allgemeinen Regeln für Arbeitsweise, verständliche Erklärungen, Änderungen, Tests, Git-Aktionen, Veröffentlichungen und Repository-Datenschutz stehen ausschließlich in `AGENTS.md`.
 
 ## Bekannte Grenzen
 
