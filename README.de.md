@@ -162,6 +162,10 @@ Fehlerberichte und Rückfragen können an
 enthält außerdem einen Fehlerbericht-Dialog, der einen datensparsamen Bericht
 für eine E-Mail oder zum Einfügen in Codex erstellt.
 
+## Community
+
+Fragen, Feedback und Diskussionen sind auf [Discord](https://discord.gg/Zy93AaYFaj) willkommen.
+
 ## Lizenz
 
 AppAtlas steht unter der GNU General Public License Version 3.
