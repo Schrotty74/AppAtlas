@@ -17,18 +17,21 @@ Katalogexporte.
 
 ## Funktionen
 
-- Frei wählbare Ordner rein lesend scannen und technische Daten sowie typische
-  Backup-Archive herausfiltern.
-- Lokale Ordner und selbst definierte Dateiendungen dauerhaft vom Scan
-  ausschließen.
+- Frei wählbare Ordner rein lesend scannen, technische Daten und typische
+  Backup-Archive herausfiltern sowie lokale Ordner oder eigene Dateiendungen
+  dauerhaft ausschließen.
 - Neue, geänderte und entfernte Dateien bei erneuten Scans mit dem Katalog
   abgleichen.
-- Apps manuell hinzufügen, bearbeiten und löschen.
-- Apps mit eigenen Tags markieren und über die Sidebar oder Suche filtern.
-- Lokale App-Dateien nur nach ausdrücklicher Bestätigung in den Papierkorb
-  legen.
-- Beschreibungen, Links und hochwertige Icons verwalten.
-- Fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen.
+- Apps manuell hinzufügen, bearbeiten und löschen; lokale App-Dateien nur nach
+  ausdrücklicher Bestätigung in den Papierkorb legen; bei Bedarf den gesamten
+  Katalog löschen.
+- Apps mit Tags markieren, über Namen, Beschreibungen, Kategorien, Ordner und
+  Tags durchsuchen sowie hierarchische Kategorien und Unterordner verwenden.
+- Beschreibungen, Links und hochwertige Icons verwalten; Icons lokal als
+  Originale und schnelle Vorschaubilder speichern.
+- Fehlende Metadaten bewusst über „Katalog aktualisieren“ ergänzen und
+  Katalogstatistiken zu Kategorien, Speicherbedarf und fehlenden Metadaten
+  anzeigen.
 - Homebrew- und Setapp-Kataloge nach einer bewussten Online-Aktualisierung lokal
   verwenden; normale Scans kontaktieren beide Dienste nicht.
 - Unsichere Treffer mit Quellenangabe unter „Zu prüfen“ bestätigen oder
@@ -36,20 +39,15 @@ Katalogexporte.
 - Online-Abfragen, Parallelität und erweiterte Suche lokal konfigurieren.
 - Website-Rückfragen pro App über eine Ausschlussliste verwalten.
 - Fremdsprachige Beschreibungen vor dem Speichern lokal übersetzen.
-- Icons lokal als separate Originale und schnelle Vorschaubilder speichern.
-- Apps über Namen, Beschreibungen, Kategorien, Ordner und Tags durchsuchen.
-- Hierarchische Kategorien und Unterordner verwenden.
-- App-Assistent mit optionaler Reddit-Recherche.
+- App-Assistent mit optionaler Reddit-Recherche nutzen.
 - Themes importieren, exportieren und löschen.
 - Native Liquid-Glass-Effekte für Bedienelemente und Karten ab macOS 26 mit
   kompatibler Darstellung auf älteren macOS-Versionen.
 - Katalog als JSON exportieren und importieren, wahlweise ohne Lizenzdaten,
   unverschlüsselt oder passwortgeschützt mit AES-256-GCM.
 - Konfigurierbare Backup-Erinnerung für regelmäßige Katalogexporte.
-- Katalogstatistik mit Kategorien, Speicherbedarf und fehlenden Metadaten.
-- Lizenzdaten aus JSON- und CSV-Dateien importieren.
-- Private Lizenzdaten im macOS-Schlüsselbund speichern.
-- Einzelne Apps oder den gesamten Katalog löschen.
+- Lizenzdaten aus JSON- und CSV-Dateien importieren und private Lizenzdaten im
+  macOS-Schlüsselbund speichern.
 - Datensparsamen Fehlerbericht für E-Mail oder Codex erstellen.
 - Deutsche und englische Oberfläche.
 
