@@ -25,25 +25,25 @@ AppAtlas is a native, privacy-focused SwiftUI app organizer and local software c
 
 ## Key Features
 
-- Scan freely selected folders in read-only mode and filter out technical data
-  and typical backup archives.
-- Permanently exclude local folders and custom file extensions from scans.
+- Scan freely selected folders in read-only mode, filter technical data and
+  typical backup archives, and permanently exclude local folders or custom file
+  extensions.
 - Compare new, changed and removed files with the catalog on repeated scans.
-- Manually add, edit and delete app entries.
-- Tag apps and filter them through the sidebar or search.
-- Move local app files to the Trash only after explicit confirmation.
-- Manage descriptions, links and high-quality icons.
-- Update missing metadata manually through "Update Catalog".
-- Use locally cached Homebrew and Setapp catalogs after an explicit online update;
-  normal scans do not contact either service.
+- Manually add, edit and delete app entries; move local app files to the Trash
+  only after explicit confirmation; delete the complete catalog when required.
+- Tag apps, search by name, description, category, folder and tags, and use
+  hierarchical categories and subfolders.
+- Manage descriptions, links and high-quality icons; store icons locally as
+  original files and fast thumbnails.
+- Update missing metadata manually and view catalog statistics, including
+  categories, storage usage and missing metadata.
+- Use locally cached Homebrew and Setapp catalogs after an explicit online
+  update; normal scans do not contact either service.
 - Review uncertain matches with source labels before accepting or rejecting
   them.
 - Configure online lookups, parallel processing and extended search locally.
 - Manage per-app website prompts through an exclusion list.
 - Translate foreign-language descriptions locally before saving them.
-- Store icons locally as original files and fast thumbnails.
-- Search apps by name, description, category, folder and tags.
-- Use hierarchical categories and subfolders.
 - Use an app assistant with optional Reddit research.
 - Import, export and delete themes.
 - Use native Liquid Glass effects for controls and cards on macOS 26 and
@@ -51,10 +51,8 @@ AppAtlas is a native, privacy-focused SwiftUI app organizer and local software c
 - Export and import the catalog as JSON, optionally without license data,
   unencrypted or password-protected with AES-256-GCM.
 - Configure backup reminders for regular catalog exports.
-- View catalog statistics with categories, storage usage and missing metadata.
-- Import license data from JSON and CSV files.
-- Store private license data in the macOS Keychain.
-- Delete individual apps or the complete catalog.
+- Import license data from JSON and CSV files and store private license data
+  in the macOS Keychain.
 - Create privacy-conscious bug reports for email or Codex.
 - Use the interface in English or German.
 
