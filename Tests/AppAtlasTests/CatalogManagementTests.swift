@@ -1063,7 +1063,8 @@ struct CatalogManagementTests {
             persistence: CatalogPersistence(fileURL: catalogURL),
             homebrewCaskMetadataCache: HomebrewCaskMetadataCache(
                 fileURL: caskURL
-            )
+            ),
+            targetLanguageProvider: { "de" }
         )
 
         store.mergeScannedApps([
@@ -1113,7 +1114,8 @@ struct CatalogManagementTests {
             persistence: CatalogPersistence(fileURL: catalogURL),
             setappCatalogMetadataCache: SetappCatalogMetadataCache(
                 fileURL: setappURL
-            )
+            ),
+            targetLanguageProvider: { "de" }
         )
 
         store.mergeScannedApps([
@@ -2591,7 +2593,9 @@ struct CatalogManagementTests {
         store.selectedCategory = CatalogStore.needsReviewFilter
 
         #expect(store.filteredApps.map(\.name) == ["Flagged"])
-        #expect(store.selectedCollectionTitle == "Zu prüfen")
+        #expect(
+            store.selectedCollectionTitle == AppLocalization.text("Zu prüfen")
+        )
         try? FileManager.default.removeItem(
             at: fileURL.deletingLastPathComponent()
         )
