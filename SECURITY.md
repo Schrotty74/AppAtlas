@@ -1,63 +1,21 @@
-# Sicherheitsrichtlinie
-
-## Unterstützte Versionen
-
-Sicherheitsupdates werden für AppAtlas **1.0.0 und neuer** bereitgestellt.
-Ältere Vorabversionen und Betas werden nicht separat gepflegt.
-
-## Sicherheitslücken melden
-
-Bitte melde Sicherheitslücken vertraulich per E-Mail an
-[appatlas@mailbox.org](mailto:appatlas@mailbox.org).
-
-Öffne für Sicherheitslücken bitte **kein öffentliches GitHub-Issue**. So
-bleiben mögliche Schwachstellen geschützt, bis sie geprüft und behoben sind.
-
-## Reaktionszeit
-
-Ich versuche, auf Sicherheitsmeldungen innerhalb von **7 Tagen** zu antworten.
-Je nach Umfang der Meldung kann die vollständige Prüfung oder Behebung länger
-dauern.
-
-## Sicherheit und Datenschutz
-
-AppAtlas ist eine datenschutzorientierte lokale macOS-App ohne eigenen
-Netzwerk-Backend-Dienst. Die wichtigsten Sicherheitsfragen betreffen daher vor
-allem lokale Datenverarbeitung, den Umgang mit dem macOS-Schlüsselbund,
-Katalogexporte sowie optionale Drittanbieter-Abfragen während der bewussten
-Katalogaktualisierung.
-
-Onlinequellen wie iTunes, GitHub oder Reddit werden nur für die
-Kataloganreicherung verwendet und nicht automatisch im Hintergrund abgefragt.
-
----
-
 # Security Policy
+
+[Deutsch](SECURITY.de.md)
 
 ## Supported Versions
 
-Security updates are provided for AppAtlas **1.0.0 and later**. Older preview
-and beta versions are not maintained separately.
+Security updates are provided for the current stable AppAtlas release. Older preview and beta versions are not maintained separately.
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities privately by email to
-[appatlas@mailbox.org](mailto:appatlas@mailbox.org).
+Please do not open a public GitHub issue for security vulnerabilities. Report them privately to [appatlas@mailbox.org](mailto:appatlas@mailbox.org). Include the AppAtlas and macOS versions, a clear description, reproduction steps and relevant logs or screenshots with private catalog and license information removed.
 
-Do **not** open a public GitHub issue for security vulnerabilities. This keeps
-potential issues protected until they can be reviewed and fixed.
+I aim to respond to security reports within 7 days.
 
-## Response Time
+## Scope
 
-I aim to respond to security reports within **7 days**. Depending on the scope
-of the report, full review or remediation may take longer.
+Relevant reports include local folder scanning and file operations, catalog databases and exports, AES-256-GCM protected exports, macOS Keychain handling of license data, metadata/catalog updates, local translation, optional online lookups and privacy-conscious bug reports.
 
-## Security and Privacy
+AppAtlas is a local-first macOS app without its own data backend. Online sources are contacted only by features that deliberately perform an online lookup or update.
 
-AppAtlas is a privacy-focused local macOS app without its own network backend.
-Most security concerns therefore relate to local data handling, macOS Keychain
-usage, catalog exports, and optional third-party API calls during explicit
-catalog enrichment.
-
-Online sources such as iTunes, GitHub, or Reddit are used only for catalog
-enrichment and are not queried automatically in the background.
+Thank you for helping keep AppAtlas and its users secure.
