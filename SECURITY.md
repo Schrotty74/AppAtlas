@@ -4,7 +4,12 @@
 
 ## Supported Versions
 
-Security updates are provided for the current stable AppAtlas release. Older preview and beta versions are not maintained separately.
+| Version | Supported |
+| --- | --- |
+| 1.2.x | Yes |
+| 1.1.x and earlier | No |
+
+The current stable release is 1.2.3. Preview and beta versions are not maintained separately.
 
 ## Reporting a Vulnerability
 
