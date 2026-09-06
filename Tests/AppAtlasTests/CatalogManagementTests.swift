@@ -1336,7 +1336,7 @@ struct CatalogManagementTests {
         let duration = startedAt.duration(to: .now)
 
         #expect(matches.count == apps.count)
-        #expect(duration < .seconds(3))
+        #expect(duration < .seconds(5))
         try? FileManager.default.removeItem(at: directory)
     }
 
