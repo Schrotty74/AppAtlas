@@ -4,7 +4,12 @@
 
 ## Unterstützte Versionen
 
-Sicherheitsupdates werden für die aktuelle stabile AppAtlas-Version bereitgestellt. Ältere Vorab- und Beta-Versionen werden nicht separat gepflegt.
+| Version | Unterstützt |
+| --- | --- |
+| 1.2.x | Ja |
+| 1.1.x und älter | Nein |
+
+Die aktuelle stabile Version ist 1.2.3. Vorab- und Beta-Versionen werden nicht separat gepflegt.
 
 ## Sicherheitslücke melden
 
