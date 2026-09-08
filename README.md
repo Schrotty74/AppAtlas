@@ -77,7 +77,7 @@ The screenshots below use demo data only.
       <br><sub>Compact view</sub>
     </td>
     <td width="50%">
-      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas Dashboard view with demo data" width="100%">
+      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas dashboard view with demo data" width="100%">
       <br><sub>Dashboard view</sub>
     </td>
   </tr>
