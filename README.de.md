@@ -92,15 +92,14 @@ Aktuellen Release herunterladen:
 Beim ersten Öffnen zeigt macOS möglicherweise eine Warnung, da AppAtlas nicht
 mit einem kostenpflichtigen Apple Developer Account notarisiert ist.
 
-So öffnest du die App trotzdem:
+Wenn Gatekeeper einen offiziellen AppAtlas-Download auf einer aktuellen macOS-Version blockiert:
 
-1. Rechtsklick auf die App-Datei.
-2. „Öffnen“ wählen.
-3. Im erscheinenden Dialog erneut „Öffnen“ beziehungsweise „Trotzdem öffnen“
-   anklicken.
+1. `AppAtlas.app` einmal normal zu öffnen versuchen, damit macOS den blockierten Start registriert.
+2. **Systemeinstellungen → Datenschutz & Sicherheit** öffnen und zum Bereich **Sicherheit** scrollen.
+3. Bei AppAtlas auf **Dennoch öffnen** klicken.
+4. Die Warnung mit **Öffnen** bestätigen und bei Bedarf authentifizieren.
 
-Alternativ kannst du unter **Systemeinstellungen -> Datenschutz & Sicherheit**
-ganz unten **Trotzdem öffnen** bestätigen.
+Die Option **Dennoch öffnen** wird nach einem blockierten Startversuch nur für begrenzte Zeit angezeigt. Gatekeeper nur für eine AppAtlas-Version übersteuern, die aus dem offiziellen GitHub-Release stammt. Dadurch wird nur für diese konkrete App eine Ausnahme angelegt; Gatekeeper wird nicht systemweit deaktiviert.
 
 Für Entwicklungsprüfungen:
 
