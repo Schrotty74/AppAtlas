@@ -77,7 +77,7 @@ The screenshots below use demo data only.
       <br><sub>Compact view</sub>
     </td>
     <td width="50%">
-      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas dashboard view with demo data" width="100%">
+      <img src="docs/screenshots/appatlas-dashboard-demo.jpg" alt="AppAtlas Dashboard view with demo data" width="100%">
       <br><sub>Dashboard view</sub>
     </td>
   </tr>
@@ -97,14 +97,14 @@ Download the current release:
 When opening AppAtlas for the first time, macOS may display a warning because
 the app is not notarized with a paid Apple Developer account.
 
-To open the app anyway:
+On current macOS versions, if Gatekeeper blocks an official AppAtlas download:
 
-1. Right-click the app file.
-2. Select **Open**.
-3. Click **Open** or **Open Anyway** in the dialog that appears.
+1. Try to open `AppAtlas.app` normally once so macOS registers the blocked launch.
+2. Open **System Settings → Privacy & Security** and scroll down to **Security**.
+3. Click **Open Anyway** for AppAtlas.
+4. Confirm the warning by clicking **Open** and authenticate if macOS asks you to.
 
-Alternatively, open **System Settings -> Privacy & Security** and confirm
-**Open Anyway** at the bottom of the page.
+The **Open Anyway** option is only shown for a limited time after the blocked launch attempt. Only override Gatekeeper for an AppAtlas build obtained from the official GitHub release. This creates an exception for that specific app and does not disable Gatekeeper system-wide.
 
 For development checks:
 
