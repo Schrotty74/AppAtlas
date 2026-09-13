@@ -22,7 +22,9 @@ done
 content_files=("${(@f)$(printf '%s\n' "${candidate_files[@]}" \
     | grep -Ev '^Scripts/privacy-(check|audit)\.sh$')}")
 if grep -I -n -E '/Users/[^/]+|/Volumes/[^/]+|serialNumber[[:space:]]*[:=][[:space:]]*"[^"$]+' \
-    "${content_files[@]}" >/tmp/appatlas-privacy-check.txt 2>/dev/null; then
+    "${content_files[@]}" 2>/dev/null \
+    | grep -Ev '/Users/example/|/Volumes/example/' \
+    >/tmp/appatlas-privacy-check.txt; then
     cat /tmp/appatlas-privacy-check.txt >&2
     echo "Datenschutzprüfung fehlgeschlagen: persönlicher Pfad oder Geheimnis gefunden." >&2
     exit 1
