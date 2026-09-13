@@ -87,17 +87,9 @@ Die allgemeinen Arbeits-, Git-, Veröffentlichungs- und Repository-Datenschutzre
   um einen neuen chronologischen Prüfbericht ergänzt. Frühere Berichte bleiben
   erhalten und werden nicht ersetzt.
 
-## Veröffentlichungs- und Backup-Besonderheiten
-
-- Normale Entwicklungsprüfungen verwenden ausschließlich `swift build` und
-  `swift test`. Dabei werden weder AppAtlas geöffnet noch ZIP-Dateien,
-  Prüfsummen, Backups oder iCloud-Kopien erzeugt.
+## Backup-Besonderheiten
 - AppAtlas wird bei Änderungen und Tests niemals automatisch geöffnet,
   aktiviert oder in den Vordergrund gebracht.
-- Beta-Veröffentlichungen benötigen den normalen Datenschutzcheck, aber kein
-  umfangreiches Datenschutzaudit und keinen neuen öffentlichen Prüfbericht.
-- Vor jeder finalen Veröffentlichung sind das umfangreiche Datenschutzaudit
-  und ein ergänzender öffentlicher Prüfbericht verpflichtend.
 - Das erweiterte Datenschutzaudit bewertet bekannte ältere AppAtlas-DMG-/ZIP-
   Artefakte unter früheren `Backup/releases/...`-Pfaden als öffentliche
   Release-Artefakte. Private Kataloge, Scanlisten, Datenbanken,
