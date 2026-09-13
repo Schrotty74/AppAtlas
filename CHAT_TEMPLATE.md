@@ -26,9 +26,8 @@ Prüfe vor Aussagen oder Änderungen den tatsächlichen Projektzustand. Halte de
 
 AppAtlas-spezifisch:
 
-- In diesem Chat nur AppAtlas bearbeiten.
-- Beta und Final laufen ausschließlich über die bestehenden Skripte, nicht über Xcode-Schemes.
-- Sichtbare Funktionsänderungen benötigen weiterhin die deutschen und englischen PDF-Handbücher nach den vorhandenen Projektregeln.
+
+- Die projektspezifischen Build-, Release- und Handbuchregeln stehen in `PROJECT_CONTEXT.md` und den dort verlinkten Spezialdokumenten.
 
 Aktueller Auftrag:
 
